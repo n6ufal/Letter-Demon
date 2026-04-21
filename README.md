@@ -27,6 +27,24 @@ Last Letter pushed a dictionary update across Casual, Intermediate, and Pro serv
 
 ---
 
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Requirements](#-requirements)
+- [Installation](#-installation)
+- [Usage](#-usage)
+  - [Quick Start](#quick-start)
+  - [Advanced Features](#advanced-features)
+- [Configuration](#️-configuration)
+- [Troubleshooting](#️-troubleshooting)
+- [How It Works](#-how-it-works)
+- [Project Structure](#-project-structure)
+- [Customization](#-customization)
+- [Disclaimer](#️-disclaimer)
+- [License](#-license)
+
+---
+
 ## ✨ Features
 
 - **Smart Word Engine** — Bisect-based prefix search with a scored trap ending index. Words ranked by suffix difficulty; ties broken by word length (mode-dependent). Separate exception filter runs as a set-membership check before output.
@@ -198,27 +216,100 @@ Crash logs are saved to `crash.log` in the project directory.
 
 ## 📊 How It Works
 
-### Word Scoring Algorithm
+### Word Selection Pipeline
 
-Words are scored against an ordered trap ending list using suffix matching with O(log n) binary search via `bisect`. Score is computed as:
+The word engine follows a deterministic pipeline from user input to final word output:
 
+#### 1. Trap Endings Index
+
+When you load or reload a `trap_endings.txt` file, the engine:
+
+1. **Parse the file line-by-line**
+   - Skip empty lines
+   - Skip comment lines (lines starting with `#`)
+   - Trim whitespace
+   - Convert to lowercase
+
+2. **Remove duplicates** while preserving order (first occurrence wins)
+
+3. **Build scoring map**
+   ```python
+   ending_scores = {
+       ending: len(trap_endings) - index
+       for index, ending in enumerate(trap_endings)
+   }
+   ```
+   - First ending (hardest) gets highest score
+   - Last ending (easiest) gets score = 1
+   - Unlisted endings get score = 0
+
+**Example:**
 ```
-score = len(trap_endings) - rank(matched_ending)
+File content:          Index    Score
+-ness                   0   →  3 - 0 = 3 (hardest)
+-ment                   1   →  3 - 1 = 2
+-ing                    2   →  3 - 2 = 1 (easiest)
 ```
 
-Higher rank = lower score = weaker trap. Words with no match score 0 and fall to fallback mode. Scores are computed once and cached; the cache is invalidated on dictionary reload or trap ending mutation.
+#### 2. Prefix Search
 
-Prefix lookup uses bisect-based binary search against the sorted word list, reducing average lookup time ~51x over linear scan on large dictionaries (100k+ entries).
+When you enter a prefix (e.g., "ca"), the engine:
 
-Example:
+1. **Bisect-based binary search** on the sorted word dictionary
+   - Finds all words starting with "ca"
+   - O(log n) complexity per search
+   - ~51x faster than linear scan on 100k+ word dictionaries
+
+2. **Case-insensitive matching**
+   - "Ca", "CA", "ca" all match the same words
+
+#### 3. Scoring & Ranking
+
+For each candidate word, compute trap score:
+
+```python
+score = max ending score found in word suffix
 ```
-Trap endings: [-ness, -ment, -ing]
 
-"happiness"   → ends with -ness (rank 0) → score: 3 - 0 = 3 ✓ (best)
-"development" → ends with -ment (rank 1) → score: 3 - 1 = 2
-"running"     → ends with -ing  (rank 2) → score: 3 - 2 = 1
-"cat"         → no match                 → score: 0 (fallback)
+**Algorithm:**
+- Extract last N characters (where N = max trap ending length)
+- For each length from N down to 1, check if suffix exists in `ending_scores`
+- Return the score of the first match found (longest suffix prioritized)
+
+**Example with trap endings: [-ness, -ment, -ing]**
 ```
+"happiness"     → check: "ness", "ness" found → score: 3 ✓
+"development"   → check: "ment", "ment" found → score: 2
+"running"       → check: "ning", "ing" found  → score: 1
+"cat"           → check: "cat", "at", "t" → no match → score: 0 (fallback)
+```
+
+#### 4. Exception Filter
+
+Before output, check if word is in the exceptions set:
+- Exceptions are stored as lowercase
+- Case-insensitive matching (`word.lower() in exceptions_set`)
+- O(1) lookup via set membership check
+- Rejected words are skipped
+
+#### 5. Fallback Mode
+
+If no trap word is found for the prefix:
+- Switch to fallback strategy (e.g., "Short Words" mode)
+- Find shortest matching word instead of highest-scoring
+- If still no match, return None (error state)
+
+#### 6. Cache Management
+
+**Cache Precomputation:**
+- When dictionary loads, all word scores are computed once
+- Stored in `_trap_score_cache: dict[str, int]`
+- ~5-30 seconds for 100k+ word dictionary (one-time)
+
+**Cache Invalidation:**
+- **Dictionary reload** → clear cache, precompute new scores
+- **Trap endings change** → clear cache, precompute new scores
+- **Word selection** → used words are tracked and excluded from future queries
 
 ### Typing Simulation
 
@@ -229,6 +320,12 @@ delay ~ LogNormal(μ, σ)
 ```
 
 where μ is derived from the configured base speed and σ scales with jitter intensity. Log-Normal was chosen because it's right-skewed — matching empirical human keystroke distributions where outlier-slow keystrokes are more common than outlier-fast ones. Delays are clamped to [30ms, 500ms] to prevent physically implausible inputs. Each character receives an independently sampled delay; no autocorrelation between keystrokes.
+
+**Configuration parameters:**
+- **Base speed** (default: 170ms) — anchors the median keystroke delay
+- **Jitter intensity** (default: 75%) — controls variance (5–100%)
+- **Pre-delay** (default: 500ms) — wait before first keystroke
+- **Post-delay** (default: 500ms) — wait after last keystroke + Enter key
 
 ---
 
