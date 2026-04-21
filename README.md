@@ -413,8 +413,6 @@ Colors use standard hex format. Changes apply on next application restart.
 
 ---
 
----
-
 ## Disclaimer
 
 This tool is for **educational and research purposes only**. Use responsibly:
@@ -429,7 +427,3 @@ This tool is for **educational and research purposes only**. Use responsibly:
 ## License
 
 MIT License — See LICENSE file for details
-
----
-
-**Letter Demon v6 • April 2026**
