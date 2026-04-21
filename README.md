@@ -1,21 +1,30 @@
-# Letter Demon 🎮
+# Letter Demon 😈
 
 > **The Demon knows every word your opponent doesn't.**
 
 Automate the Last Letter word game on Roblox with intelligent word selection, trap ending detection, and human-like typing simulation.
 
 ---
+
 ## 📢 Update — April 20, 2026
 
 Last Letter pushed a dictionary update across Casual, Intermediate, and Pro servers, removing a large portion of words sourced from Dwyl's English Dictionary. All three modes now share the same synchronized dictionary.
 
-**Impact by mode:**
+**Compatibility by mode:**
 
 | Mode | Status | Notes |
 |------|--------|-------|
-| Casual | ⚠️ Degraded | Letter Demon ships with a 470K-word legacy library — partial overlap with the updated dictionary. Some trap words still land. Use updated `trap_endings.txt`. |
-| Intermediate | ✅ Fully functional | Old dictionary still aligns well. Use legacy `trap_endings.txt`. |
-| Pro | ❌ Not viable | Pro enforces hyphenated compounds and a significantly wider suffix/prefix range. Current custom dictionary coverage is insufficient. |
+| Casual | ⚠️ Degraded | Ships against a 470K-word legacy library. Partial overlap remains — some trap words still land. Use updated `trap_endings.txt`. |
+| Intermediate | ✅ Functional | Legacy dictionary still aligns well. Use legacy `trap_endings.txt`. |
+| Pro | ❌ Not viable | Enforces hyphenated compounds with a significantly wider suffix/prefix range. Current dictionary coverage is insufficient. |
+
+---
+
+## 🗺️ Roadmap
+
+- **Mode Profiles** — Dedicated Casual and Intermediate profiles that automatically load the correct dictionary and trap endings per game mode.
+- **Auto-update** — Fetch the latest trap endings list for each mode directly from GitHub.
+
 ---
 
 ## ✨ Features
@@ -292,20 +301,3 @@ This tool is for **educational purposes**. Use responsibly:
 MIT License — See LICENSE file for details
 
 ---
-
-## 👤 Author
-
-**n6ufal**
-- Discord: `b6xy`
-- Email: `boxcarr@proton.me`
-
----
-
-## 🙏 Acknowledgments
-
-- Inspired by word game theory and adaptive algorithms
-- Built with Python, Tkinter, and ❤️
-
----
-
-**v6 • April 2026**
