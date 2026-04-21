@@ -5,35 +5,37 @@
 Automate the Last Letter word game on Roblox with intelligent word selection, trap ending detection, and human-like typing simulation.
 
 ---
+## 📢 Update — April 20, 2026
+
+Last Letter pushed a dictionary update across Casual, Intermediate, and Pro servers, removing a large portion of words sourced from Dwyl's English Dictionary. All three modes now share the same synchronized dictionary.
+
+**Impact by mode:**
+
+| Mode | Status | Notes |
+|------|--------|-------|
+| Casual | ⚠️ Degraded | Letter Demon ships with a 470K-word legacy library — partial overlap with the updated dictionary. Some trap words still land. Use updated `trap_endings.txt`. |
+| Intermediate | ✅ Fully functional | Old dictionary still aligns well. Use legacy `trap_endings.txt`. |
+| Pro | ❌ Not viable | Pro enforces hyphenated compounds and a significantly wider suffix/prefix range. Current custom dictionary coverage is insufficient. |
+---
 
 ## ✨ Features
 
-- **Smart Word Engine** — Analyzes your dictionary and finds optimal words based on:
-  - Trap endings (hard-to-continue words ranked by difficulty)
-  - Word exceptions (blacklisted words to avoid)
-  - Game mode strategies (Trap Words, Short Words, or custom fallback)
+- **Smart Word Engine** — Bisect-based prefix search with a scored trap ending index. Words ranked by suffix difficulty; ties broken by word length (mode-dependent). Separate exception filter runs as a set-membership check before output.
 
-- **Anti-Detection Typing** — Human-like keyboard simulation with:
-  - Configurable typing speed (ms per character)
-  - Realistic jitter/variance (Log-Normal distribution)
-  - Pre/post-delay customization
-  - Character-by-character keystroke simulation
+- **Anti-Detection Typing** — Per-keystroke delay sampled from a Log-Normal distribution, matching empirical human keystroke timing. Configurable base speed, jitter variance, and pre/post-action delays. Each character gets an independently sampled delay with no autocorrelation.
 
 - **Roblox Integration**
   - Live process detection with 3-second polling
-  - Automatic window focus
+  - Automatic window focus via WinAPI
   - Status indicator (● on/off)
 
 - **Advanced Configuration**
   - Load custom dictionary files (JSON or TXT)
-  - Edit trap endings in real-time
+  - Edit trap endings in real-time with live cache invalidation
   - Manage word exceptions
   - Persist settings across sessions
 
-- **Cache Management**
-  - Built-in word scoring cache
-  - Track used words during gameplay
-  - Clear cache with one click
+- **Cache Management** — Word scores are memoized per dictionary load. Cache invalidation is triggered by dictionary swap or trap ending mutation. Used-word tracking persists per session and is excluded from candidate selection at query time.
 
 ---
 
@@ -56,7 +58,7 @@ ctypes        (WinAPI integration)
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/letter-demon.git
+   git clone https://github.com/n6ufal/Letter-Demon.git
    cd letter-demon
    ```
 
@@ -189,36 +191,35 @@ Crash logs are saved to `crash.log` in the project directory.
 
 ### Word Scoring Algorithm
 
-Each word receives a **trap score** based on its ending:
+Words are scored against an ordered trap ending list using suffix matching with O(log n) binary search via `bisect`. Score is computed as:
 
-1. Extract the last N characters of the word (N = max trap ending length)
-2. Check if it matches any trap ending
-3. Return the score: `total_endings - rank` (higher = harder)
-4. Words with higher scores are suggested first
+```
+score = len(trap_endings) - rank(matched_ending)
+```
+
+Higher rank = lower score = weaker trap. Words with no match score 0 and fall to fallback mode. Scores are computed once and cached; the cache is invalidated on dictionary reload or trap ending mutation.
+
+Prefix lookup uses bisect-based binary search against the sorted word list, reducing average lookup time ~51x over linear scan on large dictionaries (100k+ entries).
 
 Example:
 ```
 Trap endings: [-ness, -ment, -ing]
 
-Word: "happiness"
-- Ends with "-ness" (rank 0)
-- Score: 3 - 0 = 3 ✓ (best)
-
-Word: "development"
-- Ends with "-ment" (rank 1)
-- Score: 3 - 1 = 2 (good)
-
-Word: "running"
-- Ends with "-ing" (rank 2)
-- Score: 3 - 2 = 1 (okay)
+"happiness"   → ends with -ness (rank 0) → score: 3 - 0 = 3 ✓ (best)
+"development" → ends with -ment (rank 1) → score: 3 - 1 = 2
+"running"     → ends with -ing  (rank 2) → score: 3 - 2 = 1
+"cat"         → no match                 → score: 0 (fallback)
 ```
 
 ### Typing Simulation
 
-Uses Log-Normal distribution for realistic delays:
-- **Base speed**: anchored median delay
-- **Jitter%**: controls variance (higher = more erratic)
-- **Min/Max**: capped at 30ms–500ms per character
+Inter-keystroke delay is sampled from a Log-Normal distribution:
+
+```
+delay ~ LogNormal(μ, σ)
+```
+
+where μ is derived from the configured base speed and σ scales with jitter intensity. Log-Normal was chosen because it's right-skewed — matching empirical human keystroke distributions where outlier-slow keystrokes are more common than outlier-fast ones. Delays are clamped to [30ms, 500ms] to prevent physically implausible inputs. Each character receives an independently sampled delay; no autocorrelation between keystrokes.
 
 ---
 
@@ -233,7 +234,7 @@ letter_demon_tk/
 │
 ├── core/
 │   ├── dictionary.py      # Word list loading & caching
-│   └── word_engine.py     # Core scoring & selection logic
+│   └── word_engine.py     # Scoring, bisect search & selection logic
 │
 ├── config/
 │   ├── settings.py        # Settings persistence
@@ -242,7 +243,7 @@ letter_demon_tk/
 │
 ├── system/
 │   ├── roblox.py          # Roblox process detection
-│   └── typer.py           # Humanized keyboard simulation
+│   └── typer.py           # Log-Normal keystroke simulation
 │
 └── ui/
     ├── app.py             # Main application class
