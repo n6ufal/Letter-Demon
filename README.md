@@ -417,6 +417,7 @@ Colors use standard hex format. Changes apply on next application restart.
 
 This tool is for **educational and research purposes only**. Use responsibly:
 
+- Code is AI-generated; the architecture, logic, and intent are entirely mine. A private passion project. Just a person and a machine building something together, learning what that even means
 - Written against public Roblox APIs only; no reverse engineering or client modification
 - Respects game integrity and fair play principles
 - Your account, your responsibility — use at your own risk
