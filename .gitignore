@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Project-specific
+cache/
+crash.log
+settings.json
+
+# Backups & Temporary
+*.backup
+*.bak
+*.tmp
+*.temp
+ui/backups/
+
+# Windows executables (if distributing .exe)
+*.exe
+dist/
+
+# Test & Debug
+.pytest_cache/
+.coverage
+htmlcov/
