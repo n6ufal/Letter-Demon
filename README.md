@@ -4,9 +4,28 @@
 
 Automate the Last Letter word game on Roblox with intelligent word selection, trap ending detection, and human-like typing simulation.
 
+![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
+![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
+![MIT License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+
 ---
 
-## 📢 Update — April 20, 2026
+## Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
+- [How It Works](#how-it-works)
+- [Project Structure](#project-structure)
+- [Customization](#customization)
+- [License](#license)
+
+---
+
+## Update — April 20, 2026
 
 Last Letter pushed a dictionary update across Casual, Intermediate, and Pro servers, removing a large portion of words sourced from Dwyl's English Dictionary. All three modes now share the same synchronized dictionary.
 
@@ -20,32 +39,14 @@ Last Letter pushed a dictionary update across Casual, Intermediate, and Pro serv
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - **Mode Profiles** — Dedicated Casual and Intermediate profiles that automatically load the correct dictionary and trap endings per game mode.
 - **Auto-update** — Fetch the latest trap endings list for each mode directly from GitHub.
 
 ---
 
-## 📑 Table of Contents
-
-- [Features](#-features)
-- [Requirements](#-requirements)
-- [Installation](#-installation)
-- [Usage](#-usage)
-  - [Quick Start](#quick-start)
-  - [Advanced Features](#advanced-features)
-- [Configuration](#️-configuration)
-- [Troubleshooting](#️-troubleshooting)
-- [How It Works](#-how-it-works)
-- [Project Structure](#-project-structure)
-- [Customization](#-customization)
-- [Disclaimer](#️-disclaimer)
-- [License](#-license)
-
----
-
-## ✨ Features
+## Features
 
 - **Smart Word Engine** — Bisect-based prefix search with a scored trap ending index. Words ranked by suffix difficulty; ties broken by word length (mode-dependent). Separate exception filter runs as a set-membership check before output.
 
@@ -66,22 +67,25 @@ Last Letter pushed a dictionary update across Casual, Intermediate, and Pro serv
 
 ---
 
-## 📋 Requirements
+## Requirements
 
-- **Windows** (uses WinAPI for Roblox detection & keyboard control)
-- **Python 3.10+**
-- **Roblox** (obviously!)
+| Requirement | Details |
+|-------------|----------|
+| **OS** | Windows (uses WinAPI for process detection & keyboard control) |
+| **Python** | 3.10 or higher |
+| **Roblox** | Client must be installed and running |
 
 ### Dependencies
-```
-tkinter       (built-in with Python)
-keyboard      (keyboard simulation)
-ctypes        (WinAPI integration)
+
+```python
+tkinter       # built-in with Python
+keyboard      # keyboard simulation — pip install keyboard
+ctypes        # WinAPI integration — built-in
 ```
 
 ---
 
-## 🚀 Installation
+## Installation
 
 1. **Clone the repository:**
    ```bash
@@ -105,12 +109,12 @@ ctypes        (WinAPI integration)
 
 ---
 
-## 🎯 Usage
+## Usage
 
 ### Quick Start
 
 1. **Load a Dictionary**
-   - Click **Advanced → Load Dictionary**
+   - Click Advanced → Load Dictionary
    - Select a `.json` or `.txt` word file
    - Wait for indexing (~5-30 seconds depending on size)
 
@@ -126,7 +130,7 @@ ctypes        (WinAPI integration)
 
 4. **Play**
    - Enter the starting letters in the text field
-   - Press **PLAY** or **Ctrl+Enter**
+   - Press PLAY or Ctrl+Enter
    - Window hides, word is typed, game window regains focus
    - Window reappears when done
 
@@ -172,20 +176,37 @@ cherry
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
-Settings are auto-saved to `settings.json`:
+Settings are auto-saved to `settings.json`. All values are optional and have sensible defaults:
 
 ```json
 {
+  // Path to loaded dictionary file (null if not loaded)
   "dict_path": "path/to/dictionary.json",
+  
+  // Typing speed in milliseconds per character (default: 170)
   "speed": 170,
+  
+  // Primary strategy: "trap_words" or "short_words"
   "mode": "trap_words",
+  
+  // Fallback strategy when primary fails
   "fallback": "short_words",
+  
+  // Delay before typing begins (milliseconds)
   "pre_delay": 500,
+  
+  // Delay after typing completes (milliseconds)
   "post_delay": 500,
+  
+  // Enable humanized typing jitter
   "jitter_enabled": true,
+  
+  // Jitter variance intensity (5-100%)
   "jitter_intensity": 75,
+  
+  // Window position (auto-saved)
   "win_x": 100,
   "win_y": 100
 }
@@ -193,7 +214,7 @@ Settings are auto-saved to `settings.json`:
 
 ---
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
@@ -214,7 +235,7 @@ Crash logs are saved to `crash.log` in the project directory.
 
 ---
 
-## 📊 How It Works
+## How It Works
 
 ### Word Selection Pipeline
 
@@ -329,7 +350,7 @@ where μ is derived from the configured base speed and σ scales with jitter int
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 letter_demon_tk/
@@ -364,37 +385,51 @@ letter_demon_tk/
 
 ---
 
-## 🎨 Customization
+## Customization
 
 ### Theme Colors
 
-Edit `ui/theme.py` to customize:
-- Background colors
-- Text colors
-- Button styles
-- Accent colors
+Edit `ui/theme.py` to customize application appearance:
 
-Example:
 ```python
-C_BG = "#1a1a1a"           # Dark background
-C_TEXT = "#e0e0e0"         # Light text
-C_PLAY_BG = "#00d084"      # Play button green
+# Background colors
+C_BG = "#1a1a1a"              # Main background
+C_BG_PANEL = "#2a2a2a"        # Panel background
+
+# Text colors
+C_TEXT = "#e0e0e0"            # Primary text
+C_MUTED = "#808080"           # Secondary/disabled text
+
+# Button colors
+C_PLAY_BG = "#00d084"         # Play button background (green)
+C_PLAY_FG = "#1a1a1a"         # Play button text (dark)
+
+# Status indicators
+C_DOT_GREEN = "#00d084"       # Running indicator
+C_DOT_RED = "#ff3333"         # Stopped indicator
 ```
 
----
-
-## ⚠️ Disclaimer
-
-This tool is for **educational purposes**. Use responsibly:
-- Follows Roblox Terms of Service (uses public APIs only)
-- Respects game integrity
-- Your account is your responsibility
-- Use at your own risk
+Colors use standard hex format. Changes apply on next application restart.
 
 ---
 
-## 📝 License
+---
+
+## Disclaimer
+
+This tool is for **educational and research purposes only**. Use responsibly:
+
+- Written against public Roblox APIs only; no reverse engineering or client modification
+- Respects game integrity and fair play principles
+- Your account, your responsibility — use at your own risk
+- By using this tool, you accept full responsibility for any consequences
+
+---
+
+## License
 
 MIT License — See LICENSE file for details
 
 ---
+
+**Letter Demon v6 • April 2026**
