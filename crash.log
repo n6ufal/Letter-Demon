@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "C:\Users\User\Downloads\Code\letter demon tk stable\letter_demon_tk\main.pyw", line 37, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\User\Downloads\Code\letter demon tk stable\letter_demon_tk\main.pyw", line 29, in main
+    from ui.app import LastLetterApp
+  File "C:\Users\User\Downloads\Code\letter demon tk stable\letter_demon_tk\ui\__init__.py", line 2, in <module>
+    from .widgets import *
+  File "C:\Users\User\Downloads\Code\letter demon tk stable\letter_demon_tk\ui\widgets.py", line 6, in <module>
+    from .theme import (
+    ...<4 lines>...
+    )
+ImportError: cannot import name 'C_BTN_HOVER' from 'ui.theme' (C:\Users\User\Downloads\Code\letter demon tk stable\letter_demon_tk\ui\theme.py)
