@@ -2,7 +2,7 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-Automate the Last Letter word game on Roblox with intelligent word selection, trap ending detection, and human-like typing simulation.
+Automate the Last Letter word game on Roblox with smart word selection, trap ending detection, and human-like typing.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -33,37 +33,37 @@ Last Letter pushed a dictionary update across Casual, Intermediate, and Pro serv
 
 | Mode | Status | Notes |
 |------|--------|-------|
-| Casual | ⚠️ Degraded | Ships against a 470K-word legacy library. Partial overlap remains — some trap words still land. Use updated `trap_endings.txt`. |
-| Intermediate | ✅ Functional | Legacy dictionary still aligns well. Use legacy `trap_endings.txt`. |
-| Pro | ❌ Not viable | Enforces hyphenated compounds with a significantly wider suffix/prefix range. Current dictionary coverage is insufficient. |
+| Casual | ⚠️ Degraded | Letter Demon runs a 470K-word library built from the same dictionaries the game uses — most words still work, including most trap words. Use updated `trap_endings.txt`. |
+| Intermediate | ✅ Functional | Works well. Use legacy `trap_endings.txt`. |
+| Pro | ❌ Not viable | Pro mode now enforces hyphenated compounds with a much wider range of word endings. Letter Demon's current dictionary doesn't cover enough of them. |
 
 ---
 
 ## Roadmap
 
-- **Mode Profiles** — Dedicated Casual and Intermediate profiles that automatically load the correct dictionary and trap endings per game mode.
-- **Auto-update** — Fetch the latest trap endings list for each mode directly from GitHub.
+- **Mode Profiles** — Separate profiles for Casual and Intermediate that automatically load the right dictionary and trap endings for each mode.
+- **Auto-update** — Pull the latest trap endings list for each mode directly from GitHub.
 
 ---
 
 ## Features
 
-- **Smart Word Engine** — Bisect-based prefix search with a scored trap ending index. Words ranked by suffix difficulty; ties broken by word length (mode-dependent). Separate exception filter runs as a set-membership check before output.
+- **Smart Word Engine** — Finds the best word for any starting letters in milliseconds. Words are ranked by how hard they are to follow; ties are broken by word length depending on your strategy. A separate exceptions list is checked before anything gets typed.
 
-- **Anti-Detection Typing** — Per-keystroke delay sampled from a Log-Normal distribution, matching empirical human keystroke timing. Configurable base speed, jitter variance, and pre/post-action delays. Each character gets an independently sampled delay with no autocorrelation.
+- **Human-like Typing** — Each keypress has its own timing, independently randomized. Occasional slow keypresses are mixed in naturally, matching how real people actually type. Speed, randomness, and delays are all configurable.
 
 - **Roblox Integration**
-  - Live process detection with 3-second polling
-  - Automatic window focus via WinAPI
-  - Status indicator (● on/off)
+  - Detects when Roblox is running automatically
+  - Focuses the Roblox window before typing
+  - Live status indicator (● on/off)
 
 - **Advanced Configuration**
-  - Load custom dictionary files (JSON or TXT)
-  - Edit trap endings in real-time with live cache invalidation
-  - Manage word exceptions
-  - Persist settings across sessions
+  - Load your own dictionary files (JSON or TXT)
+  - Edit trap endings on the fly — changes take effect immediately
+  - Manage a list of words to never suggest
+  - Settings save automatically between sessions
 
-- **Cache Management** — Word scores are memoized per dictionary load. Cache invalidation is triggered by dictionary swap or trap ending mutation. Used-word tracking persists per session and is excluded from candidate selection at query time.
+- **Fast Lookups** — Word scores are preloaded when your dictionary is indexed. Searches are instant. Everything updates automatically when you change your dictionary or trap endings.
 
 ---
 
@@ -71,7 +71,7 @@ Last Letter pushed a dictionary update across Casual, Intermediate, and Pro serv
 
 | Requirement | Details |
 |-------------|----------|
-| **OS** | Windows (uses WinAPI for process detection & keyboard control) |
+| **OS** | Windows only |
 | **Python** | 3.10 or higher |
 | **Roblox** | Client must be installed and running |
 
@@ -79,8 +79,8 @@ Last Letter pushed a dictionary update across Casual, Intermediate, and Pro serv
 
 ```python
 tkinter       # built-in with Python
-keyboard      # keyboard simulation — pip install keyboard
-ctypes        # WinAPI integration — built-in
+keyboard      # pip install keyboard
+ctypes        # built-in
 ```
 
 ---
@@ -100,7 +100,7 @@ ctypes        # WinAPI integration — built-in
 
 3. **Run the application:**
    ```bash
-   # With GUI (no console)
+   # Without console (normal use)
    python main.pyw
    
    # With console (for debugging)
@@ -115,33 +115,33 @@ ctypes        # WinAPI integration — built-in
 
 1. **Load a Dictionary**
    - Click Advanced → Load Dictionary
-   - Select a `.json` or `.txt` word file
-   - Wait for indexing (~5-30 seconds depending on size)
+   - Pick a `.json` or `.txt` word file
+   - Wait for it to index (about 5–30 seconds depending on size)
 
 2. **Configure Typing**
    - Set typing speed (default: 170ms per character)
-   - Enable/disable humanized jitter (default: on, 75%)
+   - Turn humanized jitter on or off (default: on, 75%)
    - Adjust pre/post delays (default: 500ms each)
 
 3. **Set Game Strategy**
-   - **Trap Words** — Prioritize hard words
-   - **Short Words** — Minimize character risk
-   - Choose fallback mode if primary fails
+   - **Trap Words** — Go for words your opponent will struggle to follow
+   - **Short Words** — Play it safe with shorter words
+   - Pick a fallback in case your main strategy comes up empty
 
 4. **Play**
-   - Enter the starting letters in the text field
+   - Type the starting letters into the text field
    - Press PLAY or Ctrl+Enter
-   - Window hides, word is typed, game window regains focus
-   - Window reappears when done
+   - The window hides, the word gets typed, Roblox regains focus
+   - The window comes back when it's done
 
 ### Advanced Features
 
 #### Custom Trap Endings
 Trap endings are word suffixes that are statistically hard for opponents to continue from:
 - Click **Advanced → Load** (Trap Endings section)
-- Select a `.txt` file with one ending per line
-- Comments start with `#`
-- **Order matters** — list endings from hardest to easiest
+- Pick a `.txt` file with one ending per line
+- Lines starting with `#` are treated as comments and ignored
+- **Order matters** — put the hardest endings first
 
 Example `trap_endings.txt`:
 ```
@@ -153,10 +153,10 @@ Example `trap_endings.txt`:
 ```
 
 #### Word Exceptions
-Prevent the engine from suggesting certain words:
+Stop the engine from ever suggesting certain words:
 - Click **Advanced → Edit** (Exceptions section)
 - Add one word per line
-- Useful for: slurs, proper nouns, slang, offensive terms
+- Useful for slurs, proper nouns, slang, or anything else you want blocked
 
 #### Dictionary Format
 
@@ -178,35 +178,35 @@ cherry
 
 ## Configuration
 
-Settings are auto-saved to `settings.json`. All values are optional and have sensible defaults:
+Settings save automatically to `settings.json`. All values are optional — sensible defaults are used if anything is missing:
 
 ```json
 {
-  // Path to loaded dictionary file (null if not loaded)
+  // Path to your loaded dictionary (null if none loaded)
   "dict_path": "path/to/dictionary.json",
   
   // Typing speed in milliseconds per character (default: 170)
   "speed": 170,
   
-  // Primary strategy: "trap_words" or "short_words"
+  // Main strategy: "trap_words" or "short_words"
   "mode": "trap_words",
   
-  // Fallback strategy when primary fails
+  // Backup strategy if the main one finds nothing
   "fallback": "short_words",
   
-  // Delay before typing begins (milliseconds)
+  // How long to wait before typing starts (milliseconds)
   "pre_delay": 500,
   
-  // Delay after typing completes (milliseconds)
+  // How long to wait after typing finishes (milliseconds)
   "post_delay": 500,
   
-  // Enable humanized typing jitter
+  // Turn humanized typing on or off
   "jitter_enabled": true,
   
-  // Jitter variance intensity (5-100%)
+  // How much randomness to add to typing speed (5–100%)
   "jitter_intensity": 75,
   
-  // Window position (auto-saved)
+  // Window position (saved automatically)
   "win_x": 100,
   "win_y": 100
 }
@@ -218,20 +218,20 @@ Settings are auto-saved to `settings.json`. All values are optional and have sen
 
 | Problem | Solution |
 |---------|----------|
-| "Roblox: off" indicator | Ensure Roblox is running before playing |
-| Dictionary won't load | Verify file exists and is valid JSON/TXT format |
-| Typing fails silently | Check that Roblox window is focused; check `crash.log` |
-| Words aren't matching prefix | Verify prefix is correct (case-insensitive) |
-| Jitter slider disabled | Enable "Jitter" checkbox in main window |
+| "Roblox: off" indicator | Make sure Roblox is open before hitting Play |
+| Dictionary won't load | Check that the file exists and is valid JSON or TXT |
+| Typing fails silently | Make sure the Roblox window is in focus; check `crash.log` |
+| Words aren't matching the prefix | Double-check what you typed — matching is case-insensitive |
+| Jitter slider is greyed out | Enable the "Jitter" checkbox first |
 
 ### Debug Mode
 
-Run with console output to see errors:
+Run with a console to see errors as they happen:
 ```bash
 python main.py
 ```
 
-Crash logs are saved to `crash.log` in the project directory.
+Crash logs are written to `crash.log` in the project folder.
 
 ---
 
@@ -389,7 +389,7 @@ letter_demon_tk/
 
 ### Theme Colors
 
-Edit `ui/theme.py` to customize application appearance:
+Edit `ui/theme.py` to change how the app looks:
 
 ```python
 # Background colors
@@ -409,7 +409,7 @@ C_DOT_GREEN = "#00d084"       # Running indicator
 C_DOT_RED = "#ff3333"         # Stopped indicator
 ```
 
-Colors use standard hex format. Changes apply on next application restart.
+Colors use standard hex format. Changes apply on the next restart.
 
 ---
 
