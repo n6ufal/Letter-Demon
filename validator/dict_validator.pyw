@@ -11,9 +11,11 @@ from typing import Dict, Optional, cast
 # ── state ────────────────────────────────────────────────────────────────────
 BASE = os.path.dirname(os.path.abspath(__file__))
 CACHE_PATH = os.path.join(BASE, ".dict_cache.pkl")
+SETTINGS_PATH = os.path.join(BASE, ".dict_settings.json")
 
 current_words = []
 current_words_rev = []
+last_loaded_path = None
 _debounce_ids: Dict[str, Optional[str]] = {"starts": None, "ends": None}
 
 # ── HiDPI ────────────────────────────────────────────────────────────────────
@@ -47,6 +49,22 @@ def save_cache(cache):
     except Exception:
         pass
 
+def load_settings():
+    if not os.path.exists(SETTINGS_PATH):
+        return {}
+    try:
+        with open(SETTINGS_PATH, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_settings(settings):
+    try:
+        with open(SETTINGS_PATH, "w") as f:
+            json.dump(settings, f, indent=2)
+    except Exception:
+        pass
+
 # ── high-performance engine ──────────────────────────────────────────────────
 def search_starts(words, query):
     if not words or not query: return []
@@ -62,8 +80,9 @@ def search_ends(words_rev, query):
     return sorted(w[::-1] for w in words_rev[lo:hi])
 
 # ── load ──────────────────────────────────────────────────────────────────────
-def load_dictionary():
-    path = filedialog.askopenfilename(filetypes=[("Dict files", "*.json *.txt")])
+def load_dictionary(path=None):
+    if path is None:
+        path = filedialog.askopenfilename(filetypes=[("Dict files", "*.json *.txt")])
     if not path: return
 
     def _load():
@@ -94,6 +113,11 @@ def load_dictionary():
 
             cache[file_hash] = {"words": words, "words_rev": words_rev}
             save_cache(cache)
+            
+            settings = load_settings()
+            settings["last_path"] = path
+            settings["last_hash"] = file_hash
+            save_settings(settings)
 
             root.after(0, lambda: apply_dictionary(
                 words, words_rev, "cached"
@@ -108,7 +132,7 @@ def load_dictionary():
     threading.Thread(target=_load, daemon=True).start()
 
 def apply_dictionary(words, words_rev, source):
-    global current_words, current_words_rev
+    global current_words, current_words_rev, last_loaded_path
     current_words = words
     current_words_rev = words_rev
     n = len(current_words)
@@ -246,7 +270,7 @@ tk.Label(top, textvariable=status_var, bg=C_BG, fg=C_DIM,
          font=FONT_STATUS).pack(side="left", padx=10)
 
 def clear_cache():
-    global current_words, current_words_rev
+    global current_words, current_words_rev, last_loaded_path
     if not os.path.exists(CACHE_PATH):
         messagebox.showinfo("Cache", "No cache found.")
         return
@@ -254,6 +278,11 @@ def clear_cache():
         os.remove(CACHE_PATH)
         current_words = []
         current_words_rev = []
+        last_loaded_path = None
+        settings = load_settings()
+        settings.pop("last_path", None)
+        settings.pop("last_hash", None)
+        save_settings(settings)
         out_starts.config(state="normal"); out_starts.delete("1.0", "end"); out_starts.config(state="disabled")
         out_ends.config(state="normal"); out_ends.delete("1.0", "end"); out_ends.config(state="disabled")
         toggle_search(False)
@@ -335,5 +364,23 @@ def make_column(parent, title, var, count_var, mode, accent_color):
 
 out_starts = make_column(left_col, "▶ STARTS WITH", sw_var, count_sw, "starts", C_ACCENT)
 out_ends   = make_column(right_col, "◀ ENDS WITH", ew_var, count_ew, "ends", C_WARN)
+
+# ── auto-load last dictionary on startup ──────────────────────────────────────
+def auto_load_last_dictionary():
+    settings = load_settings()
+    last_path = settings.get("last_path")
+    last_hash = settings.get("last_hash")
+    
+    if not last_path or not os.path.exists(last_path):
+        return
+    
+    cache = load_cache()
+    if last_hash not in cache:
+        return
+    
+    entry = cache[last_hash]
+    apply_dictionary(entry["words"], entry["words_rev"], "from cache (auto-loaded)")
+
+root.after(100, auto_load_last_dictionary)
 
 root.mainloop()
