@@ -417,11 +417,12 @@ Colors use standard hex format. Changes apply on the next restart.
 
 This tool is for **educational and research purposes only**. Use responsibly:
 
-- Code is AI-generated; the architecture, logic, and intent are entirely mine. A private passion project. Just a person and a machine building something together, learning what that even means
-- Written against public Roblox APIs only; no reverse engineering or client modification
-- Respects game integrity and fair play principles
-- Your account, your responsibility — use at your own risk
-- By using this tool, you accept full responsibility for any consequences
+- The code is generated with AI, but the design, logic, and decisions are mine. This is a personal project for learning and experimentation
+- This tool only uses publicly available data and standard Roblox interfaces. It does not modify the Roblox client or access private systems
+- References to publicly shared word lists or community sources do not imply permission or endorsement from any game developer
+- This tool may interact with game mechanics in ways that are not intended by the developers. Use of it may violate game rules or terms of service
+- I do not guarantee accuracy, safety, or continued functionality. The tool may break, behave unexpectedly, or stop working at any time
+- By using this tool, you accept all risks and agree that the creator is not liable for any damage, loss, or account actions
 
 ---
 
