@@ -38,6 +38,10 @@ env/
 .project
 .pydevproject
 
+# Pickle / serialized data
+*.pkl
+*.pickle
+
 # OS
 Thumbs.db
 .DS_Store

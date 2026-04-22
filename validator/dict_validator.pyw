@@ -266,6 +266,17 @@ class CopyableText(tk.Text):
         if event.keysym in ('Left', 'Right', 'Up', 'Down', 'Home', 'End'):
             return
         return "break"
+class CopyableText(tk.Text):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.bind("<Key>", self._handle_key)
+
+    def _handle_key(self, event):
+        if event.state & 0x4 and event.keysym.lower() in ('c', 'a'):
+            return
+        if event.keysym in ('Left', 'Right', 'Up', 'Down', 'Home', 'End'):
+            return
+        return "break"
 
 root = tk.Tk()
 root.title("Dict Validator — Letter Demon")
