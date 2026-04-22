@@ -12,10 +12,13 @@ from typing import Dict, Optional, cast
 BASE = os.path.dirname(os.path.abspath(__file__))
 CACHE_PATH = os.path.join(BASE, ".dict_cache.pkl")
 SETTINGS_PATH = os.path.join(BASE, ".dict_settings.json")
+EXCEPTIONS_PATH = os.path.join(os.path.dirname(BASE), "exceptions.txt")
 
 current_words = []
 current_words_rev = []
+current_exceptions = set()
 last_loaded_path = None
+exceptions_mtime = 0
 _debounce_ids: Dict[str, Optional[str]] = {"starts": None, "ends": None}
 
 # ── HiDPI ────────────────────────────────────────────────────────────────────
@@ -64,6 +67,62 @@ def save_settings(settings):
             json.dump(settings, f, indent=2)
     except Exception:
         pass
+
+def load_exceptions():
+    global current_exceptions, exceptions_mtime
+    if not os.path.exists(EXCEPTIONS_PATH):
+        current_exceptions = set()
+        exceptions_mtime = 0
+        return
+    
+    try:
+        mtime = os.path.getmtime(EXCEPTIONS_PATH)
+        if mtime == exceptions_mtime:
+            return  # No changes
+        
+        exceptions_mtime = mtime
+        current_exceptions = set()
+        
+        with open(EXCEPTIONS_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    current_exceptions.add(line.lower())
+        
+        status_var.set(f"Loaded {len(current_exceptions):,} exceptions")
+        
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to load exceptions: {str(e)}")
+
+def save_exceptions():
+    try:
+        with open(EXCEPTIONS_PATH, "w", encoding="utf-8") as f:
+            f.write("# Word exceptions - one per line\n")
+            f.write("# Lines starting with # are comments\n")
+            f.write("# These words will never be chosen by the macro\n")
+            f.write("# Case-insensitive. Edit this file and click Reload Exceptions in the app\n\n")
+            for word in sorted(current_exceptions):
+                f.write(f"{word}\n")
+        
+        global exceptions_mtime
+        exceptions_mtime = os.path.getmtime(EXCEPTIONS_PATH)
+        
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save exceptions: {str(e)}")
+
+def toggle_exception(word):
+    word = word.lower().strip()
+    if word in current_exceptions:
+        current_exceptions.remove(word)
+        status_var.set(f"Removed '{word}' from exceptions")
+    else:
+        current_exceptions.add(word)
+        status_var.set(f"Added '{word}' to exceptions")
+    
+    save_exceptions()
+    # Re-run current search to update display
+    if sw_var.get(): run_search("starts")
+    if ew_var.get(): run_search("ends")
 
 # ── high-performance engine ──────────────────────────────────────────────────
 def search_starts(words, query):
@@ -264,6 +323,9 @@ top.pack(fill="x", padx=10, pady=(10, 6))
 
 btn_load = styled_btn(top, "⬆ Load", load_dictionary, accent=True, color=C_ACCENT)
 btn_load.pack(side="left")
+
+btn_exceptions = styled_btn(top, "🚫 Exceptions", load_exceptions, accent=False, color=C_WARN)
+btn_exceptions.pack(side="left", padx=(6, 0))
 
 status_var = tk.StringVar(value="No dictionary loaded")
 tk.Label(top, textvariable=status_var, bg=C_BG, fg=C_DIM,
