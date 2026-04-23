@@ -17,7 +17,7 @@ def get_project_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-SETTINGS_FILE = os.path.join(get_project_root(), "settings.json")
+SETTINGS_FILE = os.path.join(get_project_root(), "data", "settings.json")
 
 
 def load_settings() -> dict:

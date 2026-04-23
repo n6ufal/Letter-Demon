@@ -4,7 +4,7 @@ import os
 
 from .settings import get_project_root
 
-TRAP_ENDINGS_FILE = os.path.join(get_project_root(), "trap_endings.txt")
+TRAP_ENDINGS_FILE = os.path.join(get_project_root(), "data", "trap_endings.txt")
 
 DEFAULT_TRAP_ENDINGS = [
     # 1-letter — hardest single letters to respond to
