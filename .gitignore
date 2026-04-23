@@ -51,6 +51,7 @@ desktop.ini
 cache/
 crash.log
 settings.json
+validator/
 
 # Backups & Temporary
 *.backup
