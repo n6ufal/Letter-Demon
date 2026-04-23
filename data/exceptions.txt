@@ -3,6 +3,18 @@
 # These words will never be chosen by the macro
 # Case-insensitive. Edit this file and click Reload Exceptions in the app
 
+tralatician
+tralaticiary
+tralaticious
+tralatition
+tralatitious
+tralatitiously
+tralineate
+tralira
+trallian
+tralucency
+tralucent
+
 a
 aaaaba
 xosa

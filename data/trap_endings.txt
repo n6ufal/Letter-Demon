@@ -1,4 +1,6 @@
-#22 april 2026 trap endings for casual
+# a growing roster of humiliations for anyone who didn't do the homework.
+# FOR CASUAL MODE ONLY - NOT INTERMEDIATE/PRO
+# traps in testing: -adau/dau, gah
 
 ocy
 loh
@@ -12,7 +14,6 @@ bh
 xa
 xo
 aha
-chy
 euch
 hl
 tse
@@ -21,6 +22,7 @@ eka
 guay
 yun
 krit
+chy
 dah
 bah
 elp
@@ -42,6 +44,7 @@ ged
 ked
 neos
 tral
+von
 eos
 eis
 osh
@@ -59,7 +62,9 @@ odon
 opod
 sula
 oko
+griv
 dae
+leit
 muz
 tzi
 tza
