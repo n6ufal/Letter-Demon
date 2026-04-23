@@ -47,9 +47,11 @@ Thumbs.db
 .DS_Store
 desktop.ini
 
-# Project-specific
+# Project-specific — Runtime & Config
 cache/
+logs/
 crash.log
+*.log
 settings.json
 validator/
 
@@ -59,12 +61,14 @@ validator/
 *.tmp
 *.temp
 ui/backups/
+typer backup/
 
 # Windows executables (if distributing .exe)
 *.exe
 dist/
 
-# Test & Debug
+# Build & Debug
 .pytest_cache/
 .coverage
 htmlcov/
+build/
