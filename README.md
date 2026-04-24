@@ -120,40 +120,39 @@ ctypes        # built-in
    - The window hides, the word gets typed, Roblox regains focus
    - The window comes back when it's done
 
-### Advanced Features
+**Custom Trap Endings**
 
-#### Custom Trap Endings
-Trap endings are word suffixes that are statistically hard for opponents to continue from. The default trap endings included in the config are **demonstration examples only** and show how the word engine prioritizes selected suffixes based on their order in `trap_endings.txt`:
-- **Order matters** — First ending = hardest score, last ending = easiest score
-- The engine finds the longest matching suffix in each word and assigns it a score accordingly
-- Earlier endings in the file get higher priority scores
+Trap endings are word suffixes that are statistically difficult for opponents to continue from. The engine scores each word by finding its longest matching suffix and prioritizing based on position in `trap_endings.txt` — earlier = higher priority.
 
-**Using Your Custom Trap Endings:**
+The default config ships with placeholder examples just to show the format. The real collection is the handpicked `trap_endings.txt` in `data/`.
 
-This project includes a more comprehensive, handpicked collection of trap endings optimized for the Last Letter game:
+**Loading the included trap endings:**
+
 1. Click **Advanced → Load** (Trap Endings section)
-2. Navigate to the `data/` folder and select `trap_endings.txt`
-3. The file contains one ending per line, ordered by difficulty
-4. Lines starting with `#` are treated as comments and ignored
-5. Changes take effect immediately
+2. Navigate to `data/` and select `trap_endings.txt`
+3. Changes take effect immediately
 
-**Recommended Setup:**
-- **Dictionary**: Load `mixed-old-complete-dict.txt` from the `dictionaries/` folder
-- **Trap Endings**: Load `trap_endings.txt` from the `data/` folder (handpicked by the author)
-- **Word Exceptions**: Edit from the **Advanced** menu to add any words you want to block
+The file contains one suffix per line, ordered by difficulty. Lines starting with `#` are comments and are ignored by the engine.
 
-Example `trap_endings.txt` structure:
+**Recommended setup:**
+- Dictionary: `mixed-old-complete-dict.txt` from `dictionaries/`
+- Trap Endings: `trap_endings.txt` from `data/` (handpicked, optimized for Last Letter)
+- Word Exceptions: `exceptions.txt` from `data/`
+
+**Example structure:**
 ```
-# Hardest endings first (highest priority)
--ness
--ment
--ing
--ion
-# ... more suffixes ordered by difficulty
+# comment lines are ignored
+ocy
+loh
+sz
+osa
 ```
+---
 
-#### Word Exceptions
+**Word Exceptions**
+
 Stop the engine from ever suggesting certain words:
+
 - Click **Advanced → Edit** (Exceptions section)
 - Add one word per line
 - Useful for slurs, proper nouns, slang, or anything else you want blocked
