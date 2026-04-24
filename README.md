@@ -25,20 +25,6 @@ Automate the Last Letter word game on Roblox with smart word selection, trap end
 
 ---
 
-## Update — April 20, 2026
-
-Last Letter pushed a dictionary update across Casual, Intermediate, and Pro servers, removing a large portion of words sourced from Dwyl's English Dictionary. All three modes now share the same synchronized dictionary.
-
-**Compatibility by mode:**
-
-| Mode | Status | Notes |
-|------|--------|-------|
-| Casual | ⚠️ Degraded | Letter Demon runs a 470K-word library built from the same dictionaries the game uses — most words still work, including most trap words. Use updated `trap_endings.txt`. |
-| Intermediate | ✅ Functional | Works well. Use legacy `trap_endings.txt`. |
-| Pro | ❌ Not viable | Pro mode now enforces hyphenated compounds with a much wider range of word endings. Letter Demon's current dictionary doesn't cover enough of them. |
-
----
-
 ## Roadmap
 
 - **Mode Profiles** — Separate profiles for Casual and Intermediate that automatically load the right dictionary and trap endings for each mode.
@@ -137,19 +123,33 @@ ctypes        # built-in
 ### Advanced Features
 
 #### Custom Trap Endings
-Trap endings are word suffixes that are statistically hard for opponents to continue from:
-- Click **Advanced → Load** (Trap Endings section)
-- Pick a `.txt` file with one ending per line
-- Lines starting with `#` are treated as comments and ignored
-- **Order matters** — put the hardest endings first
+Trap endings are word suffixes that are statistically hard for opponents to continue from. The default trap endings included in the config are **demonstration examples only** and show how the word engine prioritizes selected suffixes based on their order in `trap_endings.txt`:
+- **Order matters** — First ending = hardest score, last ending = easiest score
+- The engine finds the longest matching suffix in each word and assigns it a score accordingly
+- Earlier endings in the file get higher priority scores
 
-Example `trap_endings.txt`:
+**Using Your Custom Trap Endings:**
+
+This project includes a more comprehensive, handpicked collection of trap endings optimized for the Last Letter game:
+1. Click **Advanced → Load** (Trap Endings section)
+2. Navigate to the `data/` folder and select `trap_endings.txt`
+3. The file contains one ending per line, ordered by difficulty
+4. Lines starting with `#` are treated as comments and ignored
+5. Changes take effect immediately
+
+**Recommended Setup:**
+- **Dictionary**: Load `mixed-old-complete-dict.txt` from the `dictionaries/` folder
+- **Trap Endings**: Load `trap_endings.txt` from the `data/` folder (handpicked by the author)
+- **Word Exceptions**: Edit from the **Advanced** menu to add any words you want to block
+
+Example `trap_endings.txt` structure:
 ```
-# Hardest endings first
+# Hardest endings first (highest priority)
 -ness
 -ment
 -ing
--tion
+-ion
+# ... more suffixes ordered by difficulty
 ```
 
 #### Word Exceptions
