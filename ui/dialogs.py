@@ -34,7 +34,7 @@ def show_about(app) -> None:
 
     title_row = tk.Frame(f, bg=C_BG)
     title_row.pack(anchor="w", fill="x")
-    tk.Label(title_row, text="Letter Demon", font=FONT_H1, bg=C_BG, fg=C_TEXT).pack(
+    tk.Label(title_row, text="Letter Demon 😈", font=FONT_H1, bg=C_BG, fg=C_TEXT).pack(
         side="left"
     )
     tk.Label(
@@ -52,7 +52,7 @@ def show_about(app) -> None:
     sep = tk.Frame(f, height=1, bg=C_SEP)
     sep.pack(fill="x", pady=(0, 12))
 
-    tk.Label(f, text="Made by n6ufal", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(
+    tk.Label(f, text="Made by n6ufal with 💜", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(
         anchor="w"
     )
     tk.Label(f, text="Discord: b6xy", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(

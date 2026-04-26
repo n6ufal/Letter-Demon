@@ -1,31 +1,33 @@
 # a growing roster of humiliations for anyone who didn't do the homework.
-# FOR CASUAL MODE ONLY - NOT INTERMEDIATE/PRO
+# FOR CASUAL MODE ONLY - Updated April 25 2026
 # traps in testing: -adau/dau, gah
 
 ocy
 loh
+xo
 sz
-osa
+sv
 dv
 md
 qa
 zh
 bh
-xa
-xo
 dh
+hd
+yp
 yg
 yc
+osa
 aha
 euch
 tse
 elp
 chuk
 eka
-yun
 krit
 chy
 aux
+pex
 obo
 olo
 dii
@@ -35,7 +37,6 @@ enk
 hya
 oro
 soke
-pex
 plex
 hyr
 ged
@@ -46,6 +47,7 @@ von
 eos
 eis
 osh
+perb
 eda
 aba
 tla
@@ -59,13 +61,12 @@ tah
 poa
 odon
 opod
-sula
+ula
 lah
 oko
 griv
 dae
 leit
-muz
 tzi
 tza
 tzo
@@ -83,7 +84,6 @@ aka
 kuh
 luh
 ezi
-nyl
 nyx
 ein
 vut
@@ -92,4 +92,5 @@ yim
 irai
 tira
 zal
-tryp
+ist
+eels
