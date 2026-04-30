@@ -54,6 +54,8 @@ crash.log
 *.log
 settings.json
 validator/
+!test/
+dictionaries/
 
 # Backups & Temporary
 *.backup
