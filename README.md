@@ -6,7 +6,6 @@ Automate a word game with smart word selection, trap ending detection, and human
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
-![MIT License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 ---
 
