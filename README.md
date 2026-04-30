@@ -2,7 +2,7 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-Automate the Last Letter word game on Roblox with smart word selection, trap ending detection, and human-like typing.
+Automate a word game with smart word selection, trap ending detection, and human-like typing.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -38,9 +38,9 @@ Automate the Last Letter word game on Roblox with smart word selection, trap end
 
 - **Human-like Typing** — Each keypress has its own timing, independently randomized. Occasional slow keypresses are mixed in naturally, matching how real people actually type. Speed, randomness, and delays are all configurable.
 
-- **Roblox Integration**
-  - Detects when Roblox is running automatically
-  - Focuses the Roblox window before typing
+- **Game Integration**
+  - Detects when the target window is running automatically
+  - Focuses the target window before typing
   - Live status indicator (● on/off)
 
 - **Advanced Configuration**
@@ -59,7 +59,6 @@ Automate the Last Letter word game on Roblox with smart word selection, trap end
 |-------------|----------|
 | **OS** | Windows only |
 | **Python** | 3.10 or higher |
-| **Roblox** | Client must be installed and running |
 
 ### Dependencies
 
@@ -117,7 +116,7 @@ ctypes        # built-in
 4. **Play**
    - Type the starting letters into the text field
    - Press PLAY or Ctrl+Enter
-   - The window hides, the word gets typed, Roblox regains focus
+   - The window hides, the word gets typed, the target window regains focus
    - The window comes back when it's done
 
 **Custom Trap Endings**
@@ -136,7 +135,7 @@ The file contains one suffix per line, ordered by difficulty. Lines starting wit
 
 **Recommended setup:**
 - Dictionary: `mixed-old-complete-dict.txt` from `dictionaries/`
-- Trap Endings: `trap_endings.txt` from `data/` (handpicked, optimized for Last Letter)
+- Trap Endings: `trap_endings.txt` from `data/` (handpicked, optimized for the word game)
 - Word Exceptions: `exceptions.txt` from `data/`
 
 **Example structure:**
@@ -147,6 +146,7 @@ loh
 sz
 osa
 ```
+
 ---
 
 **Word Exceptions**
@@ -217,9 +217,9 @@ Settings save automatically to `settings.json`. All values are optional — sens
 
 | Problem | Solution |
 |---------|----------|
-| "Roblox: off" indicator | Make sure Roblox is open before hitting Play |
+| "Game: off" indicator | Make sure the game window is open before hitting Play |
 | Dictionary won't load | Check that the file exists and is valid JSON or TXT |
-| Typing fails silently | Make sure the Roblox window is in focus; check `crash.log` |
+| Typing fails silently | Make sure the target window is in focus; check `crash.log` |
 | Words aren't matching the prefix | Double-check what you typed — matching is case-insensitive |
 | Jitter slider is greyed out | Enable the "Jitter" checkbox first |
 
@@ -368,7 +368,7 @@ letter_demon_tk/
 │   └── exceptions.py      # Exception word management
 │
 ├── system/
-│   ├── roblox.py          # Roblox process detection
+│   ├── window.py          # Target window process detection
 │   └── typer.py           # Log-Normal keystroke simulation
 │
 └── ui/
@@ -417,7 +417,7 @@ Colors use standard hex format. Changes apply on the next restart.
 This tool is for **educational and research purposes only**. Use responsibly:
 
 - The code is generated with AI, but the design, logic, and decisions are mine. This is a personal project for learning and experimentation
-- This tool only uses publicly available data and standard Roblox interfaces. It does not modify the Roblox client or access private systems
+- This tool only uses publicly available data and standard interfaces. It does not modify any game client or access private systems
 - References to publicly shared word lists or community sources do not imply permission or endorsement from any game developer
 - This tool may interact with game mechanics in ways that are not intended by the developers. Use of it may violate game rules or terms of service
 - I do not guarantee accuracy, safety, or continued functionality. The tool may break, behave unexpectedly, or stop working at any time
@@ -427,4 +427,4 @@ This tool is for **educational and research purposes only**. Use responsibly:
 
 ## License
 
-MIT License — See LICENSE file for details
+MIT License
