@@ -12,6 +12,7 @@ Automate a word game with smart word selection, trap ending detection, and human
 
 ## Table of Contents
 
+- [Roadmap and Current Status](#roadmap-and-current-status)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -25,10 +26,14 @@ Automate a word game with smart word selection, trap ending detection, and human
 
 ---
 
-## Roadmap
+## Roadmap and Current Status
 
-- **Mode Profiles** — Separate profiles for Casual and Intermediate that automatically load the right dictionary and trap endings for each mode.
-- **Auto-update** — Pull the latest trap endings list for each mode directly from GitHub.
+### Roadmap
+- **Mode Profiles** — Separate profiles for Casual and Intermediate modes that automatically load the appropriate dictionaries and trap endings for each.
+- **Auto-update** — Fetch the latest trap endings for each mode directly from GitHub.
+
+### Status (April 30, 2026)
+- Dictionaries have been removed from this repo to prevent abuse. The repo now contains only the main program and a few supporting files.
 
 ---
 
