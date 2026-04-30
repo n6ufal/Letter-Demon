@@ -22,7 +22,6 @@ Automate a word game with smart word selection, trap ending detection, and human
 - [How It Works](#how-it-works)
 - [Project Structure](#project-structure)
 - [Customization](#customization)
-- [License](#license)
 
 ---
 
@@ -361,7 +360,6 @@ letter_demon_tk/
 ├── main.py                 # Debug entry point (shows console)
 ├── main.pyw                # Release entry point (hidden console)
 ├── settings.json           # User configuration
-├── crash.log              # Error logs (auto-generated)
 │
 ├── core/
 │   ├── dictionary.py      # Word list loading & caching
@@ -427,9 +425,3 @@ This tool is for **educational and research purposes only**. Use responsibly:
 - This tool may interact with game mechanics in ways that are not intended by the developers. Use of it may violate game rules or terms of service
 - I do not guarantee accuracy, safety, or continued functionality. The tool may break, behave unexpectedly, or stop working at any time
 - By using this tool, you accept all risks and agree that the creator is not liable for any damage, loss, or account actions
-
----
-
-## License
-
-MIT License
