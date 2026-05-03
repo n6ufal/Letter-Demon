@@ -1,4 +1,4 @@
-# app.py — main window orchestration
+# app.py main window orchestration
 """Main application window — wires UI modules to engines."""
 
 import os
