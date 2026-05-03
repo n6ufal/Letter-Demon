@@ -31,11 +31,11 @@ Searches 470k words in milliseconds, picks the hardest word your opponent can fo
 ## Roadmap and Current Status
 
 ### Roadmap
-- **Mode Profiles** separate profiles for Casual and Intermediate that load the right dictionaries and trap endings automatically
+- **Mode Profiles** separate profiles for Casual and Pro that load the right dictionaries and trap endings automatically
 - **Auto-update** pull the latest trap endings for each mode straight from GitHub
 
 ### Status (April 30, 2026)
-Dictionaries have been removed from this repo to prevent abuse. The repo now contains only the main program and a few supporting files.
+Dictionaries and the full version of `trap_endings.txt` are not included. Repo is code-only. Bring your own data.
 
 ---
 
