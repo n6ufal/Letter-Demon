@@ -35,7 +35,8 @@ Searches 470k words in milliseconds, picks the hardest word your opponent can fo
 - **Auto-update** pull the latest trap endings for each mode straight from GitHub
 
 ### Status (April 30, 2026)
-This repository is code-only. I’ve excluded the 470k+ and 500k+ dictionaries, as well as the full trap_endings.txt. To run the engine, you’ll need to supply your own dictionary.
+This repository is code-only. I’ve excluded the 470k+ and 500k+ dictionaries, as well as the full version of trap_endings.txt to prevent abuse. You’ll need to supply your own dictionary.
+
 ---
 
 ## Features
