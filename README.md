@@ -4,7 +4,7 @@
 
 Searches 470k words in milliseconds, picks the hardest word your opponent can follow, and types it like a human would. Built for a word game where every move starts from the last 2, 3, or 4 letters of the previous word.
 
-> **No dictionary is included.** This tool expects you to supply your own word list.  
+> ⚠️ **No dictionary is included.** This tool expects you to supply your own word list.  
 > See [Usage](#usage) for the expected format.
 > 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
