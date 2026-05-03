@@ -2,7 +2,7 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-Automate a word game with smart word selection, trap ending detection, and human-like typing.
+Searches 470k words in milliseconds, picks the hardest word your opponent can follow, and types it like a human would. Built for a word game where every move starts from the last 2, 3, or 4 letters of the previous word.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -113,7 +113,8 @@ ctypes        # built-in
 
 3. **Set Game Strategy**
    - **Trap Words** go for words your opponent will struggle to follow
-   - **Short Words** play it safe
+   - **Long Words** go for the longest word available
+   - **Short Words** play it safe with shorter words
    - Pick a fallback for when your main strategy comes up empty
 
 4. **Play**
@@ -272,7 +273,11 @@ For each candidate word, the engine checks what suffix it ends with and looks th
 "cat"         -> no match         -> score 0
 ```
 
-The word with the highest score wins. Ties go to the longer or shorter word depending on your strategy setting.
+The word with the highest trap score wins. If multiple words tie, the tiebreaker depends on your strategy:
+
+- **Trap Words** picks the highest-scoring word, tiebroken by longest
+- **Long Words** ignores trap scores entirely, just finds the longest match
+- **Short Words** ignores trap scores entirely, just finds the shortest match
 
 #### 4. Exception Filter
 
@@ -280,7 +285,7 @@ Before anything gets typed, the engine checks the exceptions set, a plain Python
 
 #### 5. Fallback
 
-If no trap word exists for the prefix, the engine falls back to your backup strategy (usually shortest word). If that's also empty, it returns None and shows an error state.
+If no word is found for the prefix under your main strategy, the engine falls back to your backup strategy. If that's also empty, it returns None and shows an error state.
 
 #### 6. Cache
 
