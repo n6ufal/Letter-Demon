@@ -11,8 +11,6 @@ Searches 470k words in milliseconds, picks the hardest word your opponent can fo
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
----
-
 ## Table of Contents
 
 - [Roadmap and Current Status](#roadmap-and-current-status)
@@ -26,8 +24,6 @@ Searches 470k words in milliseconds, picks the hardest word your opponent can fo
 - [Project Structure](#project-structure)
 - [Customization](#customization)
 
----
-
 ## Roadmap and Current Status
 
 ### Roadmap
@@ -36,8 +32,6 @@ Searches 470k words in milliseconds, picks the hardest word your opponent can fo
 
 ### Status (April 30, 2026)
 This repository is code-only. I’ve excluded the 470k+ and 500k+ dictionaries, as well as the full version of trap_endings.txt to prevent abuse. You’ll need to supply your own dictionary.
-
----
 
 ## Features
 
@@ -58,8 +52,6 @@ This repository is code-only. I’ve excluded the 470k+ and 500k+ dictionaries, 
 
 - **Fast Lookups** preload word scores when your dictionary is indexed. Searches are instant. Everything updates automatically when you change your dictionary or trap endings.
 
----
-
 ## Requirements
 
 | Requirement | Details |
@@ -74,8 +66,6 @@ tkinter       # built-in with Python
 keyboard      # pip install keyboard
 ctypes        # built-in
 ```
-
----
 
 ## Installation
 
@@ -98,8 +88,6 @@ ctypes        # built-in
    # Debugging (shows console)
    python main.py
    ```
-
----
 
 ## Usage
 
@@ -126,8 +114,6 @@ ctypes        # built-in
    - Press PLAY or Ctrl+Enter
    - The window hides, the word gets typed, the target window gets focus
    - Window comes back when it's done
-
----
 
 ### Custom Trap Endings
 
@@ -156,8 +142,6 @@ loh
 sz
 osa
 ```
-
----
 
 ### Word Exceptions
 
