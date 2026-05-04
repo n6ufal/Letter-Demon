@@ -2,7 +2,7 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-Searches 470k words in milliseconds, picks the hardest word your opponent can follow, and types it like a human would. Built for a word game where every move starts from the last 2, 3, or 4 letters of the previous word.
+A pragmatic tool that searches 470k words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for word games where every move builds from the last 2–4 letters.
 
 > ⚠️ **No dictionary is included.** This tool expects you to supply your own word list.  
 > See [Usage](#usage) for the expected format.
