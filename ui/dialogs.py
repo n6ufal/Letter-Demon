@@ -55,9 +55,6 @@ def show_about(app) -> None:
     tk.Label(f, text="Made by n6ufal with 💜", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(
         anchor="w"
     )
-    tk.Label(f, text="Discord: b6xy", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(
-        anchor="w", pady=(2, 0)
-    )
     import webbrowser
     email_label = tk.Label(
         f,
