@@ -167,8 +167,6 @@ banana
 cherry
 ```
 
----
-
 ## Configuration
 
 Settings save automatically to `settings.json`. All values are optional, defaults kick in if anything is missing:
@@ -199,8 +197,6 @@ Settings save automatically to `settings.json`. All values are optional, default
 | `jitter_enabled` | true | humanized timing on/off |
 | `jitter_intensity` | 75 | variance amount (5-100%) |
 
----
-
 ## Troubleshooting
 
 | Problem | Solution |
@@ -212,8 +208,6 @@ Settings save automatically to `settings.json`. All values are optional, default
 | Jitter slider greyed out | enable the "Jitter" checkbox first |
 
 Run `python main.py` to see errors in the console as they happen. Crash logs go to `crash.log`.
-
----
 
 ## How It Works
 
@@ -281,8 +275,6 @@ When you load a dictionary, the engine precomputes scores for every word upfront
 
 The cache clears automatically when you load a new dictionary or change your trap endings.
 
----
-
 ### Typing Simulation
 
 Keystroke delay is sampled from a log-normal distribution:
@@ -300,8 +292,6 @@ Log-normal means the distribution is right-skewed. Most keystrokes cluster aroun
 - **Jitter intensity** (default: 75%) controls variance
 - **Pre-delay** (default: 500ms) is the wait before the first keystroke
 - **Post-delay** (default: 500ms) is the wait after the last keystroke and Enter
-
----
 
 ## Project Structure
 
@@ -335,8 +325,6 @@ letter_demon_tk/
     └── file_editors.py     # file editing dialogs
 ```
 
----
-
 ## Customization
 
 Edit `ui/theme.py` to change colors:
@@ -353,8 +341,6 @@ C_DOT_RED = "#ff3333"      # stopped indicator
 ```
 
 Changes apply on next restart.
-
----
 
 ## Disclaimer
 
