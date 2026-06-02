@@ -1,9 +1,12 @@
 # app.py main window orchestration
 """Main application window — wires UI modules to engines."""
 
+import logging
 import os
 import sys
 import threading
+
+logger = logging.getLogger(__name__)
 if sys.platform == "win32":
     import winsound
 else:
@@ -53,7 +56,7 @@ class LastLetterApp:
         try:
             self.root.iconbitmap(resource_path("LastLetter.ico"))
         except Exception as e:
-            print("Icon load error:", e)
+            logger.warning("Icon load error: %s", e)
 
         self.engine = WordEngine(
             wordlist=[],
@@ -312,7 +315,7 @@ class LastLetterApp:
                 completion, pre_delay_s=pre, post_delay_s=post
             )
             if not success:
-                print(f"[WARNING] Typing failed: {message}")
+                logger.warning("Typing failed: %s", message)
                 self.root.after(
                     0,
                     lambda m=message: self.notify(

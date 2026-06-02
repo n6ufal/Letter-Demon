@@ -2,7 +2,10 @@
 
 import hashlib
 import json
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(BASE_DIR, "cache")
@@ -99,6 +102,6 @@ def load_wordlist_from_dict(dict_path: str) -> tuple[list[str], bool]:
         with open(cache_hash_path, "w") as f:
             f.write(dict_hash)
     except Exception as ex:
-        print("Warning: could not save cache:", ex)
+        logger.warning("Could not save cache: %s", ex)
 
     return wordlist, False

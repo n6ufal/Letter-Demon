@@ -14,6 +14,18 @@ _PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
+import logging
+log_dir = os.path.join(_PROJECT_ROOT, "logs")
+os.makedirs(log_dir, exist_ok=True)
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, "letter_demon.log"), mode="a", encoding="utf-8"),
+    ],
+)
+log_path = os.path.join(log_dir, "letter_demon.log")
+
 import ctypes
 
 # HiDPI — must run before any window is created
@@ -35,21 +47,15 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        # .pyw suppresses console output — write crash info to a log file
-        import traceback
-        log_path = os.path.join(_PROJECT_ROOT, "crash.log")
-        with open(log_path, "w") as f:
-            f.write(traceback.format_exc())
-        # Also show a messagebox so the user sees something
+    except Exception:
+        logging.exception("Unhandled exception at startup")
         try:
             import tkinter.messagebox as mb
             root = tk.Tk()
             root.withdraw()
             mb.showerror(
                 "Letter Demon — Startup Error",
-                f"{type(e).__name__}: {e}\n\n"
-                f"Details saved to:\n{log_path}",
+                f"An error occurred.\n\nDetails written to:\n{log_path}",
             )
         except Exception:
             pass
