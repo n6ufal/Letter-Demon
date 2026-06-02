@@ -29,6 +29,7 @@ cache/          Gitignored. Dictionary cache (.txt + .hash companion files)
 ```
 
 ## Gotchas
+- **Never touch `data/` or `dictionaries/`** — user-managed data files. Do not read, write, edit, or commit them.
 - `.gitignore` excludes `settings.json`, `dictionaries/`, `cache/`, `validator/`, `testenv/`, `logs/`, `crash.log`.
 - `main.pyw` does not show a console — logging goes to `logs/letter_demon.log`. Top-level exceptions are written there via `logging.exception()` and a `tkinter.messagebox` is shown.
 - Only dependency: `keyboard` (in `requirements.txt`). No `pyproject.toml`, `setup.py`, or `setup.cfg`.
