@@ -6,11 +6,12 @@
 
 ## Setup
 ```powershell
-pip install keyboard
+pip install -r requirements.txt
 ```
 
 ## Key facts
-- **No tests, no CI, no linter/formatter/typechecker config.** Repo is code-only; agent should not assume any test framework.
+- **Tests** live in `tests/` — run with `python -m unittest discover`. Only `core/word_engine.py` is tested (pure logic, no UI deps).
+- **No CI, no linter/formatter/typechecker config.** Repo is code-only.
 - **Windows-only.** Uses `ctypes.windll`, WinAPI (`FindWindowW`, `ShowWindow`, `SetForegroundWindow`, `CreateToolhelp32Snapshot`), and `winsound`.
 - **`keyboard` library** for keystroke simulation (`press_and_release`, `send("enter")`). Requires admin privileges on some Windows configs.
 - **Pure tkinter** — no web framework, no async runtime.
@@ -28,7 +29,8 @@ cache/          Gitignored. Dictionary cache (.txt + .hash companion files)
 ```
 
 ## Gotchas
-- `.gitignore` excludes `settings.json`, `dictionaries/`, `cache/`, `validator/`, `testenv/`, `crash.log`.
-- `main.pyw` catches top-level exceptions, writes `crash.log`, and shows a `tkinter.messagebox` — does not re-raise.
-- No `pyproject.toml`, `setup.py`, `setup.cfg`, or `requirements.txt` — the only dependency is `keyboard`.
+- `.gitignore` excludes `settings.json`, `dictionaries/`, `cache/`, `validator/`, `testenv/`, `logs/`, `crash.log`.
+- `main.pyw` does not show a console — logging goes to `logs/letter_demon.log`. Top-level exceptions are written there via `logging.exception()` and a `tkinter.messagebox` is shown.
+- Only dependency: `keyboard` (in `requirements.txt`). No `pyproject.toml`, `setup.py`, or `setup.cfg`.
 - `settings.json` is auto-created with defaults on first run.
+- `.gitattributes` (`* text=auto`) normalizes line endings — commit will show CRLF warnings until it's in effect.

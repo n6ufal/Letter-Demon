@@ -1,8 +1,11 @@
 """Settings persistence — load/save settings.json."""
 
 import json
+import logging
 import os
 import sys
+
+logger = logging.getLogger(__name__)
 
 
 def get_project_root() -> str:
@@ -33,4 +36,4 @@ def save_settings(data: dict) -> None:
         with open(SETTINGS_FILE, "w") as f:
             json.dump(data, f, indent=2)
     except Exception as e:
-        print("Failed to save settings:", e)
+        logger.warning("Failed to save settings: %s", e)

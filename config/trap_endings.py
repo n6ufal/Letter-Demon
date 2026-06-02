@@ -1,8 +1,11 @@
 """Trap endings — load/save trap_endings.txt."""
 
+import logging
 import os
 
 from .settings import get_project_root
+
+logger = logging.getLogger(__name__)
 
 TRAP_ENDINGS_FILE = os.path.join(get_project_root(), "data", "trap_endings.txt")
 
@@ -86,4 +89,4 @@ def save_trap_endings(endings: list[str]) -> None:
             for e in endings:
                 f.write(e + "\n")
     except Exception as ex:
-        print("Failed to save trap endings:", ex)
+        logger.warning("Failed to save trap endings: %s", ex)

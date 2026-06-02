@@ -1,8 +1,11 @@
 """Word exceptions — load/save exceptions.txt."""
 
+import logging
 import os
 
 from .settings import get_project_root
+
+logger = logging.getLogger(__name__)
 
 EXCEPTIONS_FILE = os.path.join(get_project_root(), "data", "exceptions.txt")
 
@@ -30,4 +33,4 @@ def save_exceptions(words: list[str]) -> None:
             for w in words:
                 f.write(w + "\n")
     except Exception as ex:
-        print("Failed to save exceptions:", ex)
+        logger.warning("Failed to save exceptions: %s", ex)
