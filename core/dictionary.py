@@ -42,16 +42,6 @@ def _compute_file_hash(file_path: str, chunk_size: int = 8192) -> str:
         return ""
 
 
-def _verify_cache_hash(cache_hash_path: str, expected_hash: str) -> bool:
-    """Verify stored cache hash matches expected hash."""
-    try:
-        with open(cache_hash_path, "r") as f:
-            stored_hash = f.read().strip()
-        return stored_hash == expected_hash and stored_hash != ""
-    except Exception:
-        return False
-
-
 def _load_dict_file(dict_path: str) -> set[str]:
     ext = os.path.splitext(dict_path)[1].lower()
     if ext == ".json":
@@ -75,19 +65,13 @@ def load_wordlist_from_dict(dict_path: str) -> tuple[list[str], bool]:
     cache_path = get_cache_path(dict_path)
     cache_hash_path = cache_path.replace('.txt', '.hash')
 
-    # OPTIMIZATION: Check the fast, free OS file-stamp first.
-    # If the cache is older than the dictionary, skip the heavy SHA256 hash entirely.
     if _cache_is_valid(cache_path, dict_path) and os.path.exists(cache_hash_path):
-        dict_hash = _compute_file_hash(dict_path)
-
-        if _verify_cache_hash(cache_hash_path, dict_hash):
-            try:
-                # SECURITY FIX: Safely read from a plain text file
-                with open(cache_path, "r", encoding="utf-8") as f:
-                    wordlist = f.read().splitlines()
-                return wordlist, True
-            except Exception:
-                pass  # Fall through to rebuild cache if reading fails
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                wordlist = f.read().splitlines()
+            return wordlist, True
+        except Exception:
+            pass
 
     # If no cache exists or is outdated, read from the raw dictionary file
     words_set = _load_dict_file(dict_path)
