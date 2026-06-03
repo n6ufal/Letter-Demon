@@ -21,7 +21,6 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
 - [How It Works](#how-it-works)
-- [Project Structure](#project-structure)
 - [Customization](#customization)
 
 ## Roadmap and Current Status
@@ -54,66 +53,29 @@ This repository is code-only. I’ve excluded the 470k+ and 500k+ dictionaries, 
 
 ## Requirements
 
-| Requirement | Details |
-|-------------|---------|
-| **OS** | Windows only |
-| **Python** | 3.10 or higher |
-
-### Dependencies
-
-```python
-tkinter       # built-in with Python
-keyboard      # pip install keyboard
-ctypes        # built-in
-```
+Windows, Python 3.10+, `keyboard` library (`pip install -r requirements.txt`).
 
 ## Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/n6ufal/Letter-Demon.git
-   cd letter-demon
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install keyboard
-   ```
-
-3. **Run:**
-   ```bash
-   # Normal use (no console)
-   python main.pyw
-
-   # Debugging (shows console)
-   python main.py
-   ```
+```bash
+git clone https://github.com/n6ufal/Letter-Demon.git
+cd letter-demon
+pip install -r requirements.txt
+python main.pyw       # normal use (no console)
+python main.py        # debug (shows console)
+```
 
 ## Usage
 
 ### Quick Start
 
-1. **Load a Dictionary**
-   - Click Advanced > Load Dictionary
-   - Pick a `.json` or `.txt` word file
-   - Wait for indexing (5-30 seconds depending on size)
-
+1. **Load a Dictionary** — Advanced > Load Dictionary, pick a `.json` or `.txt` file. Indexing takes 5-30s.
 2. **Configure Typing**
    - Set typing speed (default: 170ms per character)
    - Toggle humanized jitter (default: on, 75%)
    - Adjust pre/post delays (default: 500ms each)
-
-3. **Set Game Strategy**
-   - **Trap Words** go for words your opponent will struggle to follow
-   - **Long Words** go for the longest word available
-   - **Short Words** play it safe with shorter words
-   - Pick a fallback for when your main strategy comes up empty
-
-4. **Play**
-   - Type starting letters into the field
-   - Press PLAY or Ctrl+Enter
-   - The window hides, the word gets typed, the target window gets focus
-   - Window comes back when it's done
+3. **Set Strategy** — Trap Words (hard for opponent), Long Words, or Short Words. Pick a fallback.
+4. **Play** — type starting letters, press Play or Ctrl+Enter. Window hides, word gets typed.
 
 ### Custom Trap Endings
 
@@ -169,22 +131,7 @@ cherry
 
 ## Configuration
 
-Settings save automatically to `settings.json`. All values are optional, defaults kick in if anything is missing:
-
-```json
-{
-  "dict_path": "path/to/dictionary.json",
-  "speed": 170,
-  "mode": "trap_words",
-  "fallback": "short_words",
-  "pre_delay": 500,
-  "post_delay": 500,
-  "jitter_enabled": true,
-  "jitter_intensity": 75,
-  "win_x": 100,
-  "win_y": 100
-}
-```
+Settings save automatically to `settings.json`:
 
 | Key | Default | Description |
 |-----|---------|-------------|
@@ -199,15 +146,10 @@ Settings save automatically to `settings.json`. All values are optional, default
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|---------|
-| "Game: off" indicator | make sure the game window is open before hitting Play |
-| Dictionary won't load | check the file exists and is valid JSON or TXT |
-| Typing fails silently | check `crash.log` in the project folder |
-| Words not matching prefix | matching is case-insensitive, double-check what you typed |
-| Jitter slider greyed out | enable the "Jitter" checkbox first |
-
-Run `python main.py` to see errors in the console as they happen. Crash logs go to `crash.log`.
+- **"Game: off" indicator** — open the game window before hitting Play
+- **Dictionary won't load** — check the file exists and is valid JSON or TXT
+- **Typing fails** — run `python main.py` to see errors, or check `logs/letter_demon.log`
+- **Jitter slider greyed out** — enable the "Jitter" checkbox first
 
 ## How It Works
 
@@ -293,54 +235,9 @@ Log-normal means the distribution is right-skewed. Most keystrokes cluster aroun
 - **Pre-delay** (default: 500ms) is the wait before the first keystroke
 - **Post-delay** (default: 500ms) is the wait after the last keystroke and Enter
 
-## Project Structure
-
-```
-letter_demon_tk/
-├── main.py                 # debug entry point (shows console)
-├── main.pyw                # release entry point (hidden console)
-├── settings.json           # user configuration
-│
-├── core/
-│   ├── dictionary.py       # word list loading & caching
-│   └── word_engine.py      # scoring, bisect search & selection
-│
-├── config/
-│   ├── settings.py         # settings persistence
-│   ├── trap_endings.py     # trap ending management
-│   └── exceptions.py       # exception word management
-│
-├── system/
-│   ├── window.py           # target window detection
-│   └── typer.py            # log-normal keystroke simulation
-│
-└── ui/
-    ├── app.py              # main application class
-    ├── dialogs.py          # advanced window & dialogs
-    ├── main_layout.py      # UI widget tree
-    ├── theme.py            # colors & typography
-    ├── modes.py            # game mode definitions
-    ├── widgets.py          # custom widget builders
-    ├── window_utils.py     # window positioning
-    └── file_editors.py     # file editing dialogs
-```
-
 ## Customization
 
-Edit `ui/theme.py` to change colors:
-
-```python
-C_BG = "#1a1a1a"           # main background
-C_BG_PANEL = "#2a2a2a"     # panel background
-C_TEXT = "#e0e0e0"         # primary text
-C_MUTED = "#808080"        # secondary/disabled text
-C_PLAY_BG = "#00d084"      # play button (green)
-C_PLAY_FG = "#1a1a1a"      # play button text
-C_DOT_GREEN = "#00d084"    # running indicator
-C_DOT_RED = "#ff3333"      # stopped indicator
-```
-
-Changes apply on next restart.
+Edit `ui/theme.py` to change colors. Restart to apply.
 
 ## Disclaimer
 
