@@ -1,34 +1,35 @@
 """Mode / fallback labels — shared by main layout and settings persistence."""
 
-MODE_DISPLAY = ["Trap", "Random", "Short", "Long"]
-MODE_INTERNAL = ["Trap Words", "Random Words", "Short Words", "Long Words"]
-FALLBACK_DISPLAY = ["Short", "Random", "Long"]
-FALLBACK_INTERNAL = ["Short Words", "Random Words", "Long Words"]
+_MODE_TO_INTERNAL = {
+    "Trap": "Trap Words",
+    "Random": "Random Words",
+    "Short": "Short Words",
+    "Long": "Long Words",
+}
+_MODE_TO_DISPLAY = {v: k for k, v in _MODE_TO_INTERNAL.items()}
+
+_FALLBACK_TO_INTERNAL = {
+    "Short": "Short Words",
+    "Random": "Random Words",
+    "Long": "Long Words",
+}
+_FALLBACK_TO_DISPLAY = {v: k for k, v in _FALLBACK_TO_INTERNAL.items()}
+
+MODE_DISPLAY = tuple(_MODE_TO_INTERNAL.keys())
+FALLBACK_DISPLAY = tuple(_FALLBACK_TO_INTERNAL.keys())
 
 
 def to_display_mode(internal: str) -> str:
-    for d, i in zip(MODE_DISPLAY, MODE_INTERNAL):
-        if i == internal:
-            return d
-    return MODE_DISPLAY[0]
+    return _MODE_TO_DISPLAY.get(internal, "Trap")
 
 
 def to_internal_mode(display: str) -> str:
-    for d, i in zip(MODE_DISPLAY, MODE_INTERNAL):
-        if d == display:
-            return i
-    return MODE_INTERNAL[0]
+    return _MODE_TO_INTERNAL.get(display, "Trap Words")
 
 
 def to_display_fallback(internal: str) -> str:
-    for d, i in zip(FALLBACK_DISPLAY, FALLBACK_INTERNAL):
-        if i == internal:
-            return d
-    return FALLBACK_DISPLAY[0]
+    return _FALLBACK_TO_DISPLAY.get(internal, "Short")
 
 
 def to_internal_fallback(display: str) -> str:
-    for d, i in zip(FALLBACK_DISPLAY, FALLBACK_INTERNAL):
-        if d == display:
-            return i
-    return FALLBACK_INTERNAL[0]
+    return _FALLBACK_TO_INTERNAL.get(display, "Short Words")
