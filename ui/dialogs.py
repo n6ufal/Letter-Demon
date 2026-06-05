@@ -70,6 +70,20 @@ def show_about(app) -> None:
         lambda e: webbrowser.open("mailto:boxcarr@proton.me")
     )
 
+    gh_label = tk.Label(
+        f,
+        text="GitHub: n6ufal/Letter-Demon",
+        font=FONT_MAIN,
+        bg=C_BG,
+        fg=C_TEXT,
+        cursor="hand2",
+    )
+    gh_label.pack(anchor="w", pady=(2, 0))
+    gh_label.bind(
+        "<Button-1>",
+        lambda e: webbrowser.open("https://github.com/n6ufal/Letter-Demon"),
+    )
+
     center_window(win)
 
 
