@@ -74,6 +74,7 @@ class LastLetterApp:
         self._dict_path = settings.get("dict_path", None)
 
         self.prefix_var = tk.StringVar()
+        self._validate_prefix_cmd = root.register(lambda v: v == "" or v.isalpha())
         saved_mode = settings.get("mode", "Trap Words")
         saved_fallback = settings.get("fallback", "Short Words")
         self.mode_var = tk.StringVar(value=modes.to_display_mode(saved_mode))

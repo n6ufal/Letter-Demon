@@ -5,12 +5,12 @@ import tkinter as tk
 from .modes import FALLBACK_DISPLAY, MODE_DISPLAY
 from .theme import (
     C_BG,
-    C_BG_PANEL,
     C_ENTRY_BD,
     C_ENTRY_BG,
     C_ENTRY_FOCUS,
     C_MUTED,
     C_DOT_RED,
+    C_PLAY_FG,
     C_TEXT,
     FONT_MAIN,
     FONT_MAIN_BOLD,
@@ -51,13 +51,17 @@ def build_main_layout(app, settings: dict) -> None:
         bg=C_ENTRY_BG,
         fg=C_TEXT,
         insertbackground=C_TEXT,
+        selectbackground=C_ENTRY_FOCUS,
+        selectforeground=C_PLAY_FG,
         relief="solid",
         bd=1,
         highlightthickness=1,
         highlightbackground=C_ENTRY_BD,
         highlightcolor=C_ENTRY_FOCUS,
+        validate="key",
+        validatecommand=(app._validate_prefix_cmd, "%P"),
     )
-    app.entry.grid(row=1, column=0, columnspan=4, sticky="we", ipady=6, pady=(0, 6))
+    app.entry.grid(row=1, column=0, columnspan=4, sticky="we", ipady=6, ipadx=8, pady=(0, 6))
     app.entry.focus_set()
 
     app.entry.bind(
@@ -80,7 +84,6 @@ def build_main_layout(app, settings: dict) -> None:
         fg=C_BG,
         padx=8,
         pady=5,
-        wraplength=300,
     )
     app.feedback_label.pack(fill="x")
     app.feedback_frame.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 4))
@@ -119,11 +122,11 @@ def build_main_layout(app, settings: dict) -> None:
         pady=(4, 8),
     )
 
-    panel = tk.Frame(f, bg=C_BG_PANEL, padx=8, pady=6)
+    panel = tk.Frame(f, bg=C_BG)
     panel.grid(row=5, column=0, columnspan=4, sticky="we", pady=(0, 6))
     panel.grid_columnconfigure(0, weight=1)
 
-    speed_frame = tk.Frame(panel, bg=C_BG_PANEL)
+    speed_frame = tk.Frame(panel, bg=C_BG)
     speed_frame.grid(row=0, column=0, sticky="we")
     speed_frame.columnconfigure(1, weight=1)
 
@@ -132,7 +135,7 @@ def build_main_layout(app, settings: dict) -> None:
         text="Speed:",
         anchor="e",
         font=FONT_MAIN,
-        bg=C_BG_PANEL,
+        bg=C_BG,
         fg=C_TEXT,
         width=12,
     ).grid(row=0, column=0, sticky="e", padx=(0, 8))
@@ -151,7 +154,7 @@ def build_main_layout(app, settings: dict) -> None:
     app.speed_slider.grid(row=0, column=1, sticky="ew", pady=(0, 2))
     app.speed_val_label.grid(row=0, column=2, sticky="e", padx=(8, 0))
 
-    humanizer_frame = tk.Frame(panel, bg=C_BG_PANEL)
+    humanizer_frame = tk.Frame(panel, bg=C_BG)
     humanizer_frame.grid(row=1, column=0, sticky="we", pady=(4, 0))
     humanizer_frame.columnconfigure(1, weight=1)
 
@@ -160,7 +163,7 @@ def build_main_layout(app, settings: dict) -> None:
         text="Humanizer:",
         anchor="e",
         font=FONT_MAIN,
-        bg=C_BG_PANEL,
+        bg=C_BG,
         fg=C_TEXT,
         width=12,
     )
