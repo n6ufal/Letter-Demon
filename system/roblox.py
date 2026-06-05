@@ -62,27 +62,4 @@ def focus_roblox_window() -> None:
         pass
 
 
-class RobloxMonitor:
-    """Polls for the Roblox process and focuses its window."""
 
-    def __init__(self, poll_interval_ms: int = 3000):
-        self._poll_interval = poll_interval_ms
-        self._running = False
-        self._on_change = None  # callback(bool is_running)
-
-    def start(self, on_change):
-        """Begin polling. *on_change* is called with True/False on each tick."""
-        self._on_change = on_change
-        self._running = True
-        self._poll()
-
-    def stop(self):
-        self._running = False
-
-    def _poll(self):
-        if not self._running:
-            return
-        running = is_roblox_running()
-        if self._on_change:
-            self._on_change(running)
-        # Reschedule via the caller — the UI layer owns the after() call

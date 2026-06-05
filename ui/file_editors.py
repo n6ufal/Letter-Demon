@@ -184,9 +184,10 @@ def save_editor_content(app, win, text_widget, file_path, reload_callback, statu
             if content and not content.endswith("\n"):
                 f_out.write("\n")
         reload_callback()
-        if "trap" in file_path:
+        basename = os.path.basename(file_path).lower()
+        if basename == "trap_endings.txt":
             count = len(app.engine.trap_endings)
-        else:
+        elif basename == "exceptions.txt":
             count = len(app.engine.word_exceptions)
         status_var.set(f"{count} loaded")
         win.destroy()

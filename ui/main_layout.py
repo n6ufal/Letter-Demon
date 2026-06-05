@@ -95,7 +95,7 @@ def build_main_layout(app, settings: dict) -> None:
     tk.Label(
         info_bar,
         textvariable=app.status_var,
-        fg=C_MUTED,
+        fg=C_TEXT,
         anchor="w",
         font=FONT_MAIN,
         bg=C_BG,

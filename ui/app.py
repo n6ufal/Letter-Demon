@@ -18,8 +18,8 @@ from tkinter.filedialog import askopenfilename
 from core.dictionary import load_wordlist_from_dict
 from core.word_engine import WordEngine
 from config.settings import load_settings, save_settings
-from config.trap_endings import load_trap_endings, save_trap_endings
-from config.exceptions import load_exceptions, save_exceptions
+from config.trap_endings import load_trap_endings, save_trap_endings, TRAP_ENDINGS_FILE
+from config.exceptions import load_exceptions, save_exceptions, EXCEPTIONS_FILE
 from system.roblox import is_roblox_running, focus_roblox_window
 from system.typer import Typer
 
@@ -29,6 +29,8 @@ from . import modes
 from .main_layout import build_main_layout
 from .theme import (
     C_BG,
+    C_DOT_GREEN,
+    C_DOT_RED,
     C_FEEDBACK_ERR_BG,
     C_FEEDBACK_ERR_FG,
     C_FEEDBACK_WARN_BG,
@@ -53,8 +55,8 @@ class LastLetterApp:
 
         try:
             self.root.iconbitmap(resource_path("LastLetter.ico"))
-        except Exception as e:
-            logger.warning("Icon load error: %s", e)
+        except Exception:
+            pass
 
         self.engine = WordEngine(
             wordlist=[],
@@ -186,33 +188,10 @@ class LastLetterApp:
             self.root.after(0, _on_load_fail)
 
     def reload_trap_endings(self) -> None:
-        from config.trap_endings import TRAP_ENDINGS_FILE, DEFAULT_TRAP_ENDINGS
-
-        try:
-            with open(TRAP_ENDINGS_FILE, "r") as f:
-                endings = [
-                    line.strip().lower()
-                    for line in f
-                    if line.strip() and not line.startswith("#")
-                ]
-            if endings:
-                endings = list(dict.fromkeys(endings))
-                self.engine.set_trap_endings(endings)
-                if hasattr(self, "trap_status_var"):
-                    self.trap_status_var.set(f"{len(endings)} loaded")
-            else:
-                if hasattr(self, "trap_status_var"):
-                    self.trap_status_var.set("File is empty — using defaults")
-        except FileNotFoundError:
-            save_trap_endings(DEFAULT_TRAP_ENDINGS)
-            self.engine.set_trap_endings(DEFAULT_TRAP_ENDINGS)
-            if hasattr(self, "trap_status_var"):
-                self.trap_status_var.set(
-                    f"Not found — created {len(DEFAULT_TRAP_ENDINGS)} defaults"
-                )
-        except Exception as ex:
-            if hasattr(self, "trap_status_var"):
-                self.trap_status_var.set(f"Reload failed: {ex}")
+        endings = load_trap_endings()
+        self.engine.set_trap_endings(endings)
+        if hasattr(self, "trap_status_var"):
+            self.trap_status_var.set(f"{len(endings)} loaded")
 
     def reload_exceptions(self) -> None:
         exceptions = load_exceptions()
@@ -221,8 +200,6 @@ class LastLetterApp:
             self.exceptions_status_var.set(f"{len(exceptions)} loaded")
 
     def edit_trap_endings(self):
-        from config.trap_endings import TRAP_ENDINGS_FILE
-
         file_editors.open_file_editor(
             self,
             title="Edit Trap Endings",
@@ -233,8 +210,6 @@ class LastLetterApp:
         )
 
     def edit_exceptions(self):
-        from config.exceptions import EXCEPTIONS_FILE
-
         file_editors.open_file_editor(
             self,
             title="Edit Exceptions",
@@ -250,8 +225,6 @@ class LastLetterApp:
         self.root.after(3000, self._poll_roblox)
 
     def _update_roblox_indicator(self, running: bool) -> None:
-        from .theme import C_DOT_GREEN, C_DOT_RED
-
         color = C_DOT_GREEN if running else C_DOT_RED
         symbol = "●" if running else "○"
         text = f"{symbol} Roblox: {'on' if running else 'off'}"
