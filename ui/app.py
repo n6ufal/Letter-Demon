@@ -47,7 +47,7 @@ def resource_path(relative_path: str) -> str:
 class LastLetterApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title("Letter Demon")
+        self.root.title("😈")
         self.root.resizable(False, False)
         self.root.attributes("-topmost", True)
 
@@ -371,6 +371,8 @@ class LastLetterApp:
         self.feedback_frame.config(bg=bg)
         self.feedback_label.config(text=message, bg=bg, fg=fg)
         self.feedback_frame.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 4))
+        self.feedback_frame.update_idletasks()
+        self.feedback_label.config(wraplength=self.feedback_frame.winfo_width() - 16)
 
         if beep and winsound:
             winsound.Beep(800, 100)
