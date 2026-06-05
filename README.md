@@ -19,6 +19,7 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
 - [How It Works](#how-it-works)
 - [Customization](#customization)
@@ -64,6 +65,18 @@ pip install -r requirements.txt
 python main.pyw       # normal use (no console)
 python main.py        # debug (shows console)
 ```
+
+## Testing
+
+Run the full test suite (no external dependencies beyond Python stdlib + `keyboard`):
+
+```bash
+python -m unittest discover -v
+```
+
+73 tests covering the word engine, dictionary caching, settings persistence, trap ending/exceptions file handling, mode mapping, and typing simulation timing logic.
+
+Word engine and dictionary tests use synthetic word lists — no real dictionary file needed. Config tests use temporary directories so your data files are never touched. Typer tests mock the `keyboard` library to avoid actual keystroke injection.
 
 ## Usage
 
