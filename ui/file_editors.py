@@ -6,6 +6,7 @@ from tkinter.scrolledtext import ScrolledText
 from .theme import (
     C_BG,
     C_ENTRY_BG,
+    C_MUTED,
     C_PLAY_ACT,
     C_PLAY_BG,
     C_PLAY_FG,
@@ -46,6 +47,94 @@ def open_file_editor(app, title, file_path, reload_callback, status_var, default
     except FileNotFoundError:
         content = default_content
     text_widget.insert("1.0", content)
+    text_widget.tag_configure("search", background="yellow", foreground="black")
+
+    search_var = tk.StringVar()
+    search_frame = tk.Frame(frame, bg=C_BG)
+
+    tk.Label(search_frame, text="Find:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(
+        side="left", padx=(0, 4)
+    )
+    search_entry = tk.Entry(
+        search_frame, textvariable=search_var, font=FONT_MAIN, width=25,
+        bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
+        relief="solid", bd=1,
+    )
+    search_entry.pack(side="left", padx=(0, 6))
+
+    match_label = tk.Label(search_frame, text="", font=FONT_MAIN, bg=C_BG, fg=C_MUTED)
+    match_label.pack(side="left")
+
+    search_matches: list[str] = []
+    search_index = 0
+
+    def _go_prev():
+        nonlocal search_index
+        if not search_matches:
+            return
+        search_index = (search_index - 1) % len(search_matches)
+        text_widget.see(search_matches[search_index])
+        match_label.config(text=f"{search_index + 1}/{len(search_matches)}")
+
+    def _go_next():
+        nonlocal search_index
+        if not search_matches:
+            return
+        search_index = (search_index + 1) % len(search_matches)
+        text_widget.see(search_matches[search_index])
+        match_label.config(text=f"{search_index + 1}/{len(search_matches)}")
+
+    prev_btn = tk.Button(
+        search_frame, text="◀", command=_go_prev,
+        font=FONT_MAIN, relief="flat", bd=0, padx=4, pady=1, cursor="hand2",
+        bg=C_BG, fg=C_TEXT, activebackground=C_ENTRY_BG, state=tk.DISABLED,
+    )
+    prev_btn.pack(side="left", padx=(2, 0))
+
+    next_btn = tk.Button(
+        search_frame, text="▶", command=_go_next,
+        font=FONT_MAIN, relief="flat", bd=0, padx=4, pady=1, cursor="hand2",
+        bg=C_BG, fg=C_TEXT, activebackground=C_ENTRY_BG, state=tk.DISABLED,
+    )
+    next_btn.pack(side="left")
+
+    search_frame.pack(fill="x", pady=(0, 6))
+
+    def _on_search(*args):
+        nonlocal search_matches, search_index
+        text_widget.tag_remove("search", "1.0", tk.END)
+        query = search_var.get()
+        if not query:
+            match_label.config(text="")
+            prev_btn.config(state=tk.DISABLED)
+            next_btn.config(state=tk.DISABLED)
+            search_matches = []
+            return
+
+        search_matches = []
+        pos = "1.0"
+        query_lower = query.lower()
+        while True:
+            pos = text_widget.search(query_lower, pos, tk.END, nocase=True)
+            if not pos:
+                break
+            end = f"{pos}+{len(query)}c"
+            text_widget.tag_add("search", pos, end)
+            search_matches.append(pos)
+            pos = end
+
+        if search_matches:
+            search_index = 0
+            text_widget.see(search_matches[0])
+            match_label.config(text=f"1/{len(search_matches)}")
+            prev_btn.config(state=tk.NORMAL)
+            next_btn.config(state=tk.NORMAL)
+        else:
+            match_label.config(text="0 matches")
+            prev_btn.config(state=tk.DISABLED)
+            next_btn.config(state=tk.DISABLED)
+
+    search_var.trace_add("write", _on_search)
 
     def save_and_close(event=None):
         save_editor_content(
@@ -79,7 +168,7 @@ def open_file_editor(app, title, file_path, reload_callback, status_var, default
     )
     save_btn.pack(side="right")
 
-    center_window(win)
+    center_window(win, app.root)
     text_widget.focus_set()
 
 

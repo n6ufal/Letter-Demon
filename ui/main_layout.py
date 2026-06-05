@@ -155,7 +155,7 @@ def build_main_layout(app, settings: dict) -> None:
     humanizer_frame.grid(row=1, column=0, sticky="we", pady=(4, 0))
     humanizer_frame.columnconfigure(1, weight=1)
 
-    tk.Label(
+    app.humanizer_label = tk.Label(
         humanizer_frame,
         text="Humanizer:",
         anchor="e",
@@ -163,13 +163,14 @@ def build_main_layout(app, settings: dict) -> None:
         bg=C_BG_PANEL,
         fg=C_TEXT,
         width=12,
-    ).grid(row=0, column=0, sticky="e", padx=(0, 8))
+    )
+    app.humanizer_label.grid(row=0, column=0, sticky="e", padx=(0, 8))
 
     app.humanizer_slider, app.humanizer_val_label = make_slider(
         humanizer_frame,
         "Humanizer",
         app.jitter_intensity,
-        from_=5,
+        from_=0,
         to=100,
         resolution=5,
         length=160,
@@ -225,7 +226,7 @@ def build_main_layout(app, settings: dict) -> None:
     )
     make_secondary_button(
         btn_row,
-        "Clear",
+        "Clear Used",
         app.on_clear_cache,
         row=0,
         column=1,

@@ -75,3 +75,6 @@ dist/
 .coverage
 htmlcov/
 build/
+
+# Homework / scratch notes
+homework

@@ -11,7 +11,6 @@ from .theme import (
     C_PLAY_FG,
     C_SEP,
     C_TEXT,
-    FONT_BTN,
     FONT_H1,
     FONT_MAIN,
     FONT_MAIN_BOLD,
@@ -85,7 +84,7 @@ def show_about(app) -> None:
         lambda e: webbrowser.open("https://github.com/n6ufal/Letter-Demon"),
     )
 
-    center_window(win)
+    center_window(win, app.root)
 
 
 def show_advanced(app) -> None:
@@ -210,34 +209,9 @@ def show_advanced(app) -> None:
     make_secondary_button(btn_row_exc, "Edit", app.edit_exceptions).pack(side="left")
     row += 1
 
-    make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
-    row += 1
-
-    tk.Label(f, text="Humanizer", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT).grid(
-        row=row, column=0, columnspan=2, sticky="w", pady=(0, 4)
-    )
-    row += 1
-
-    app.humanizer_check = tk.Checkbutton(
-        f,
-        text="Enable Humanizer",
-        variable=app.jitter_enabled,
-        command=app._on_jitter_toggle,
-        font=FONT_BTN,
-        bg=C_BG,
-        fg=C_TEXT,
-        activebackground=C_BG,
-        activeforeground=C_TEXT,
-        selectcolor=C_ENTRY_BG,
-        padx=4,
-        pady=6,
-    )
-    app.humanizer_check.grid(row=row, column=0, columnspan=2, sticky="w")
-    row += 1
-
     f.grid_columnconfigure(0, weight=1)
     f.grid_columnconfigure(1, weight=1)
-    center_window(win)
+    center_window(win, app.root)
 
     def _on_adv_close():
         app._advanced_window = None
@@ -300,7 +274,7 @@ def show_used_words(app) -> None:
 
         make_secondary_button(outer, "Close", lambda: close_used_words(app)).pack()
 
-        center_window(app.used_words_window)
+        center_window(app.used_words_window, app.root)
         app.used_words_window.protocol(
             "WM_DELETE_WINDOW", lambda: close_used_words(app)
         )

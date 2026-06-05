@@ -33,8 +33,6 @@ from .theme import (
     C_FEEDBACK_ERR_FG,
     C_FEEDBACK_WARN_BG,
     C_FEEDBACK_WARN_FG,
-    C_MUTED,
-    C_TEXT,
 )
 
 
@@ -80,7 +78,6 @@ class LastLetterApp:
         saved_fallback = settings.get("fallback", "Short Words")
         self.mode_var = tk.StringVar(value=modes.to_display_mode(saved_mode))
         self.fallback_var = tk.StringVar(value=modes.to_display_fallback(saved_fallback))
-        self.jitter_enabled = tk.BooleanVar(value=settings.get("jitter_enabled", True))
         self.jitter_intensity = tk.IntVar(value=settings.get("jitter_intensity", 75))
         self.pre_delay_var = tk.IntVar(value=settings.get("pre_delay", 500))
         self.post_delay_var = tk.IntVar(value=settings.get("post_delay", 500))
@@ -94,7 +91,6 @@ class LastLetterApp:
         if "win_x" in settings and "win_y" in settings:
             self.root.geometry(f"+{settings['win_x']}+{settings['win_y']}")
 
-        self.root.after(50, self._on_jitter_toggle)
         self.root.bind("<FocusIn>", self._on_root_focus_in)
         self.root.protocol("WM_DELETE_WINDOW", self.on_quit)
         self.entry.bind("<Control-Return>", self.on_ctrl_enter)
@@ -102,6 +98,8 @@ class LastLetterApp:
         self._poll_roblox()
 
         if self._dict_path and os.path.exists(self._dict_path):
+            if hasattr(self, "play_btn") and self.play_btn.winfo_exists():
+                self.play_btn.config(text="Loading...", state=tk.DISABLED)
             threading.Thread(
                 target=self._load_wordlist_thread,
                 args=(self._dict_path,),
@@ -110,6 +108,7 @@ class LastLetterApp:
         else:
             self._dict_path = None
             self.status_var.set("No dictionary loaded")
+            self._update_start_button()
 
     def _on_root_focus_in(self, event: tk.Event) -> None:
         self.root.after_idle(self._maybe_focus_prefix_entry)
@@ -133,6 +132,14 @@ class LastLetterApp:
         except tk.TclError:
             pass
 
+    def _update_start_button(self) -> None:
+        if not hasattr(self, "play_btn") or not self.play_btn.winfo_exists():
+            return
+        if not self.engine.has_wordlist():
+            self.play_btn.config(text="Load a dictionary", state=tk.DISABLED)
+        else:
+            self.play_btn.config(text="Start (Ctrl+Enter)", state=tk.NORMAL)
+
     def show_advanced(self) -> None:
         dialogs.show_advanced(self)
 
@@ -154,6 +161,8 @@ class LastLetterApp:
         if not path:
             return
         self._dict_path = path
+        if hasattr(self, "play_btn") and self.play_btn.winfo_exists():
+            self.play_btn.config(text="Loading...", state=tk.DISABLED)
         if hasattr(self, "dict_label_var"):
             self.dict_label_var.set(self._dict_display_name())
         threading.Thread(
@@ -166,10 +175,12 @@ class LastLetterApp:
             self.engine.set_wordlist(wordlist)
             word_count = len(wordlist)
             self.root.after(0, lambda: self.status_var.set(f"{word_count:,} words"))
+            self.root.after(0, self._update_start_button)
         except Exception:
             def _on_load_fail() -> None:
                 self.notify("error", "Could not load dictionary.", duration_ms=6000)
                 self.status_var.set("No dictionary loaded")
+                self._update_start_button()
 
             self.root.after(0, _on_load_fail)
 
@@ -293,7 +304,7 @@ class LastLetterApp:
             self._update_roblox_indicator(False)
 
         self.typer.base_speed_ms = self.speed_var.get()
-        self.typer.jitter_on = self.jitter_enabled.get()
+        self.typer.jitter_on = self.jitter_intensity.get() > 0
         self.typer.jitter_pct = self.jitter_intensity.get()
 
         pre = max(0.1, self.pre_delay_var.get() / 1000.0)
@@ -362,7 +373,7 @@ class LastLetterApp:
         self.feedback_frame.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 4))
 
         if beep and winsound:
-            winsound.MessageBeep(winsound.MB_ICONHAND)
+            winsound.Beep(800, 100)
 
         self._feedback_after_id = self.root.after(
             duration_ms, self._clear_feedback_strip
@@ -376,14 +387,6 @@ class LastLetterApp:
             self.feedback_frame.grid_remove()
         except tk.TclError:
             pass
-
-    def _on_jitter_toggle(self) -> None:
-        state = tk.NORMAL if self.jitter_enabled.get() else tk.DISABLED
-        enabled = self.jitter_enabled.get()
-
-        if hasattr(self, "humanizer_slider") and self.humanizer_slider.winfo_exists():
-            self.humanizer_slider.config(state=state)
-            self.humanizer_val_label.config(fg=C_TEXT if enabled else C_MUTED)
 
     def show_about(self) -> None:
         dialogs.show_about(self)
@@ -399,7 +402,6 @@ class LastLetterApp:
             "fallback": modes.to_internal_fallback(self.fallback_var.get()),
             "pre_delay": self.pre_delay_var.get(),
             "post_delay": self.post_delay_var.get(),
-            "jitter_enabled": self.jitter_enabled.get(),
             "jitter_intensity": self.jitter_intensity.get(),
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
