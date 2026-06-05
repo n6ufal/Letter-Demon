@@ -13,7 +13,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from core.dictionary import (
     get_cache_path,
     _cache_is_valid,
-    _compute_file_hash,
     _load_dict_file,
     load_wordlist_from_dict,
     CACHE_DIR,
@@ -31,33 +30,6 @@ class GetCachePathTest(unittest.TestCase):
         p1 = get_cache_path(r"C:\dicts\words.txt")
         p2 = get_cache_path(r"C:\dicts\other.txt")
         self.assertNotEqual(p1, p2)
-
-
-class ComputeFileHashTest(unittest.TestCase):
-    def test_known_hash(self):
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
-            f.write("hello world")
-            f.flush()
-            tmp = f.name
-        try:
-            result = _compute_file_hash(tmp)
-            expected = hashlib.sha256(b"hello world").hexdigest()
-            self.assertEqual(result, expected)
-        finally:
-            os.unlink(tmp)
-
-    def test_empty_file(self):
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
-            tmp = f.name
-        try:
-            result = _compute_file_hash(tmp)
-            self.assertEqual(result, hashlib.sha256(b"").hexdigest())
-        finally:
-            os.unlink(tmp)
-
-    def test_missing_file_returns_empty(self):
-        result = _compute_file_hash(r"C:\nonexistent\file.txt")
-        self.assertEqual(result, "")
 
 
 class CacheIsValidTest(unittest.TestCase):

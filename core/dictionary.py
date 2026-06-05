@@ -14,7 +14,6 @@ CACHE_DIR = os.path.join(BASE_DIR, "cache")
 def get_cache_path(dict_path: str) -> str:
     os.makedirs(CACHE_DIR, exist_ok=True)
     path_hash = hashlib.md5(os.path.abspath(dict_path).encode()).hexdigest()[:10]
-    # SECURITY FIX: Use .txt instead of dangerous .pkl
     return os.path.join(CACHE_DIR, f"cache_{path_hash}.txt")
 
 
@@ -25,21 +24,6 @@ def _cache_is_valid(cache_path: str, dict_path: str) -> bool:
         return os.path.getmtime(cache_path) >= os.path.getmtime(dict_path)
     except Exception:
         return False
-
-
-def _compute_file_hash(file_path: str, chunk_size: int = 8192) -> str:
-    """Compute SHA256 hash of file content."""
-    sha = hashlib.sha256()
-    try:
-        with open(file_path, "rb") as f:
-            while True:
-                chunk = f.read(chunk_size)
-                if not chunk:
-                    break
-                sha.update(chunk)
-        return sha.hexdigest()
-    except Exception:
-        return ""
 
 
 def _load_dict_file(dict_path: str) -> set[str]:
@@ -63,9 +47,8 @@ def _load_dict_file(dict_path: str) -> set[str]:
 def load_wordlist_from_dict(dict_path: str) -> tuple[list[str], bool]:
     """Load and sort a word list from disk. Returns (wordlist, from_cache)."""
     cache_path = get_cache_path(dict_path)
-    cache_hash_path = cache_path.replace('.txt', '.hash')
 
-    if _cache_is_valid(cache_path, dict_path) and os.path.exists(cache_hash_path):
+    if _cache_is_valid(cache_path, dict_path):
         try:
             with open(cache_path, "r", encoding="utf-8") as f:
                 wordlist = f.read().splitlines()
@@ -73,18 +56,12 @@ def load_wordlist_from_dict(dict_path: str) -> tuple[list[str], bool]:
         except Exception:
             pass
 
-    # If no cache exists or is outdated, read from the raw dictionary file
     words_set = _load_dict_file(dict_path)
     wordlist = sorted(words_set)
 
     try:
-        # SECURITY FIX: Save safely as a plain text file, separated by newlines
         with open(cache_path, "w", encoding="utf-8") as f:
             f.write("\n".join(wordlist))
-        # Only compute the hash when we actually need to save the new cache
-        dict_hash = _compute_file_hash(dict_path)
-        with open(cache_hash_path, "w") as f:
-            f.write(dict_hash)
     except Exception as ex:
         logger.warning("Could not save cache: %s", ex)
 

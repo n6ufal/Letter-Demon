@@ -107,21 +107,15 @@ class WordEngine:
                 best_score = max(s for s, _ in trap_scored)
                 top = [w for s, w in trap_scored if s == best_score]
                 return random.choice(top)
-            else:
-                return self._apply_fallback(candidates, fallback)
+            return self._pick_by_strategy(candidates, fallback)
 
-        elif mode == "Short Words":
-            return min(candidates, key=len)
-        elif mode == "Long Words":
-            return max(candidates, key=len)
-        else:
-            return random.choice(candidates)
+        return self._pick_by_strategy(candidates, mode)
 
     @staticmethod
-    def _apply_fallback(candidates: list[str], fallback: str) -> str:
-        if fallback == "Short Words":
+    def _pick_by_strategy(candidates: list[str], strategy: str) -> str:
+        if strategy == "Short Words":
             return min(candidates, key=len)
-        elif fallback == "Long Words":
+        elif strategy == "Long Words":
             return max(candidates, key=len)
         else:
             return random.choice(candidates)

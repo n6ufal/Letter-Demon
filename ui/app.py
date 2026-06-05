@@ -284,11 +284,18 @@ class LastLetterApp:
         pre = max(0.1, self.pre_delay_var.get() / 1000.0)
         post = max(0.1, self.post_delay_var.get() / 1000.0)
 
-        threading.Thread(
-            target=self._type_and_return,
-            args=(completion, pre, post),
-            daemon=True,
-        ).start()
+        try:
+            threading.Thread(
+                target=self._type_and_return,
+                args=(completion, pre, post),
+                daemon=True,
+            ).start()
+        except Exception:
+            with self._playing_lock:
+                self._is_playing = False
+            self.root.deiconify()
+            self.notify("error", "Failed to start typing thread.", duration_ms=6000)
+            logger.exception("Thread creation failed")
 
     def on_ctrl_enter(self, event):
         self.on_play_round()
