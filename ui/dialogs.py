@@ -39,7 +39,7 @@ def show_about(app) -> None:
         side="left"
     )
     tk.Label(
-        f, text=version_string(), font=FONT_MAIN, bg=C_BG, fg=C_MUTED
+        f, text=version_string, font=FONT_MAIN, bg=C_BG, fg=C_MUTED
     ).pack(anchor="w", pady=(2, 0))
 
     tk.Label(
