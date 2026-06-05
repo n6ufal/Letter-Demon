@@ -20,6 +20,7 @@ from .theme import (
 )
 from .widgets import make_secondary_button, make_separator, make_slider
 from .window_utils import center_window
+from core import version_string
 
 
 def show_about(app) -> None:
@@ -38,7 +39,7 @@ def show_about(app) -> None:
         side="left"
     )
     tk.Label(
-        f, text="v6 \u2022 April 2026", font=FONT_MAIN, bg=C_BG, fg=C_MUTED
+        f, text=version_string(), font=FONT_MAIN, bg=C_BG, fg=C_MUTED
     ).pack(anchor="w", pady=(2, 0))
 
     tk.Label(
