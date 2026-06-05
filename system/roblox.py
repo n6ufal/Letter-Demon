@@ -1,58 +1,24 @@
-"""Roblox process detection and window focus via WinAPI."""
+"""Roblox window detection and focus via WinAPI."""
 
 import ctypes
-import ctypes.wintypes
 
 
-_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-_TH32CS_SNAPPROCESS = 0x00000002
-
-# Set proper restype so INVALID_HANDLE_VALUE (-1) compares correctly
-# on both 32-bit and 64-bit Windows.
-_kernel32.CreateToolhelp32Snapshot.restype = ctypes.wintypes.HANDLE
-
-
-class _PROCESSENTRY32(ctypes.Structure):
-    _fields_ = [
-        ("dwSize",              ctypes.wintypes.DWORD),
-        ("cntUsage",            ctypes.wintypes.DWORD),
-        ("th32ProcessID",       ctypes.wintypes.DWORD),
-        ("th32DefaultHeapID",   ctypes.POINTER(ctypes.c_ulong)),
-        ("th32ModuleID",        ctypes.wintypes.DWORD),
-        ("cntThreads",          ctypes.wintypes.DWORD),
-        ("th32ParentProcessID", ctypes.wintypes.DWORD),
-        ("pcPriClassBase",      ctypes.c_long),
-        ("dwFlags",             ctypes.wintypes.DWORD),
-        ("szExeFile",           ctypes.c_char * 260),
-    ]
+def _user32() -> ctypes.WinDLL:
+    return ctypes.WinDLL("user32", use_last_error=True)
 
 
 def is_roblox_running() -> bool:
-    """Check whether RobloxPlayerBeta.exe is in the process list."""
-    INVALID = ctypes.wintypes.HANDLE(-1).value
-    snapshot = _kernel32.CreateToolhelp32Snapshot(_TH32CS_SNAPPROCESS, 0)
-    if ctypes.c_void_p(snapshot).value == INVALID:
-        return False
-    entry = _PROCESSENTRY32()
-    entry.dwSize = ctypes.sizeof(_PROCESSENTRY32)
-    found = False
+    """Check whether a Roblox window exists (via FindWindowW)."""
     try:
-        if _kernel32.Process32First(snapshot, ctypes.byref(entry)):
-            while True:
-                if entry.szExeFile == b"RobloxPlayerBeta.exe":
-                    found = True
-                    break
-                if not _kernel32.Process32Next(snapshot, ctypes.byref(entry)):
-                    break
-    finally:
-        _kernel32.CloseHandle(snapshot)
-    return found
+        return _user32().FindWindowW(None, "Roblox") != 0
+    except Exception:
+        return False
 
 
 def focus_roblox_window() -> None:
     """Bring the Roblox window to the foreground (restore if minimized)."""
     try:
-        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        user32 = _user32()
         hwnd = user32.FindWindowW(None, "Roblox")
         if hwnd:
             if user32.IsIconic(hwnd):

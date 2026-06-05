@@ -222,7 +222,7 @@ class LastLetterApp:
     def _poll_roblox(self) -> None:
         running = is_roblox_running()
         self._update_roblox_indicator(running)
-        self.root.after(3000, self._poll_roblox)
+        self.root.after(15000, self._poll_roblox)
 
     def _update_roblox_indicator(self, running: bool) -> None:
         color = C_DOT_GREEN if running else C_DOT_RED
