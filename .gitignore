@@ -76,5 +76,8 @@ dist/
 htmlcov/
 build/
 
+# Documentation
+AGENTS.md
+
 # Homework / scratch notes
 homework
