@@ -183,14 +183,14 @@ def show_advanced(app) -> None:
     row += 1
 
     app.trap_status_var = tk.StringVar(value=f"{len(app.engine.trap_endings)} loaded")
-    tk.Label(f, textvariable=app.trap_status_var, fg=C_MUTED, font=FONT_MAIN, anchor="w", bg=C_BG).grid(
+    tk.Label(f, textvariable=app.trap_status_var, fg=C_TEXT, font=FONT_MAIN, anchor="w", bg=C_BG).grid(
         row=row, column=0, sticky="nw", padx=(0, 12)
     )
     app.exceptions_status_var = tk.StringVar(
         value=f"{len(app.engine.word_exceptions)} loaded"
     )
     tk.Label(
-        f, textvariable=app.exceptions_status_var, fg=C_MUTED, font=FONT_MAIN, anchor="w", bg=C_BG
+        f, textvariable=app.exceptions_status_var, fg=C_TEXT, font=FONT_MAIN, anchor="w", bg=C_BG
     ).grid(row=row, column=1, sticky="nw")
     row += 1
 

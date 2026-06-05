@@ -7,7 +7,7 @@ import tkinter.ttk as ttk
 from .theme import (
     C_BG, C_BG_PANEL, C_TEXT, C_MUTED, C_ENTRY_BG, C_ENTRY_BD, C_ENTRY_FOCUS,
     C_PLAY_BG, C_PLAY_FG, C_PLAY_ACT, C_BTN_BG, C_BTN_FG,
-    C_SEP, C_ACCENT_LIGHT, FONT_BTN, FONT_MAIN, FONT_MONO
+    C_SEP, FONT_BTN, FONT_MAIN, FONT_MONO
 )
 
 # Keys that belong to .grid(), not to the widget constructor
@@ -61,12 +61,13 @@ def setup_ttk_styles():
     style.configure("Bg.Horizontal.TScale", background=C_BG)
 
 
-def _split_grid_kwargs(kwargs: dict) -> dict:
+def _split_grid_kwargs(kwargs: dict) -> tuple[dict, dict]:
     """Separate grid layout options from widget constructor options.
 
     Extracts standard grid keys (row, column, sticky, etc.) AND padx/pady
     when grid keys are present (padx/pady are always grid options in that
     context, whether int or tuple).
+    Returns (widget_opts, grid_opts).
     """
     grid_opts = {k: v for k, v in kwargs.items() if k in _GRID_KEYS}
     has_grid_keys = bool(grid_opts)
@@ -74,7 +75,8 @@ def _split_grid_kwargs(kwargs: dict) -> dict:
         val = kwargs.get(key)
         if isinstance(val, tuple) or has_grid_keys:
             grid_opts[key] = val
-    return grid_opts
+    widget_opts = {k: v for k, v in kwargs.items() if k not in grid_opts}
+    return widget_opts, grid_opts
 
 
 # ---------------------------------------------------------------------------
@@ -120,7 +122,7 @@ def make_slider(parent, label: str, variable, from_: int, to: int,
 
 def make_primary_button(parent, text: str, command, **grid_kwargs):
     """Dark green accent button (Play round, Save)."""
-    grid_opts = _split_grid_kwargs(grid_kwargs)
+    _, grid_opts = _split_grid_kwargs(grid_kwargs)
 
     btn = tk.Button(
         parent, text=text, command=command,
@@ -138,7 +140,7 @@ def make_primary_button(parent, text: str, command, **grid_kwargs):
 
 def make_secondary_button(parent, text: str, command, **grid_kwargs):
     """Light gray utility button."""
-    grid_opts = _split_grid_kwargs(grid_kwargs)
+    _, grid_opts = _split_grid_kwargs(grid_kwargs)
 
     btn = tk.Button(
         parent, text=text, command=command,
