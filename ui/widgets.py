@@ -149,6 +149,8 @@ def make_secondary_button(parent, text: str, command, **grid_kwargs):
     )
     if grid_opts:
         btn.grid(**grid_opts)
+    btn.bind("<Enter>", lambda e: btn.config(bg=C_ENTRY_BD))
+    btn.bind("<Leave>", lambda e: btn.config(bg=C_BTN_BG))
     return btn
 
 

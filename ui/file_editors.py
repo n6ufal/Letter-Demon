@@ -1,5 +1,7 @@
 """Modal text editors for trap endings and exceptions files."""
 
+import os
+import shutil
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 
@@ -175,6 +177,8 @@ def open_file_editor(app, title, file_path, reload_callback, status_var, default
 def save_editor_content(app, win, text_widget, file_path, reload_callback, status_var):
     content = text_widget.get("1.0", tk.END).strip()
     try:
+        if os.path.exists(file_path):
+            shutil.copy2(file_path, file_path + ".bak")
         with open(file_path, "w", encoding="utf-8") as f_out:
             f_out.write(content)
             if content and not content.endswith("\n"):
