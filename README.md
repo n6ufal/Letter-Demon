@@ -50,33 +50,13 @@ python main.py        # debug (shows console)
 
 ## Testing
 
-Letter Demon has a comprehensive test suite with 105 tests covering the word engine, dictionary caching, settings persistence, typing simulation, and complete end-to-end workflows.
-
-### Running Tests
-
-To run all tests:
+Run the test suite (105 tests covering word engine, dictionary caching, settings persistence, typing simulation, and end-to-end workflows):
 
 ```bash
 python -m unittest discover -v
 ```
 
-This runs all 105 tests in about 2-3 seconds. You should see "OK" at the end if all tests pass.
-
-### What the Tests Cover
-
-- Word engine logic: Does word selection work correctly?
-- Dictionary loading and caching: Can dictionaries load fast?
-- Settings persistence: Do settings save and load properly?
-- Typing simulation: Is the timing correct?
-- End-to-end workflows: Can you load a dictionary, find a word, and type it?
-- Error recovery: Does the app handle errors gracefully?
-- System integration: Does Roblox window detection work?
-
-Tests use synthetic word lists and temporary directories, so your data files are never touched. The keyboard library is mocked during tests to avoid actual keystroke injection.
-
-### Learning More
-
-For a beginner-friendly guide to running and understanding tests, see TESTING.md.
+See [TESTING.md](TESTING.md) for details on running and understanding tests.
 
 ## Usage
 
