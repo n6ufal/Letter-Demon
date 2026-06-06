@@ -22,7 +22,7 @@ def _cache_is_valid(cache_path: str, dict_path: str) -> bool:
         return False
     try:
         return os.path.getmtime(cache_path) >= os.path.getmtime(dict_path)
-    except Exception:
+    except OSError:
         return False
 
 

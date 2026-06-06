@@ -5,6 +5,8 @@ import random
 import time
 import keyboard
 
+_MIN_KEYSTROKE_DELAY_S = 0.03  # 30ms — absolute human+OS input lag floor
+
 
 class Typer:
     """Types text character-by-character with configurable speed and jitter.
@@ -46,7 +48,7 @@ class Typer:
 
     def _next_delay(self) -> float:
         # Convert ms to seconds for time.sleep()
-        base_s = max(0.03, self.base_speed_ms / 1000.0)
+        base_s = max(_MIN_KEYSTROKE_DELAY_S, self.base_speed_ms / 1000.0)
 
         if not self.jitter_on:
             return base_s
@@ -64,4 +66,4 @@ class Typer:
 
         # Absolute physical limit: Even the fastest human twitch + OS input lag
         # takes about 30ms. Never go below this to prevent robotic spam.
-        return max(0.03, delay)
+        return max(_MIN_KEYSTROKE_DELAY_S, delay)

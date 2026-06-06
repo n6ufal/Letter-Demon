@@ -18,8 +18,8 @@ from tkinter.filedialog import askopenfilename
 from core.dictionary import load_wordlist_from_dict
 from core.word_engine import WordEngine
 from config.settings import load_settings, save_settings
-from config.trap_endings import load_trap_endings, save_trap_endings, TRAP_ENDINGS_FILE
-from config.exceptions import load_exceptions, save_exceptions, EXCEPTIONS_FILE
+from config.trap_endings import load_trap_endings, TRAP_ENDINGS_FILE
+from config.exceptions import load_exceptions, EXCEPTIONS_FILE
 from system.roblox import is_roblox_running, focus_roblox_window
 from system.typer import Typer
 
