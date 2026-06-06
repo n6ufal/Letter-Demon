@@ -50,15 +50,33 @@ python main.py        # debug (shows console)
 
 ## Testing
 
-Run the full test suite (no external dependencies beyond Python stdlib + `keyboard`):
+Letter Demon has a comprehensive test suite with 105 tests covering the word engine, dictionary caching, settings persistence, typing simulation, and complete end-to-end workflows.
+
+### Running Tests
+
+To run all tests:
 
 ```bash
 python -m unittest discover -v
 ```
 
-73 tests covering the word engine, dictionary caching, settings persistence, trap ending/exceptions file handling, mode mapping, and typing simulation timing logic.
+This runs all 105 tests in about 2-3 seconds. You should see "OK" at the end if all tests pass.
 
-Word engine and dictionary tests use synthetic word lists — no real dictionary file needed. Config tests use temporary directories so your data files are never touched. Typer tests mock the `keyboard` library to avoid actual keystroke injection.
+### What the Tests Cover
+
+- Word engine logic: Does word selection work correctly?
+- Dictionary loading and caching: Can dictionaries load fast?
+- Settings persistence: Do settings save and load properly?
+- Typing simulation: Is the timing correct?
+- End-to-end workflows: Can you load a dictionary, find a word, and type it?
+- Error recovery: Does the app handle errors gracefully?
+- System integration: Does Roblox window detection work?
+
+Tests use synthetic word lists and temporary directories, so your data files are never touched. The keyboard library is mocked during tests to avoid actual keystroke injection.
+
+### Learning More
+
+For a beginner-friendly guide to running and understanding tests, see TESTING.md.
 
 ## Usage
 
@@ -66,10 +84,10 @@ Word engine and dictionary tests use synthetic word lists — no real dictionary
 
 1. **Load a Dictionary** — Advanced > Load Dictionary, pick a `.json` or `.txt` file. Indexing takes 5-30s.
 2. **Configure Typing**
-   - Set typing speed (default: 170ms per character)
-   - Toggle humanized jitter (default: on, 75%)
+   - Set typing speed (default: 170ms per keystroke)
+   - Set humanizer intensity (default: 75%, 0 = off)
    - Adjust pre/post delays (default: 500ms each)
-3. **Set Strategy** — Trap Words (hard for opponent), Long Words, or Short Words. Pick a fallback.
+3. **Set Strategy** — Trap Words (hard for opponent), Random Words, Long Words, or Short Words. Pick a fallback.
 4. **Play** — type starting letters, press Play or Ctrl+Enter. Window hides, word gets typed.
 
 ### Custom Trap Endings
@@ -126,13 +144,12 @@ Settings save automatically to `settings.json`:
 | Key | Default | Description |
 |-----|---------|-------------|
 | `dict_path` | null | path to loaded dictionary |
-| `speed` | 170 | ms per character |
-| `mode` | trap_words | main strategy |
-| `fallback` | short_words | backup strategy |
+| `speed` | 170 | ms per keystroke |
+| `mode` | "Trap Words" | main strategy |
+| `fallback` | "Short Words" | backup strategy |
 | `pre_delay` | 500 | ms before typing starts |
 | `post_delay` | 500 | ms after typing finishes |
-| `jitter_enabled` | true | humanized timing on/off |
-| `jitter_intensity` | 75 | variance amount (5-100%) |
+| `jitter_intensity` | 75 | humanizer intensity (0-100, 0 = off) |
 
 To customize UI colors, edit `ui/theme.py` and restart.
 
@@ -141,7 +158,6 @@ To customize UI colors, edit `ui/theme.py` and restart.
 - **"Game: off" indicator** — open the game window before hitting Play
 - **Dictionary won't load** — check the file exists and is valid JSON or TXT
 - **Typing fails** — run `python main.py` to see errors, or check `logs/letter_demon.log`
-- **Jitter slider greyed out** — enable the "Jitter" checkbox first
 
 ## How It Works
 
