@@ -147,3 +147,7 @@ To customize UI colors, edit `ui/theme.py` and restart.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for details on the word selection pipeline and typing simulation.
 
+## Disclaimer
+
+This is a personal Python learning project for personal use only.
+
