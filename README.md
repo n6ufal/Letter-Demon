@@ -6,14 +6,13 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 
 > ⚠️ **No dictionary is included.** This tool expects you to supply your own word list.  
 > See [Usage](#usage) for the expected format.
-> 
+
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 ## Table of Contents
 
-- [Roadmap and Current Status](#roadmap-and-current-status)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -22,35 +21,18 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
 - [How It Works](#how-it-works)
-- [Customization](#customization)
-
-## Roadmap and Current Status
-
-### Roadmap
-- **Mode Profiles** separate profiles for Casual and Pro that load the right dictionaries and trap endings automatically
-- **Auto-update** pull the latest trap endings for each mode straight from GitHub
-
-### Status (April 30, 2026)
-This repository is code-only. I’ve excluded the 470k+ and 500k+ dictionaries, as well as the full version of trap_endings.txt to prevent abuse. You’ll need to supply your own dictionary.
 
 ## Features
 
-- **Smart Word Engine** finds the best word for any starting letters in milliseconds. Words are ranked by how hard they are to follow; ties broken by length depending on your strategy. An exceptions list is checked before anything gets typed.
+- **Smart Word Engine** finds the hardest-to-follow word for any starting letters in milliseconds. An exceptions list blocks unwanted suggestions.
 
-- **Human-like Typing** gives each keypress its own independently randomized timing. Occasional slow keypresses are mixed in naturally, the way people actually type. Speed, randomness, and delays are all configurable.
+- **Human-like Typing** randomized per-keystroke delays from a log-normal distribution. Speed, jitter, and pre/post delays are all configurable.
 
-- **Game Integration**
-  - detects when the target window is running
-  - focuses it before typing, returns focus when done
-  - live status indicator (on/off)
+- **Game Integration** detects the target window, focuses it before typing, and restores focus when done, with a live on/off status indicator.
 
-- **Advanced Configuration**
-  - load your own dictionary files (JSON or TXT)
-  - edit trap endings on the fly, changes take effect immediately
-  - maintain a list of words to never suggest
-  - settings save automatically between sessions
+- **Advanced Configuration** load custom dictionaries (JSON or TXT), edit trap endings live, maintain an exceptions list, and save settings automatically.
 
-- **Fast Lookups** preload word scores when your dictionary is indexed. Searches are instant. Everything updates automatically when you change your dictionary or trap endings.
+- **Fast Lookups** precomputes scores on index, so searches are instant. Automatically recaches on config changes.
 
 ## Requirements
 
@@ -104,11 +86,6 @@ The default config ships with placeholder examples just to show the format. The 
 
 One suffix per line, ordered by difficulty. Lines starting with `#` are ignored.
 
-**Recommended setup:**
-- Dictionary: `mixed-old-complete-dict.txt` from `dictionaries/`
-- Trap Endings: `trap_endings.txt` from `data/`
-- Exceptions: `exceptions.txt` from `data/`
-
 **Example structure:**
 ```
 # comment lines are ignored
@@ -157,6 +134,8 @@ Settings save automatically to `settings.json`:
 | `jitter_enabled` | true | humanized timing on/off |
 | `jitter_intensity` | 75 | variance amount (5-100%) |
 
+To customize UI colors, edit `ui/theme.py` and restart.
+
 ## Troubleshooting
 
 - **"Game: off" indicator** — open the game window before hitting Play
@@ -166,96 +145,5 @@ Settings save automatically to `settings.json`:
 
 ## How It Works
 
-### Word Selection Pipeline
+See [ARCHITECTURE.md](ARCHITECTURE.md) for details on the word selection pipeline and typing simulation.
 
-From input to output, the engine follows a fixed sequence of steps.
-
-#### 1. Trap Endings Index
-
-When you load `trap_endings.txt`, the engine parses it line by line, skipping blanks and comments, trimming whitespace, lowercasing everything, then removes duplicates while preserving order.
-
-Each ending gets a score based on its position:
-
-```python
-ending_scores = {
-    ending: len(trap_endings) - index
-    for index, ending in enumerate(trap_endings)
-}
-```
-
-First entry gets the highest score. Last gets 1. Anything not in the list gets 0.
-
-So a file with three endings gives you:
-
-```
-ocy  ->  score 3  (hardest to follow)
-loh  ->  score 2
-sz   ->  score 1
-```
-
-#### 2. Prefix Search
-
-You type a prefix like "ca". The engine runs a bisect-based binary search on the sorted word list to find every word that starts with those letters. Binary search is O(log n), which on a 100k+ word dictionary is roughly 51x faster than scanning the list from the top.
-
-Matching is case-insensitive, so "Ca", "CA", and "ca" all hit the same results.
-
-#### 3. Scoring
-
-For each candidate word, the engine checks what suffix it ends with and looks that up against `ending_scores`. It starts with the longest possible suffix and works down until it finds a match:
-
-```
-"happiness"   -> ends with "ness" -> score 3
-"development" -> ends with "ment" -> score 2
-"running"     -> ends with "ing"  -> score 1
-"cat"         -> no match         -> score 0
-```
-
-The word with the highest trap score wins. If multiple words tie, the tiebreaker depends on your strategy:
-
-- **Trap Words** picks the highest-scoring word, tiebroken by longest
-- **Long Words** ignores trap scores entirely, just finds the longest match
-- **Short Words** ignores trap scores entirely, just finds the shortest match
-
-#### 4. Exception Filter
-
-Before anything gets typed, the engine checks the exceptions set, a plain Python set of lowercase words. Set lookups are O(1) so this adds no noticeable overhead. Words on the list get skipped.
-
-#### 5. Fallback
-
-If no word is found for the prefix under your main strategy, the engine falls back to your backup strategy. If that's also empty, it returns None and shows an error state.
-
-#### 6. Cache
-
-When you load a dictionary, the engine precomputes scores for every word upfront and stores them in `_trap_score_cache`. That's where the 5-30 second wait on first load comes from. After that, lookups are instant.
-
-The cache clears automatically when you load a new dictionary or change your trap endings.
-
-### Typing Simulation
-
-Keystroke delay is sampled from a log-normal distribution:
-
-```
-delay ~ LogNormal(μ, σ)
-```
-
-Log-normal means the distribution is right-skewed. Most keystrokes cluster around your base speed, but occasionally one takes longer, which is how people actually type. A uniform random distribution would feel robotic by comparison.
-
-`μ` is derived from your configured base speed. `σ` scales with jitter intensity. Delays are clamped to [30ms, 500ms] to keep inputs physically plausible. Every character gets its own independently sampled delay with no pattern between keystrokes.
-
-**Parameters:**
-- **Base speed** (default: 170ms) is the median keystroke delay
-- **Jitter intensity** (default: 75%) controls variance
-- **Pre-delay** (default: 500ms) is the wait before the first keystroke
-- **Post-delay** (default: 500ms) is the wait after the last keystroke and Enter
-
-## Customization
-
-Edit `ui/theme.py` to change colors. Restart to apply.
-
-## Disclaimer
-
-This is a personal project built for learning. The code is AI-assisted but the design, logic, and decisions are mine.
-
-The tool only uses publicly available data. It doesn't modify any game client or touch anything private. That said, it may interact with game mechanics in ways devs didn't intend, and using it could violate a game's terms of service. That's on you.
-
-I don't guarantee it keeps working. Use it at your own risk.
