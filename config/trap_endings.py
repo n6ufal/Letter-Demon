@@ -70,7 +70,7 @@ DEFAULT_TRAP_ENDINGS = [
 
 def load_trap_endings() -> list[str]:
     try:
-        with open(TRAP_ENDINGS_FILE, "r") as f:
+        with open(TRAP_ENDINGS_FILE, "r", encoding="utf-8") as f:
             endings = [line.strip().lower() for line in f if line.strip() and not line.startswith("#")]
         if endings:
             return list(dict.fromkeys(endings))  # deduplicate, preserve order
@@ -82,7 +82,7 @@ def load_trap_endings() -> list[str]:
 
 def save_trap_endings(endings: list[str]) -> None:
     try:
-        with open(TRAP_ENDINGS_FILE, "w") as f:
+        with open(TRAP_ENDINGS_FILE, "w", encoding="utf-8") as f:
             f.write("# Trap endings - one per line, hardest first\n")
             f.write("# Lines starting with # are comments\n")
             f.write("# Edit this file and click Reload Traps in the app\n\n")

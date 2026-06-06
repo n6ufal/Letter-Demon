@@ -14,7 +14,7 @@ DEFAULT_EXCEPTIONS: list[str] = []
 
 def load_exceptions() -> set[str]:
     try:
-        with open(EXCEPTIONS_FILE, "r") as f:
+        with open(EXCEPTIONS_FILE, "r", encoding="utf-8") as f:
             words = {line.strip().lower() for line in f if line.strip() and not line.startswith("#")}
         return words
     except Exception:
@@ -25,7 +25,7 @@ def load_exceptions() -> set[str]:
 
 def save_exceptions(words: list[str]) -> None:
     try:
-        with open(EXCEPTIONS_FILE, "w") as f:
+        with open(EXCEPTIONS_FILE, "w", encoding="utf-8") as f:
             f.write("# Word exceptions - one per line\n")
             f.write("# Lines starting with # are comments\n")
             f.write("# These words will never be chosen by the macro\n")

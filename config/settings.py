@@ -25,7 +25,7 @@ SETTINGS_FILE = os.path.join(get_project_root(), "data", "settings.json")
 
 def load_settings() -> dict:
     try:
-        with open(SETTINGS_FILE, "r") as f:
+        with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -33,7 +33,7 @@ def load_settings() -> dict:
 
 def save_settings(data: dict) -> None:
     try:
-        with open(SETTINGS_FILE, "w") as f:
+        with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
     except Exception as e:
         logger.warning("Failed to save settings: %s", e)
