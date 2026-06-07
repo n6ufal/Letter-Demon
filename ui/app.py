@@ -29,12 +29,17 @@ from . import modes
 from .main_layout import build_main_layout
 from .theme import (
     C_BG,
+    C_BG_PANEL,
     C_DOT_GREEN,
     C_DOT_RED,
     C_FEEDBACK_ERR_BG,
     C_FEEDBACK_ERR_FG,
     C_FEEDBACK_WARN_BG,
     C_FEEDBACK_WARN_FG,
+    C_PLAY_ACT,
+    C_PLAY_BG,
+    C_PLAY_FG,
+    C_TEXT,
 )
 
 
@@ -138,10 +143,32 @@ class LastLetterApp:
     def _update_start_button(self) -> None:
         if not hasattr(self, "play_btn") or not self.play_btn.winfo_exists():
             return
+        self.play_btn.unbind("<Enter>")
+        self.play_btn.unbind("<Leave>")
         if not self.engine.has_wordlist():
-            self.play_btn.config(text="Load a dictionary", state=tk.DISABLED)
+            self.play_btn.config(
+                text="Load a dictionary first!",
+                state=tk.NORMAL,
+                fg=C_DOT_RED,
+                bg=C_BG_PANEL,
+                activeforeground="#c0392b",
+                activebackground="#ddd",
+            )
+            if hasattr(self, "status_label"):
+                self.status_label.config(fg=C_DOT_RED)
         else:
-            self.play_btn.config(text="Start (Ctrl+Enter)", state=tk.NORMAL)
+            self.play_btn.bind("<Enter>", lambda e: self.play_btn.config(bg=C_PLAY_ACT))
+            self.play_btn.bind("<Leave>", lambda e: self.play_btn.config(bg=C_PLAY_BG))
+            self.play_btn.config(
+                text="Start (Ctrl+Enter)",
+                state=tk.NORMAL,
+                fg=C_PLAY_FG,
+                bg=C_PLAY_BG,
+                activebackground=C_PLAY_ACT,
+                activeforeground=C_PLAY_FG,
+            )
+            if hasattr(self, "status_label"):
+                self.status_label.config(fg=C_TEXT)
 
     def show_advanced(self) -> None:
         dialogs.show_advanced(self)

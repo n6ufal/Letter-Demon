@@ -92,14 +92,15 @@ def build_main_layout(app, settings: dict) -> None:
     info_bar = tk.Frame(f, bg=C_BG)
     info_bar.grid(row=3, column=0, columnspan=4, sticky="we", pady=(0, 4))
     app.status_var = tk.StringVar(value="No dictionary loaded")
-    tk.Label(
+    app.status_label = tk.Label(
         info_bar,
         textvariable=app.status_var,
-        fg=C_TEXT,
+        fg=C_DOT_RED,
         anchor="w",
         font=FONT_MAIN,
         bg=C_BG,
-    ).pack(side="left")
+    )
+    app.status_label.pack(side="left")
     app.roblox_status_var = tk.StringVar(value="○ Roblox: off")
     app.roblox_status_label = tk.Label(
         info_bar,
