@@ -36,9 +36,11 @@ from .theme import (
     C_FEEDBACK_ERR_FG,
     C_FEEDBACK_WARN_BG,
     C_FEEDBACK_WARN_FG,
+    C_MUTED,
     C_PLAY_ACT,
     C_PLAY_BG,
     C_PLAY_FG,
+    C_TEXT,
 )
 
 
@@ -144,6 +146,9 @@ class LastLetterApp:
             return
         self.play_btn.unbind("<Enter>")
         self.play_btn.unbind("<Leave>")
+        self.status_label.unbind("<Button-1>")
+        self.status_label.unbind("<Enter>")
+        self.status_label.unbind("<Leave>")
         if not self.engine.has_wordlist():
             self.play_btn.config(
                 text="Load a dictionary first!",
@@ -153,6 +158,11 @@ class LastLetterApp:
                 activeforeground="#c0392b",
                 activebackground="#ddd",
             )
+            self.status_var.set("Load Dictionary...")
+            self.status_label.config(fg=C_MUTED, cursor="hand2")
+            self.status_label.bind("<Button-1>", lambda e: self.on_load_dict())
+            self.status_label.bind("<Enter>", lambda e: self.status_label.config(fg=C_TEXT))
+            self.status_label.bind("<Leave>", lambda e: self.status_label.config(fg=C_MUTED))
         else:
             self.play_btn.bind("<Enter>", lambda e: self.play_btn.config(bg=C_PLAY_ACT))
             self.play_btn.bind("<Leave>", lambda e: self.play_btn.config(bg=C_PLAY_BG))
