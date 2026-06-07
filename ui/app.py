@@ -39,7 +39,6 @@ from .theme import (
     C_PLAY_ACT,
     C_PLAY_BG,
     C_PLAY_FG,
-    C_TEXT,
 )
 
 
@@ -115,7 +114,7 @@ class LastLetterApp:
             ).start()
         else:
             self._dict_path = None
-            self.status_var.set("No dictionary loaded")
+            self.status_var.set("")
             self._update_start_button()
 
     def _on_root_focus_in(self, event: tk.Event) -> None:
@@ -154,8 +153,6 @@ class LastLetterApp:
                 activeforeground="#c0392b",
                 activebackground="#ddd",
             )
-            if hasattr(self, "status_label"):
-                self.status_label.config(fg=C_DOT_RED)
         else:
             self.play_btn.bind("<Enter>", lambda e: self.play_btn.config(bg=C_PLAY_ACT))
             self.play_btn.bind("<Leave>", lambda e: self.play_btn.config(bg=C_PLAY_BG))
@@ -167,8 +164,6 @@ class LastLetterApp:
                 activebackground=C_PLAY_ACT,
                 activeforeground=C_PLAY_FG,
             )
-            if hasattr(self, "status_label"):
-                self.status_label.config(fg=C_TEXT)
 
     def show_advanced(self) -> None:
         dialogs.show_advanced(self)
@@ -209,7 +204,7 @@ class LastLetterApp:
         except Exception:
             def _on_load_fail() -> None:
                 self.notify("error", "Could not load dictionary.", duration_ms=6000)
-                self.status_var.set("No dictionary loaded")
+                self.status_var.set("")
                 self._update_start_button()
 
             self.root.after(0, _on_load_fail)
