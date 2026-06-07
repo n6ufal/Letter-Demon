@@ -231,7 +231,7 @@ def build_main_layout(app, settings: dict) -> None:
     make_secondary_button(
         btn_row,
         "Clear Used",
-        app.on_clear_cache,
+        app.on_clear_used_words,
         row=0,
         column=1,
         sticky="we",

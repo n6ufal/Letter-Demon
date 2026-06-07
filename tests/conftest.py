@@ -202,11 +202,3 @@ def assert_threads_clean(timeout=1.0):
         t.join(timeout=timeout)
         if t.is_alive():
             raise AssertionError(f"Daemon thread '{t.name}' did not complete within {timeout}s")
-
-
-def get_cache_key_for_dict(dict_path: str) -> str:
-    """Get the cache filename that would be generated for a dictionary."""
-    import hashlib
-    basename = os.path.basename(dict_path)
-    hash_digest = hashlib.md5(dict_path.encode()).hexdigest()[:8]
-    return f"cache_{hash_digest}_{basename}"

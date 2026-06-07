@@ -358,7 +358,7 @@ class LastLetterApp:
     def show_used_words(self) -> None:
         dialogs.show_used_words(self)
 
-    def on_clear_cache(self) -> None:
+    def on_clear_used_words(self) -> None:
         self.engine.clear_used_words()
         if dialogs.used_words_window_alive(self):
             dialogs.update_used_words_list(self)
