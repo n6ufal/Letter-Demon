@@ -35,8 +35,12 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
         import tempfile
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_path = self.tmp_dir.name
+        self._cache_patch = patch("core.dictionary.CACHE_DIR",
+                                  os.path.join(self.tmp_path, "cache"))
+        self._cache_patch.start()
 
     def tearDown(self):
+        self._cache_patch.stop()
         self.tmp_dir.cleanup()
 
     def test_load_dict_and_find_word_end_to_end(self):
@@ -123,8 +127,12 @@ class WordSearchingIntegrationTest(unittest.TestCase):
         import tempfile
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_path = self.tmp_dir.name
+        self._cache_patch = patch("core.dictionary.CACHE_DIR",
+                                  os.path.join(self.tmp_path, "cache"))
+        self._cache_patch.start()
 
     def tearDown(self):
+        self._cache_patch.stop()
         self.tmp_dir.cleanup()
 
     def _create_engine_from_files(self, words, trap_endings, exceptions):
@@ -286,8 +294,12 @@ class TypingIntegrationTest(unittest.TestCase):
         import tempfile
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_path = self.tmp_dir.name
+        self._cache_patch = patch("core.dictionary.CACHE_DIR",
+                                  os.path.join(self.tmp_path, "cache"))
+        self._cache_patch.start()
 
     def tearDown(self):
+        self._cache_patch.stop()
         self.tmp_dir.cleanup()
 
     @patch("system.typer.keyboard")
