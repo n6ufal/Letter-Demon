@@ -33,7 +33,7 @@ python main.py        # debug (shows console)
 ## Quick Start
 
 1. **Load a Dictionary** - Advanced > Load Dictionary, pick a .json or .txt file. Indexing takes 5-30s.
-2. **Configure Typing** - Set speed (default 170ms), humanizer intensity (default 75%), pre/post delays (default 500ms each).
+2. **Configure Typing** - Set speed (default 170ms), jitter/humanizer intensity (default 75%), pre/post delays (default 500ms each).
 3. **Pick Strategy** - Trap Words (hardest), Long Words, Short Words, or Random. Choose a fallback.
 4. **Play** - Type starting letters, press Play or Ctrl+Enter.
 
@@ -60,7 +60,7 @@ Settings save automatically to `settings.json`:
 | `fallback` | "Short Words" | backup strategy |
 | `pre_delay` | 500 | ms before typing starts |
 | `post_delay` | 500 | ms after typing finishes |
-| `jitter_intensity` | 75 | humanizer intensity (0-100, 0 = off) |
+| `jitter_intensity` | 75 | jitter/humanizer intensity (0-100, 0 = off) |
 
 <details>
 <summary><b>Dictionary Format</b></summary>
@@ -136,6 +136,7 @@ See [TESTING.md](TESTING.md) for full details.
 
 - Full architecture and algorithms: [ARCHITECTURE.md](ARCHITECTURE.md)
 - Test suite guide: [TESTING.md](TESTING.md)
+- Blog post: [What Happens When You Take a Word Game Too Seriously](https://alifnaufal.me/posts/what-happens-when-you-take-a-word-game-too-seriously/)
 
 ## Disclaimer
 

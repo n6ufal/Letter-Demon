@@ -264,11 +264,11 @@ def _next_delay(self):
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | Base speed | 170ms | Median keystroke delay |
-| Jitter intensity | 75% | Controls distribution spread (0 = robotic, 100 = erratic) |
+| Jitter/Humanizer | 75% | Controls distribution spread (0 = robotic, 100 = erratic) |
 | Pre-delay | 500ms | Pause before first keystroke |
 | Post-delay | 500ms | Pause after Enter |
 
-The `mu = log(base_s)` anchor guarantees the distribution's median equals the configured speed, regardless of jitter level. The `max(0.03, delay)` clamp prevents sub-30ms intervals that would look inhuman. There is no upper-bound clamp — the log-normal distribution naturally makes very long delays rare.
+The `mu = log(base_s)` anchor guarantees the distribution's median equals the configured speed, regardless of jitter/humanizer level. The `max(0.03, delay)` clamp prevents sub-30ms intervals that would look inhuman. There is no upper-bound clamp — the log-normal distribution naturally makes very long delays rare.
 
 Every character gets its own independently sampled delay with no pattern between keystrokes.
 
@@ -328,7 +328,7 @@ Three files live in `data/`:
 
 ### settings.json
 
-Saved on quit, loaded on start. Includes dict path, speed, mode, fallback, jitter intensity, pre/post delays, and window position.
+Saved on quit, loaded on start. Includes dict path, speed, mode, fallback, jitter/humanizer intensity, pre/post delays, and window position.
 
 ```json
 {
