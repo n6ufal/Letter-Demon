@@ -4,7 +4,7 @@
 
 A pragmatic tool that searches 470k words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for a word game where every move builds from the last 2-4 letters.
 
-> **No dictionary is included.** This tool expects you to supply your own word list. See [Dictionary Format](#dictionary-format) for details.
+> **No dictionary is included.** This tool expects you to supply your own word list.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -98,6 +98,8 @@ To load trap endings:
 3. Changes take effect immediately
 
 Format: one suffix per line, ordered by difficulty. Lines starting with # are ignored.
+
+> **Note:** The `data/trap_endings.txt` in this repository is a minimal dummy for testing. Provide your own full trap endings file for real use.
 
 ```
 # comment lines are ignored
