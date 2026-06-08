@@ -12,7 +12,7 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 
 ## Screenshot
 
-![Letter Demon main window](screenshots/main-GUI.png)
+<img src="screenshots/main-GUI.png" width="600" alt="Letter Demon main window">
 
 ## Features
 
@@ -87,7 +87,7 @@ cherry
 <details>
 <summary><b>Advanced Configuration</b></summary>
 
-![Advanced configuration window](screenshots/advanced-window-GUI.png)
+<img src="screenshots/advanced-window-GUI.png" width="600" alt="Advanced configuration window">
 
 #### Custom Trap Endings
 
@@ -109,7 +109,7 @@ sz
 osa
 ```
 
-![Trap endings editor](screenshots/editor-GUI.png)
+<img src="screenshots/editor-GUI.png" width="600" alt="Trap endings editor">
 
 #### Word Exceptions
 
