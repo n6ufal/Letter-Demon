@@ -10,6 +10,10 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
+## Screenshot
+
+![Letter Demon main window](screenshots/main-GUI.png)
+
 ## Features
 
 - Finds the toughest words your opponent can play from 470k words in milliseconds
@@ -83,6 +87,8 @@ cherry
 <details>
 <summary><b>Advanced Configuration</b></summary>
 
+![Advanced configuration window](screenshots/advanced-window-GUI.png)
+
 #### Custom Trap Endings
 
 Trap endings are suffixes that are statistically hard to continue from. The engine scores each word by its longest matching suffix, prioritizing earlier entries in `trap_endings.txt`.
@@ -102,6 +108,8 @@ loh
 sz
 osa
 ```
+
+![Trap endings editor](screenshots/editor-GUI.png)
 
 #### Word Exceptions
 
