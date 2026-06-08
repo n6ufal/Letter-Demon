@@ -10,8 +10,6 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
-## Screenshot
-
 <img src="screenshots/main-GUI.png" width="600" alt="Letter Demon main window">
 
 ## Features
