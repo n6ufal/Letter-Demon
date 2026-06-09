@@ -52,17 +52,24 @@ def load_wordlist_from_dict(dict_path: str) -> tuple[list[str], bool]:
         try:
             with open(cache_path, "r", encoding="utf-8") as f:
                 wordlist = f.read().splitlines()
-            return wordlist, True
+            if len(wordlist) > 0:
+                return wordlist, True
         except Exception:
             pass
 
     words_set = _load_dict_file(dict_path)
     wordlist = sorted(words_set)
 
+    tmp_path = cache_path + ".tmp"
     try:
-        with open(cache_path, "w", encoding="utf-8") as f:
+        with open(tmp_path, "w", encoding="utf-8") as f:
             f.write("\n".join(wordlist))
+        os.replace(tmp_path, cache_path)
     except Exception as ex:
         logger.warning("Could not save cache: %s", ex)
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
 
     return wordlist, False

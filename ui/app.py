@@ -72,9 +72,11 @@ class LastLetterApp:
         self.typer = Typer()
 
         self._is_playing = False
-        self._playing_lock = threading.Lock()
+        self._playing_lock = threading.RLock()
+        self._used_words_window_open = False
         self._dict_path: str | None = None
         self._feedback_after_id = None
+        self._poll_id = None
         self._advanced_window = None
         self.used_words_window = None
 
@@ -98,7 +100,11 @@ class LastLetterApp:
         build_main_layout(self, settings)
 
         if "win_x" in settings and "win_y" in settings:
-            self.root.geometry(f"+{settings['win_x']}+{settings['win_y']}")
+            x, y = settings["win_x"], settings["win_y"]
+            sw = self.root.winfo_screenwidth()
+            sh = self.root.winfo_screenheight()
+            if -50 <= x < sw - 100 and -50 <= y < sh - 50:
+                self.root.geometry(f"+{x}+{y}")
 
         self.root.bind("<FocusIn>", self._on_root_focus_in)
         self.root.protocol("WM_DELETE_WINDOW", self.on_quit)
@@ -254,7 +260,7 @@ class LastLetterApp:
     def _poll_roblox(self) -> None:
         running = is_roblox_running()
         self._update_roblox_indicator(running)
-        self.root.after(15000, self._poll_roblox)
+        self._poll_id = self.root.after(15000, self._poll_roblox)
 
     def _update_roblox_indicator(self, running: bool) -> None:
         color = C_DOT_GREEN if running else C_DOT_RED
@@ -300,21 +306,28 @@ class LastLetterApp:
 
             self._is_playing = True
 
-        self.root.withdraw()
-        self.prefix_var.set("")
+        try:
+            self.root.withdraw()
+            self.prefix_var.set("")
 
-        if is_roblox_running():
-            focus_roblox_window()
-            self._update_roblox_indicator(True)
-        else:
-            self._update_roblox_indicator(False)
+            if is_roblox_running():
+                focus_roblox_window()
+                self._update_roblox_indicator(True)
+            else:
+                self._update_roblox_indicator(False)
 
-        self.typer.base_speed_ms = self.speed_var.get()
-        self.typer.jitter_on = self.jitter_intensity.get() > 0
-        self.typer.jitter_pct = self.jitter_intensity.get()
+            self.typer.base_speed_ms = self.speed_var.get()
+            self.typer.jitter_on = self.jitter_intensity.get() > 0
+            self.typer.jitter_pct = self.jitter_intensity.get()
 
-        pre = max(0.1, self.pre_delay_var.get() / 1000.0)
-        post = max(0.1, self.post_delay_var.get() / 1000.0)
+            pre = max(0.1, self.pre_delay_var.get() / 1000.0)
+            post = max(0.1, self.post_delay_var.get() / 1000.0)
+        except Exception:
+            with self._playing_lock:
+                self._is_playing = False
+            self.notify("error", "Failed to prepare for typing.", duration_ms=6000)
+            logger.exception("Failed to prepare for typing")
+            return
 
         try:
             threading.Thread(
@@ -342,8 +355,8 @@ class LastLetterApp:
                 logger.warning("Typing failed: %s", message)
                 self.root.after(
                     0,
-                    lambda m=message: self.notify(
-                        "error",
+                    lambda m=message: self._try_tcl(
+                        self.notify, "error",
                         f"Typing failed: {m}",
                         duration_ms=8000,
                     ),
@@ -351,9 +364,11 @@ class LastLetterApp:
         finally:
             with self._playing_lock:
                 self._is_playing = False
-            self.root.after(0, self.root.deiconify)
-            if dialogs.used_words_window_alive(self):
-                self.root.after(0, lambda: dialogs.update_used_words_list(self))
+            self.root.after(0, lambda: self._try_tcl(self.root.deiconify))
+            if self._used_words_window_open:
+                self.root.after(
+                    0, lambda: self._try_tcl(dialogs.update_used_words_list, self)
+                )
 
     def show_used_words(self) -> None:
         dialogs.show_used_words(self)
@@ -362,6 +377,12 @@ class LastLetterApp:
         self.engine.clear_used_words()
         if dialogs.used_words_window_alive(self):
             dialogs.update_used_words_list(self)
+
+    def _try_tcl(self, fn, *args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except tk.TclError:
+            pass
 
     def notify(
         self,
@@ -385,7 +406,9 @@ class LastLetterApp:
         self.feedback_label.config(text=message, bg=bg, fg=fg)
         self.feedback_frame.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 4))
         self.feedback_frame.update_idletasks()
-        self.feedback_label.config(wraplength=self.feedback_frame.winfo_width() - 16)
+        self.feedback_label.config(
+            wraplength=max(200, self.feedback_frame.winfo_width() - 16)
+        )
 
         if beep and winsound:
             winsound.Beep(800, 100)
@@ -410,6 +433,9 @@ class LastLetterApp:
         if self._feedback_after_id is not None:
             self.root.after_cancel(self._feedback_after_id)
             self._feedback_after_id = None
+        if self._poll_id is not None:
+            self.root.after_cancel(self._poll_id)
+            self._poll_id = None
         save_settings({
             "dict_path": self._dict_path,
             "speed": self.speed_var.get(),

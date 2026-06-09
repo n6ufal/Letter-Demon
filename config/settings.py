@@ -33,6 +33,7 @@ def load_settings() -> dict:
 
 def save_settings(data: dict) -> None:
     try:
+        os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
         with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
     except Exception as e:

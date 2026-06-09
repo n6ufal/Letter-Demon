@@ -230,6 +230,7 @@ def used_words_window_alive(app) -> bool:
 def show_used_words(app) -> None:
     if not used_words_window_alive(app):
         app.used_words_window = tk.Toplevel(app.root)
+        app._used_words_window_open = True
         app.used_words_window.title("Used Words")
         app.used_words_window.resizable(True, True)
         app.used_words_window.attributes("-topmost", True)
@@ -287,6 +288,7 @@ def show_used_words(app) -> None:
 def close_used_words(app) -> None:
     app.used_words_window.destroy()
     app.used_words_window = None
+    app._used_words_window_open = False
 
 
 def update_used_words_list(app) -> None:
