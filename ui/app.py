@@ -92,12 +92,15 @@ class LastLetterApp:
         self.jitter_intensity = tk.IntVar(value=settings.get("jitter_intensity", 75))
         self.pre_delay_var = tk.IntVar(value=settings.get("pre_delay", 500))
         self.post_delay_var = tk.IntVar(value=settings.get("post_delay", 500))
+        self.auto_type_prefix = tk.StringVar(value="On" if settings.get("auto_type_prefix", True) else "Off")
 
         self.root.configure(bg=C_BG)
         self.main_frame = tk.Frame(self.root, padx=12, pady=10, bg=C_BG)
         self.main_frame.pack(fill="both", expand=True)
 
         build_main_layout(self, settings)
+        self._update_auto_prefix_indicator()
+        self.auto_type_prefix.trace_add("write", lambda *_: self._update_auto_prefix_indicator())
 
         if "win_x" in settings and "win_y" in settings:
             x, y = settings["win_x"], settings["win_y"]
@@ -262,12 +265,15 @@ class LastLetterApp:
         self._update_roblox_indicator(running)
         self._poll_id = self.root.after(15000, self._poll_roblox)
 
+    def _update_auto_prefix_indicator(self) -> None:
+        if not hasattr(self, "auto_prefix_label"):
+            return
+        self.auto_prefix_var.set("Suffix" if self.auto_type_prefix.get() == "On" else "Full")
+        self.auto_prefix_label.config(fg=C_DOT_GREEN)
+
     def _update_roblox_indicator(self, running: bool) -> None:
-        color = C_DOT_GREEN if running else C_DOT_RED
-        symbol = "●" if running else "○"
-        text = f"{symbol} Roblox: {'on' if running else 'off'}"
-        self.roblox_status_label.config(fg=color)
-        self.roblox_status_var.set(text)
+        self.roblox_status_label.config(fg=C_DOT_GREEN if running else C_DOT_RED)
+        self.roblox_status_var.set("Roblox")
 
     def on_play_round(self) -> None:
         with self._playing_lock:
@@ -291,12 +297,19 @@ class LastLetterApp:
                 )
                 return
 
-            completion = self.engine.find_completion(
-                prefix,
-                modes.to_internal_mode(self.mode_var.get()),
-                modes.to_internal_fallback(self.fallback_var.get()),
-            )
-            if completion is None:
+            if self.auto_type_prefix.get() == "On":
+                word_to_type = self.engine.find_completion(
+                    prefix,
+                    modes.to_internal_mode(self.mode_var.get()),
+                    modes.to_internal_fallback(self.fallback_var.get()),
+                )
+            else:
+                word_to_type = self.engine.find_full_word(
+                    prefix,
+                    modes.to_internal_mode(self.mode_var.get()),
+                    modes.to_internal_fallback(self.fallback_var.get()),
+                )
+            if word_to_type is None:
                 self.notify(
                     "error",
                     "No matching word found.",
@@ -332,7 +345,7 @@ class LastLetterApp:
         try:
             threading.Thread(
                 target=self._type_and_return,
-                args=(completion, pre, post),
+                args=(word_to_type, pre, post),
                 daemon=True,
             ).start()
         except Exception:
@@ -444,6 +457,7 @@ class LastLetterApp:
             "pre_delay": self.pre_delay_var.get(),
             "post_delay": self.post_delay_var.get(),
             "jitter_intensity": self.jitter_intensity.get(),
+            "auto_type_prefix": self.auto_type_prefix.get() == "On",
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
         })

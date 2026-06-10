@@ -9,6 +9,7 @@ from .theme import (
     C_ENTRY_BG,
     C_ENTRY_FOCUS,
     C_MUTED,
+    C_DOT_GREEN,
     C_DOT_RED,
     C_PLAY_FG,
     C_TEXT,
@@ -91,6 +92,9 @@ def build_main_layout(app, settings: dict) -> None:
 
     info_bar = tk.Frame(f, bg=C_BG)
     info_bar.grid(row=3, column=0, columnspan=4, sticky="we", pady=(0, 4))
+    for col in range(3):
+        info_bar.grid_columnconfigure(col, weight=1)
+
     app.status_var = tk.StringVar(value="")
     app.status_label = tk.Label(
         info_bar,
@@ -100,8 +104,19 @@ def build_main_layout(app, settings: dict) -> None:
         font=FONT_MAIN,
         bg=C_BG,
     )
-    app.status_label.pack(side="left")
-    app.roblox_status_var = tk.StringVar(value="○ Roblox: off")
+    app.status_label.grid(row=0, column=0, sticky="w")
+
+    app.auto_prefix_var = tk.StringVar(value="")
+    app.auto_prefix_label = tk.Label(
+        info_bar,
+        textvariable=app.auto_prefix_var,
+        fg=C_DOT_GREEN,
+        font=FONT_MAIN,
+        bg=C_BG,
+    )
+    app.auto_prefix_label.grid(row=0, column=1)
+
+    app.roblox_status_var = tk.StringVar(value="Roblox")
     app.roblox_status_label = tk.Label(
         info_bar,
         textvariable=app.roblox_status_var,
@@ -110,7 +125,7 @@ def build_main_layout(app, settings: dict) -> None:
         font=FONT_MAIN,
         bg=C_BG,
     )
-    app.roblox_status_label.pack(side="right")
+    app.roblox_status_label.grid(row=0, column=2, sticky="e")
 
     app.play_btn = make_primary_button(
         f,

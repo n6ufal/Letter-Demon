@@ -174,6 +174,27 @@ def show_advanced(app) -> None:
     make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
     row += 1
 
+    tk.Label(f, text="Typing Mode", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT).grid(
+        row=row, column=0, columnspan=2, sticky="w", pady=(0, 4)
+    )
+    row += 1
+
+    tk.Label(f, text="Auto Type Prefix:", font=FONT_MAIN, anchor="w", bg=C_BG, fg=C_TEXT).grid(
+        row=row, column=0, sticky="w"
+    )
+    app.auto_type_combo = tk.ttk.Combobox(
+        f,
+        textvariable=app.auto_type_prefix,
+        values=["On", "Off"],
+        state="readonly",
+        width=6,
+    )
+    app.auto_type_combo.grid(row=row, column=1, sticky="e")
+    row += 1
+
+    make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
+    row += 1
+
     tk.Label(f, text="Trap endings", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT).grid(
         row=row, column=0, sticky="nw", pady=(0, 2), padx=(0, 12)
     )
