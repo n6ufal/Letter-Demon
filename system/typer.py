@@ -23,8 +23,11 @@ class Typer:
         self.jitter_pct = jitter_pct  # Expects 5.0 to 100.0
 
     def type_text(self, text: str, pre_delay_s: float = 0.5,
-                  post_delay_s: float = 0.5) -> tuple[bool, str]:
+                  post_delay_s: float = 0.5, abort_event=None) -> tuple[bool, str]:
         """Type *text* into the currently focused window.
+
+        If *abort_event* is provided and becomes set during typing, the
+        operation is cancelled immediately.
 
         Returns (success: bool, message: str).
         Blocks the calling thread. Typically run on a daemon thread.
@@ -32,11 +35,15 @@ class Typer:
         time.sleep(max(0.1, pre_delay_s))
         try:
             for i, ch in enumerate(text):
+                if abort_event is not None and abort_event.is_set():
+                    return False, "Aborted"
                 try:
                     keyboard.press_and_release(ch)
                 except Exception as e:
                     return False, f"Failed at char {i+1}/{len(text)}: '{ch}' — {e}"
                 time.sleep(self._next_delay())
+            if abort_event is not None and abort_event.is_set():
+                return False, "Aborted"
             try:
                 keyboard.send("enter")
             except Exception as e:
