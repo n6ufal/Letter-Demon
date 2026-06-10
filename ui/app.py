@@ -6,8 +6,6 @@ import os
 import sys
 import threading
 
-import keyboard
-
 logger = logging.getLogger(__name__)
 if sys.platform == "win32":
     import winsound
@@ -75,7 +73,6 @@ class LastLetterApp:
 
         self._is_playing = False
         self._playing_lock = threading.RLock()
-        self._abort_event = threading.Event()
         self._used_words_window_open = False
         self._dict_path: str | None = None
         self._feedback_after_id = None
@@ -278,16 +275,6 @@ class LastLetterApp:
         self.roblox_status_label.config(fg=C_DOT_GREEN if running else C_DOT_RED)
         self.roblox_status_var.set("Roblox")
 
-    def _set_abort(self) -> None:
-        self._abort_event.set()
-
-    def _clear_hotkey(self) -> None:
-        if hasattr(self, "_hotkey_id"):
-            try:
-                keyboard.remove_hotkey(self._hotkey_id)
-            except Exception:
-                pass
-
     def on_play_round(self) -> None:
         with self._playing_lock:
             if self._is_playing:
@@ -331,9 +318,6 @@ class LastLetterApp:
                 return
 
             self._is_playing = True
-            self._abort_event.clear()
-            self._clear_hotkey()
-            self._hotkey_id = keyboard.add_hotkey("ctrl+delete", self._set_abort)
 
         try:
             self.root.withdraw()
@@ -367,7 +351,6 @@ class LastLetterApp:
         except Exception:
             with self._playing_lock:
                 self._is_playing = False
-            self._clear_hotkey()
             self.root.deiconify()
             self.notify("error", "Failed to start typing thread.", duration_ms=6000)
             logger.exception("Thread creation failed")
@@ -379,36 +362,22 @@ class LastLetterApp:
     def _type_and_return(self, completion: str, pre: float, post: float) -> None:
         try:
             success, message = self.typer.type_text(
-                completion, pre_delay_s=pre, post_delay_s=post,
-                abort_event=self._abort_event,
+                completion, pre_delay_s=pre, post_delay_s=post
             )
             if not success:
-                if message == "Aborted":
-                    logger.info("Typing aborted by user")
-                    self.root.after(
-                        0,
-                        lambda: self._try_tcl(
-                            self.notify, "warn", "Typing cancelled",
-                            duration_ms=3000,
-                        ),
-                    )
-                else:
-                    logger.warning("Typing failed: %s", message)
-                    self.root.after(
-                        0,
-                        lambda m=message: self._try_tcl(
-                            self.notify, "error",
-                            f"Typing failed: {m}",
-                            duration_ms=8000,
-                        ),
-                    )
+                logger.warning("Typing failed: %s", message)
+                self.root.after(
+                    0,
+                    lambda m=message: self._try_tcl(
+                        self.notify, "error",
+                        f"Typing failed: {m}",
+                        duration_ms=8000,
+                    ),
+                )
         finally:
             with self._playing_lock:
                 self._is_playing = False
-            self._clear_hotkey()
             self.root.after(0, lambda: self._try_tcl(self.root.deiconify))
-            self.root.after(0, lambda: self._try_tcl(self.root.lift))
-            self.root.after(0, lambda: self._try_tcl(self.root.focus_force))
             if self._used_words_window_open:
                 self.root.after(
                     0, lambda: self._try_tcl(dialogs.update_used_words_list, self)
