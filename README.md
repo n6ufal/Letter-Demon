@@ -2,9 +2,11 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-A pragmatic tool that searches 477,000+ words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for a word game where every move builds from the last 2-4 letters.
+A pragmatic tool that searches 477k+ words in milliseconds, picks the hardest follow-up, and types it like a human.
 
-> No dictionary is included, and this repo is strictly code only. The game's word list isn't distributed here and won't be included.
+Why? The game's suffix matching system rewards dead-end patterns over vocabulary. This tool weaponizes that flaw.
+
+> **No dictionary is included.** This tool expects you to supply your own word list — ideally one around 474k-477k entries that the game use. Anything smaller and the magic fades.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -25,7 +27,7 @@ Pick a main strategy, then a backup for when things go sideways.
 
 ### 2. Typing That Feels Human
 
-Typing speed ranges from 10-200 ms per keystroke.
+Typing speed ranges from 10-250 ms per keystroke.
 
 Turn up the humanizer and the typing stops feeling like a machine gun and starts feeling like an actual person. A little hesitation here, a weird pause there, enough imperfection to look natural.
 
@@ -39,12 +41,6 @@ The app suggests. You decide.
 - Create custom trap endings.
 - Edit everything in an inline editor with search and undo.
 - Keep a log of every word played.
-
-### 4. Fast Enough to Be Boring
-
-Lookups happen in milliseconds and have been tested against the game's evolving 477k-word dictionary.
-
-The slowest part of the whole process is usually you: entering prefixes and pressing Ctrl + Enter between rounds. Fully automating everything would be boring, and probably a little suspicious.
 
 ## Installation
 
@@ -146,6 +142,7 @@ python -m unittest discover -v
 ```
 
 See [TESTING.md](TESTING.md) for full details.
+
 ## Troubleshooting
 
 - **"Game: off" indicator** - Open the game window before hitting Play
