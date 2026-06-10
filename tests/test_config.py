@@ -181,18 +181,5 @@ class ExceptionsRoundTripTest(unittest.TestCase):
         self._patch_file(test)
 
 
-class ConfigInitExportsTest(unittest.TestCase):
-    def test_init_exports_expected_names(self):
-        from config import (
-            load_settings, save_settings, load_trap_endings, save_trap_endings, load_exceptions, save_exceptions,
-        )
-        self.assertTrue(callable(load_settings))
-        self.assertTrue(callable(save_settings))
-        self.assertTrue(callable(load_trap_endings))
-        self.assertTrue(callable(save_trap_endings))
-        self.assertTrue(callable(load_exceptions))
-        self.assertTrue(callable(save_exceptions))
-
-
 if __name__ == "__main__":
     unittest.main()

@@ -44,25 +44,12 @@ from .theme import (
 )
 
 
-def resource_path(relative_path: str) -> str:
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.dirname(__file__)
-    return os.path.join(base_path, relative_path)
-
-
 class LastLetterApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("😈")
         self.root.resizable(False, False)
         self.root.attributes("-topmost", True)
-
-        try:
-            self.root.iconbitmap(resource_path("LastLetter.ico"))
-        except Exception:
-            pass
 
         self.engine = WordEngine(
             wordlist=[],
@@ -461,10 +448,4 @@ class LastLetterApp:
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
         })
-        try:
-            import keyboard
-
-            keyboard.unhook_all()
-        except Exception:
-            pass
         self.root.destroy()
