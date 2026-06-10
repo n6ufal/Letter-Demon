@@ -159,4 +159,4 @@ See [TESTING.md](TESTING.md) for full details.
 
 ## Disclaimer
 
-This began as a Python learning project and is provided as-is for personal use.
+I built this as my personal Python learning project, for personal use only.
