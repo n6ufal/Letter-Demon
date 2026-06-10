@@ -15,7 +15,6 @@ from .theme import (
     FONT_MAIN,
     FONT_MAIN_BOLD,
     FONT_MONO_M,
-    FONT_SMALL,
 )
 from .widgets import make_secondary_button, make_separator, make_slider
 from .window_utils import center_window

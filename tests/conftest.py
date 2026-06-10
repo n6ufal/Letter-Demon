@@ -4,8 +4,7 @@ import os
 import sys
 import tempfile
 import threading
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -14,9 +13,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from core.word_engine import WordEngine
 from core.dictionary import load_wordlist_from_dict
-from config.settings import load_settings, save_settings
-from config.trap_endings import load_trap_endings, save_trap_endings
-from config.exceptions import load_exceptions, save_exceptions
+from config.trap_endings import load_trap_endings
+from config.exceptions import load_exceptions
 
 
 # ============================================================================

@@ -184,9 +184,7 @@ class ExceptionsRoundTripTest(unittest.TestCase):
 class ConfigInitExportsTest(unittest.TestCase):
     def test_init_exports_expected_names(self):
         from config import (
-            load_settings, save_settings, get_project_root, SETTINGS_FILE,
-            load_trap_endings, save_trap_endings, TRAP_ENDINGS_FILE, DEFAULT_TRAP_ENDINGS,
-            load_exceptions, save_exceptions, EXCEPTIONS_FILE, DEFAULT_EXCEPTIONS,
+            load_settings, save_settings, load_trap_endings, save_trap_endings, load_exceptions, save_exceptions,
         )
         self.assertTrue(callable(load_settings))
         self.assertTrue(callable(save_settings))

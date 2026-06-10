@@ -5,8 +5,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 from .theme import (
-    C_BG, C_BG_PANEL, C_TEXT, C_MUTED, C_ENTRY_BG, C_ENTRY_BD, C_ENTRY_FOCUS,
-    C_PLAY_BG, C_PLAY_FG, C_PLAY_ACT, C_BTN_BG, C_BTN_FG,
+    C_BG, C_BG_PANEL, C_TEXT, C_MUTED, C_ENTRY_BG, C_ENTRY_BD, C_PLAY_BG, C_PLAY_FG, C_PLAY_ACT, C_BTN_BG, C_BTN_FG,
     C_SEP, FONT_BTN, FONT_MAIN, FONT_MONO
 )
 
