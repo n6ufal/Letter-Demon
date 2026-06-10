@@ -15,9 +15,8 @@ from .theme import (
     FONT_MAIN,
     FONT_MAIN_BOLD,
     FONT_MONO_M,
-    FONT_SMALL,
 )
-from .widgets import make_secondary_button, make_separator, make_slider
+from .widgets import make_secondary_button, make_separator, make_slider, add_tooltip
 from .window_utils import center_window
 from core import version_string
 
@@ -113,9 +112,10 @@ def show_advanced(app) -> None:
     tk.Label(f, textvariable=app.dict_label_var, fg=C_MUTED, font=FONT_MAIN, anchor="w", bg=C_BG).grid(
         row=row, column=0, sticky="w"
     )
-    make_secondary_button(
+    load_btn = make_secondary_button(
         f, "Load Dictionary", app.on_load_dict, row=row, column=1, sticky="e", padx=(12, 0)
     )
+    add_tooltip(load_btn, "Open a .json or .txt word list file")
     row += 1
     make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
     row += 1
@@ -146,6 +146,7 @@ def show_advanced(app) -> None:
     )
     adv_pre_slider.grid(row=row, column=0, sticky="we", pady=(0, 6))
     adv_pre_val.grid(row=row, column=1, sticky="e")
+    add_tooltip(adv_pre_slider, "Pause before typing the first character")
     row += 1
 
     tk.Label(f, text="Post-type delay:", font=FONT_MAIN, anchor="w", bg=C_BG, fg=C_TEXT).grid(
@@ -169,6 +170,29 @@ def show_advanced(app) -> None:
     )
     adv_post_slider.grid(row=row, column=0, sticky="we", pady=(0, 4))
     adv_post_val.grid(row=row, column=1, sticky="e")
+    add_tooltip(adv_post_slider, "Pause after pressing Enter")
+    row += 1
+
+    make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
+    row += 1
+
+    tk.Label(f, text="Typing Mode", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT).grid(
+        row=row, column=0, columnspan=2, sticky="w", pady=(0, 4)
+    )
+    row += 1
+
+    tk.Label(f, text="Auto Type Prefix:", font=FONT_MAIN, anchor="w", bg=C_BG, fg=C_TEXT).grid(
+        row=row, column=0, sticky="w"
+    )
+    app.auto_type_combo = tk.ttk.Combobox(
+        f,
+        textvariable=app.auto_type_prefix,
+        values=["On", "Off"],
+        state="readonly",
+        width=6,
+    )
+    app.auto_type_combo.grid(row=row, column=1, sticky="e")
+    add_tooltip(app.auto_type_combo, "On: types only the ending / Off: types the full word")
     row += 1
 
     make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
@@ -196,17 +220,21 @@ def show_advanced(app) -> None:
 
     btn_row_trap = tk.Frame(f, bg=C_BG)
     btn_row_trap.grid(row=row, column=0, sticky="nw", pady=(4, 0), padx=(0, 12))
-    make_secondary_button(btn_row_trap, "Reload", app.reload_trap_endings).pack(
-        side="left", padx=(0, 4)
-    )
-    make_secondary_button(btn_row_trap, "Edit", app.edit_trap_endings).pack(side="left")
+    trap_reload_btn = make_secondary_button(btn_row_trap, "Reload", app.reload_trap_endings)
+    trap_reload_btn.pack(side="left", padx=(0, 4))
+    add_tooltip(trap_reload_btn, "Reload trap endings from the file")
+    trap_edit_btn = make_secondary_button(btn_row_trap, "Edit", app.edit_trap_endings)
+    trap_edit_btn.pack(side="left")
+    add_tooltip(trap_edit_btn, "Edit the trap endings list")
 
     btn_row_exc = tk.Frame(f, bg=C_BG)
     btn_row_exc.grid(row=row, column=1, sticky="nw", pady=(4, 0))
-    make_secondary_button(btn_row_exc, "Reload", app.reload_exceptions).pack(
-        side="left", padx=(0, 4)
-    )
-    make_secondary_button(btn_row_exc, "Edit", app.edit_exceptions).pack(side="left")
+    exc_reload_btn = make_secondary_button(btn_row_exc, "Reload", app.reload_exceptions)
+    exc_reload_btn.pack(side="left", padx=(0, 4))
+    add_tooltip(exc_reload_btn, "Reload exceptions from the file")
+    exc_edit_btn = make_secondary_button(btn_row_exc, "Edit", app.edit_exceptions)
+    exc_edit_btn.pack(side="left")
+    add_tooltip(exc_edit_btn, "Edit the word exceptions list")
     row += 1
 
     f.grid_columnconfigure(0, weight=1)

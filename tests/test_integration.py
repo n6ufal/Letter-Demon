@@ -10,17 +10,16 @@ These tests validate complete user scenarios:
 import os
 import sys
 import threading
-import time
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from core.dictionary import load_wordlist_from_dict
 from core.word_engine import WordEngine
 from config.settings import load_settings, save_settings
-from config.trap_endings import load_trap_endings, save_trap_endings
-from config.exceptions import load_exceptions, save_exceptions
+from config.trap_endings import load_trap_endings
+from config.exceptions import load_exceptions
 from system.typer import Typer
 
 
@@ -66,15 +65,11 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
             f.write("apple\nbanana\ncherry\n" * 100)  # Larger dict
 
         # First load: slower, not from cache
-        start = time.perf_counter()
         wordlist1, from_cache1 = load_wordlist_from_dict(dict_path)
-        time1 = time.perf_counter() - start
         self.assertFalse(from_cache1)
 
         # Second load: faster, from cache
-        start = time.perf_counter()
         wordlist2, from_cache2 = load_wordlist_from_dict(dict_path)
-        time2 = time.perf_counter() - start
         self.assertTrue(from_cache2)
 
         self.assertEqual(wordlist1, wordlist2)
@@ -385,8 +380,8 @@ class UsedWordsTrackingIntegrationTest(unittest.TestCase):
         engine = WordEngine(wordlist=wordlist, trap_endings=[], exceptions=set())
 
         # Use both words
-        first = engine.find_full_word("app")
-        second = engine.find_full_word("app")
+        engine.find_full_word("app")
+        engine.find_full_word("app")
 
         # No more words available
         third = engine.find_full_word("app")

@@ -1,6 +1,5 @@
 """Tests for core/dictionary.py — dictionary loading, caching, hashing."""
 
-import hashlib
 import json
 import os
 import sys

@@ -139,7 +139,7 @@ def _trap_score(self, word):
     return 0
 ```
 
-Scores are **precomputed** for every word on engine startup and stored in `_trap_score_cache`. This is the 5–30 second wait on first dictionary load. After that, lookups are instant — a single dict get.
+Scores are computed **lazily** — only for candidate words at query time. This eliminates the 5–30 second wait on dictionary load entirely. For typical candidate sets (100–2,000 words), scoring adds ~1–50ms per query, imperceptible during gameplay.
 
 ### 5. Strategy & Selection
 
@@ -150,7 +150,7 @@ def _select(self, candidates, mode, fallback):
     if mode == "Trap Words":
         trap_scored = [
             (s, w) for w in candidates
-            if (s := self._trap_score_cache.get(w, 0)) > 0
+            if (s := self._trap_score(w)) > 0
         ]
         if trap_scored:
             best_score = max(s for s, _ in trap_scored)
@@ -194,11 +194,9 @@ def used_words_for_display(self):
 
 Reset via the "Clear Used" button in the UI — not to be confused with the disk cache.
 
-### 9. In-Memory Cache Lifecycle
+### 9. Scoring Lifecycle
 
-`_trap_score_cache` is rebuilt when:
-- A new dictionary is loaded (`set_wordlist`)
-- Trap endings are changed (`set_trap_endings`)
+Trap scores are computed lazily at query time in `_select`. The scoring index (`_ending_scores` and `_max_ending_len`) is rebuilt when trap endings change via `set_trap_endings`. No per-word cache is maintained — scores are computed fresh for each query's candidate set.
 
 The disk cache (`cache/cache_*.txt`) is only invalidated when the dictionary file's mtime changes.
 

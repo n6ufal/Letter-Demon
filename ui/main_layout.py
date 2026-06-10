@@ -9,6 +9,7 @@ from .theme import (
     C_ENTRY_BG,
     C_ENTRY_FOCUS,
     C_MUTED,
+    C_DOT_GREEN,
     C_DOT_RED,
     C_PLAY_FG,
     C_TEXT,
@@ -23,6 +24,7 @@ from .widgets import (
     make_separator,
     make_slider,
     setup_ttk_styles,
+    add_tooltip,
 )
 
 
@@ -91,6 +93,9 @@ def build_main_layout(app, settings: dict) -> None:
 
     info_bar = tk.Frame(f, bg=C_BG)
     info_bar.grid(row=3, column=0, columnspan=4, sticky="we", pady=(0, 4))
+    for col in range(3):
+        info_bar.grid_columnconfigure(col, weight=1)
+
     app.status_var = tk.StringVar(value="")
     app.status_label = tk.Label(
         info_bar,
@@ -100,8 +105,19 @@ def build_main_layout(app, settings: dict) -> None:
         font=FONT_MAIN,
         bg=C_BG,
     )
-    app.status_label.pack(side="left")
-    app.roblox_status_var = tk.StringVar(value="○ Roblox: off")
+    app.status_label.grid(row=0, column=0, sticky="w")
+
+    app.auto_prefix_var = tk.StringVar(value="")
+    app.auto_prefix_label = tk.Label(
+        info_bar,
+        textvariable=app.auto_prefix_var,
+        fg=C_DOT_GREEN,
+        font=FONT_MAIN,
+        bg=C_BG,
+    )
+    app.auto_prefix_label.grid(row=0, column=1)
+
+    app.roblox_status_var = tk.StringVar(value="Roblox")
     app.roblox_status_label = tk.Label(
         info_bar,
         textvariable=app.roblox_status_var,
@@ -110,7 +126,7 @@ def build_main_layout(app, settings: dict) -> None:
         font=FONT_MAIN,
         bg=C_BG,
     )
-    app.roblox_status_label.pack(side="right")
+    app.roblox_status_label.grid(row=0, column=2, sticky="e")
 
     app.play_btn = make_primary_button(
         f,
@@ -147,7 +163,7 @@ def build_main_layout(app, settings: dict) -> None:
         "Speed",
         app.speed_var,
         from_=10,
-        to=200,
+        to=250,
         resolution=5,
         length=160,
         suffix="",
@@ -218,7 +234,7 @@ def build_main_layout(app, settings: dict) -> None:
     btn_row.grid_columnconfigure(1, weight=1)
     btn_row.grid_columnconfigure(2, weight=1)
 
-    make_secondary_button(
+    app.advanced_btn = make_secondary_button(
         btn_row,
         "Advanced",
         app.show_advanced,
@@ -228,7 +244,7 @@ def build_main_layout(app, settings: dict) -> None:
         padx=2,
         pady=(0, 2),
     )
-    make_secondary_button(
+    app.clear_used_btn = make_secondary_button(
         btn_row,
         "Clear Used",
         app.on_clear_used_words,
@@ -238,7 +254,7 @@ def build_main_layout(app, settings: dict) -> None:
         padx=2,
         pady=(0, 2),
     )
-    make_secondary_button(
+    app.used_words_btn = make_secondary_button(
         btn_row,
         "Used Words",
         app.show_used_words,
@@ -259,3 +275,14 @@ def build_main_layout(app, settings: dict) -> None:
 
     for col in range(4):
         f.grid_columnconfigure(col, weight=1)
+
+    add_tooltip(app.auto_prefix_label, "Suffix: types only the ending / Full: types the complete word")
+    add_tooltip(app.roblox_status_label, "Green: Roblox running / Red: Roblox not found")
+    add_tooltip(app.play_btn, "Type the word into Roblox (Ctrl+Enter)", delay_ms=200)
+    add_tooltip(app.speed_slider, "Average keystroke delay in ms (actual delays vary around this)")
+    add_tooltip(app.humanizer_slider, "Human-like timing variation (0 = robotic)")
+    add_tooltip(app.mode_combobox, "Primary strategy for picking the word")
+    add_tooltip(app.fallback_combobox, "Backup strategy when primary mode finds nothing")
+    add_tooltip(app.advanced_btn, "Dictionary, timing, trap endings, exceptions")
+    add_tooltip(app.clear_used_btn, "Reset used words for a new game")
+    add_tooltip(app.used_words_btn, "Show words played this session")

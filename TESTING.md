@@ -199,6 +199,11 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+If `ruff` is not found, install it separately:
+```bash
+pip install ruff
+```
+
 ### Tests fail with FileNotFoundError
 
 The test is trying to access a file that doesn't exist. This is usually not a problem - the test creates temporary files as needed. If it persists, clear the cache:

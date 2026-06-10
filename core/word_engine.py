@@ -22,10 +22,6 @@ class WordEngine:
         self._lock = threading.RLock()
         self._build_trap_scores()
 
-        self._trap_score_cache: dict[str, int] = {}
-        if self.wordlist:
-            self._precompute_trap_scores()
-
     def _build_trap_scores(self) -> None:
         self._ending_scores: dict[str, int] = {
             ending: len(self.trap_endings) - i
@@ -34,9 +30,6 @@ class WordEngine:
         self._max_ending_len: int = max(
             (len(e) for e in self.trap_endings), default=8
         )
-
-    def _precompute_trap_scores(self) -> None:
-        self._trap_score_cache = {word: self._trap_score(word) for word in self.wordlist}
 
     def _trap_score(self, word: str) -> int:
         lower = word.lower()
@@ -100,7 +93,7 @@ class WordEngine:
         if mode == "Trap Words":
             trap_scored = [
                 (s, w) for w in candidates
-                if (s := self._trap_score_cache.get(w, 0)) > 0
+                if (s := self._trap_score(w)) > 0
             ]
 
             if trap_scored:
@@ -137,8 +130,6 @@ class WordEngine:
         with self._lock:
             self.trap_endings = endings
             self._build_trap_scores()
-            if self.wordlist:
-                self._precompute_trap_scores()
 
     def set_exceptions(self, exceptions: set[str]) -> None:
         with self._lock:
@@ -147,5 +138,3 @@ class WordEngine:
     def set_wordlist(self, wordlist: list[str]) -> None:
         with self._lock:
             self.wordlist = wordlist
-            if self.wordlist:
-                self._precompute_trap_scores()

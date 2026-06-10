@@ -137,6 +137,15 @@ Stop the engine from suggesting certain words:
 
 </details>
 
+## Testing
+
+Run all 97 tests:
+
+```bash
+python -m unittest discover -v
+```
+
+See [TESTING.md](TESTING.md) for full details.
 ## Troubleshooting
 
 - **"Game: off" indicator** - Open the game window before hitting Play

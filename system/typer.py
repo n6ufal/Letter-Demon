@@ -57,10 +57,9 @@ class Typer:
         # 0.0 = perfectly robotic. 0.75 = highly erratic/drunk.
         scale = (self.jitter_pct / 100.0) * 0.75
 
-        # Log-Normal magic:
-        # By setting mu = log(base_s), the MEDIAN of the distribution
-        # is guaranteed to be exactly base_s, keeping it anchored to the speed slider.
-        mu = math.log(base_s)
+        # Shift mu so the MEAN of the distribution equals base_s
+        # (exp(mu + sigma^2/2) = base_s), making the slider an honest average.
+        mu = math.log(base_s) - 0.5 * scale ** 2
 
         delay = random.lognormvariate(mu, scale)
 
