@@ -6,8 +6,60 @@ import tkinter.ttk as ttk
 
 from .theme import (
     C_BG, C_BG_PANEL, C_TEXT, C_MUTED, C_ENTRY_BG, C_ENTRY_BD, C_PLAY_BG, C_PLAY_FG, C_PLAY_ACT, C_BTN_BG, C_BTN_FG,
-    C_SEP, FONT_BTN, FONT_MAIN, FONT_MONO
+    C_SEP, FONT_BTN, FONT_MAIN, FONT_MONO, FONT_SMALL,
 )
+
+
+class ToolTip:
+    """Hover tooltip for any tkinter widget.
+
+    Shows a small popup with explanatory text after a short delay.
+    """
+
+    def __init__(self, widget: tk.Widget, text: str, *, delay_ms: int = 500):
+        self.widget = widget
+        self.text = text
+        self._delay_ms = delay_ms
+        self._tip = None
+        self._after_id = None
+        widget.bind("<Enter>", self._enter, add="+")
+        widget.bind("<Leave>", self._leave, add="+")
+
+    def _enter(self, event=None) -> None:
+        if self._after_id is not None:
+            self.widget.after_cancel(self._after_id)
+        self._after_id = self.widget.after(self._delay_ms, self._show)
+
+    def _leave(self, event=None) -> None:
+        self._cancel()
+        self._hide()
+
+    def _cancel(self) -> None:
+        if self._after_id is not None:
+            self.widget.after_cancel(self._after_id)
+            self._after_id = None
+
+    def _show(self) -> None:
+        self._after_id = None
+        x = self.widget.winfo_rootx() + 16
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 4
+        self._tip = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry(f"+{x}+{y}")
+        tk.Label(tw, text=self.text, background="#333333", foreground="#ffffff",
+                 font=FONT_SMALL, padx=6, pady=3, wraplength=250).pack()
+
+    def _hide(self) -> None:
+        if self._tip is not None:
+            try:
+                self._tip.destroy()
+            except tk.TclError:
+                pass
+            self._tip = None
+
+
+def add_tooltip(widget: tk.Widget, text: str, *, delay_ms: int = 500) -> ToolTip:
+    return ToolTip(widget, text, delay_ms=delay_ms)
 
 # Keys that belong to .grid(), not to the widget constructor
 _GRID_KEYS = {"row", "column", "rowspan", "columnspan", "sticky", "ipadx", "ipady"}

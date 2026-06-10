@@ -24,6 +24,7 @@ from .widgets import (
     make_separator,
     make_slider,
     setup_ttk_styles,
+    add_tooltip,
 )
 
 
@@ -233,7 +234,7 @@ def build_main_layout(app, settings: dict) -> None:
     btn_row.grid_columnconfigure(1, weight=1)
     btn_row.grid_columnconfigure(2, weight=1)
 
-    make_secondary_button(
+    app.advanced_btn = make_secondary_button(
         btn_row,
         "Advanced",
         app.show_advanced,
@@ -243,7 +244,7 @@ def build_main_layout(app, settings: dict) -> None:
         padx=2,
         pady=(0, 2),
     )
-    make_secondary_button(
+    app.clear_used_btn = make_secondary_button(
         btn_row,
         "Clear Used",
         app.on_clear_used_words,
@@ -253,7 +254,7 @@ def build_main_layout(app, settings: dict) -> None:
         padx=2,
         pady=(0, 2),
     )
-    make_secondary_button(
+    app.used_words_btn = make_secondary_button(
         btn_row,
         "Used Words",
         app.show_used_words,
@@ -274,3 +275,12 @@ def build_main_layout(app, settings: dict) -> None:
 
     for col in range(4):
         f.grid_columnconfigure(col, weight=1)
+
+    add_tooltip(app.auto_prefix_label, "Suffix: types only the ending / Full: types the complete word")
+    add_tooltip(app.roblox_status_label, "Green: Roblox running / Red: Roblox not found")
+    add_tooltip(app.play_btn, "Type the word into Roblox (Ctrl+Enter)", delay_ms=200)
+    add_tooltip(app.speed_slider, "Keystroke delay in milliseconds")
+    add_tooltip(app.humanizer_slider, "Human-like timing variation (0 = robotic)")
+    add_tooltip(app.advanced_btn, "Dictionary, timing, trap endings, exceptions")
+    add_tooltip(app.clear_used_btn, "Reset used words for a new game")
+    add_tooltip(app.used_words_btn, "Show words played this session")
