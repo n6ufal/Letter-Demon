@@ -2,9 +2,9 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-A pragmatic tool that searches 477,000+ words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for a word game where every move builds from the last 2-4 letters.
+A pragmatic tool that searches 477k+ words in milliseconds, finds the hardest follow-up, and types it like a human.
 
-> No dictionary is included, and this repo is strictly code only. The game's word list isn't distributed here and won't be included.
+The game's suffix-matching system rewards dead-end patterns more than vocabulary. Letter Demon exploits that weakness.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -25,13 +25,13 @@ Pick a main strategy, then a backup for when things go sideways.
 
 ### 2. Typing That Feels Human
 
-Typing speed ranges from 10-200 ms per keystroke.
+Typing speed ranges from 10-250 ms per keystroke.
 
 Turn up the humanizer and the typing stops feeling like a machine gun and starts feeling like an actual person. A little hesitation here, a weird pause there, enough imperfection to look natural.
 
 At around **170 ms** with **75%+ humanization** in **Trap** mode, it starts looking suspiciously like a real player who somehow knows every obscure word in the dictionary.
 
-### 3. You're Still the Boss
+### 3. Full Control
 
 The app suggests. You decide.
 
@@ -40,15 +40,24 @@ The app suggests. You decide.
 - Edit everything in an inline editor with search and undo.
 - Keep a log of every word played.
 
-### 4. Fast Enough to Be Boring
+### Example Workflow
 
-Lookups happen in milliseconds and have been tested against the game's evolving 477k-word dictionary.
+You type "ca" at the start of a game. The engine:
 
-The slowest part of the whole process is usually you: entering prefixes and pressing Ctrl + Enter between rounds. Fully automating everything would be boring, and probably a little suspicious.
+1. Searches all words starting with "ca" (cabinet, camera, capital, etc.)
+2. Scores each by matching trap endings (suffix priority list)
+3. Picks the highest-scoring word that's not in exceptions
+4. Types it like a human with realistic keystroke delays
+
+Result: "cabinet" gets typed with delays that look natural.
+
+> **Note**
+>
+> No dictionary is included. Bring your own word list and `trap_endings.txt`, ideally from the game's 474k-477k-word dictionary.
 
 ## Installation
 
-Windows, Python 3.10+. Run:
+Windows • Python 3.10+. Run:
 
 ```bash
 git clone https://github.com/n6ufal/Letter-Demon.git
@@ -63,17 +72,6 @@ python main.pyw
 2. **Configure Typing** - Set speed (default 170ms), jitter/humanizer intensity (default 75%), pre/post delays (default 500ms each).
 3. **Pick Strategy** - Trap Words (hardest), Long Words, Short Words, or Random. Choose a fallback.
 4. **Play** - Type starting letters, press Play or Ctrl+Enter.
-
-### Example Workflow
-
-You type "ca" at the start of a game. The engine:
-
-1. Searches all words starting with "ca" (cabinet, camera, capital, etc.)
-2. Scores each by matching trap endings (suffix priority list)
-3. Picks the highest-scoring word that's not in exceptions
-4. Types it like a human with realistic keystroke delays
-
-Result: "cabinet" gets typed with delays that look natural.
 
 ## Configuration
 
@@ -146,6 +144,7 @@ python -m unittest discover -v
 ```
 
 See [TESTING.md](TESTING.md) for full details.
+
 ## Troubleshooting
 
 - **"Game: off" indicator** - Open the game window before hitting Play
@@ -160,4 +159,4 @@ See [TESTING.md](TESTING.md) for full details.
 
 ## Disclaimer
 
-This is a personal Python learning project for personal use only.
+I built this as my personal Python learning project, for personal use only.
