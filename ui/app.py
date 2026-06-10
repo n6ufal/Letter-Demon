@@ -6,8 +6,6 @@ import os
 import sys
 import threading
 
-import ctypes
-
 import keyboard
 
 logger = logging.getLogger(__name__)
@@ -283,13 +281,6 @@ class LastLetterApp:
     def _set_abort(self) -> None:
         self._abort_event.set()
 
-    def _check_abort_key(self) -> bool:
-        """Returns True if Ctrl+Delete is physically held down (Polling fallback)."""
-        user32 = ctypes.windll.user32
-        ctrl = user32.GetAsyncKeyState(0x11) & 0x8000
-        delete = user32.GetAsyncKeyState(0x2E) & 0x8000
-        return bool(ctrl and delete)
-
     def _clear_hotkey(self) -> None:
         if hasattr(self, "_hotkey_id"):
             try:
@@ -342,7 +333,7 @@ class LastLetterApp:
             self._is_playing = True
             self._abort_event.clear()
             self._clear_hotkey()
-            self._hotkey_id = keyboard.add_hotkey("ctrl+delete", self._set_abort, suppress=True)
+            self._hotkey_id = keyboard.add_hotkey("ctrl+delete", self._set_abort)
 
         try:
             self.root.withdraw()
@@ -390,7 +381,6 @@ class LastLetterApp:
             success, message = self.typer.type_text(
                 completion, pre_delay_s=pre, post_delay_s=post,
                 abort_event=self._abort_event,
-                abort_check=self._check_abort_key,
             )
             if not success:
                 if message == "Aborted":
