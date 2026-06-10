@@ -69,6 +69,7 @@ class LastLetterApp:
 
         settings = load_settings()
         self._dict_path = settings.get("dict_path", None)
+        self._window_title = settings.get("window_title", "Roblox")
 
         self.prefix_var = tk.StringVar()
         self._validate_prefix_cmd = root.register(lambda v: v == "" or v.isalpha())
@@ -248,7 +249,7 @@ class LastLetterApp:
         )
 
     def _poll_roblox(self) -> None:
-        running = is_roblox_running()
+        running = is_roblox_running(self._window_title)
         self._update_roblox_indicator(running)
         self._poll_id = self.root.after(15000, self._poll_roblox)
 
@@ -260,7 +261,7 @@ class LastLetterApp:
 
     def _update_roblox_indicator(self, running: bool) -> None:
         self.roblox_status_label.config(fg=C_DOT_GREEN if running else C_DOT_RED)
-        self.roblox_status_var.set("Roblox")
+        self.roblox_status_var.set(self._window_title)
 
     def on_play_round(self) -> None:
         with self._playing_lock:
@@ -310,8 +311,8 @@ class LastLetterApp:
             self.root.withdraw()
             self.prefix_var.set("")
 
-            if is_roblox_running():
-                focus_roblox_window()
+            if is_roblox_running(self._window_title):
+                focus_roblox_window(self._window_title)
                 self._update_roblox_indicator(True)
             else:
                 self._update_roblox_indicator(False)
