@@ -281,6 +281,8 @@ def build_main_layout(app, settings: dict) -> None:
     add_tooltip(app.play_btn, "Type the word into Roblox (Ctrl+Enter)", delay_ms=200)
     add_tooltip(app.speed_slider, "Keystroke delay in milliseconds")
     add_tooltip(app.humanizer_slider, "Human-like timing variation (0 = robotic)")
+    add_tooltip(app.mode_combobox, "Primary strategy for picking the word")
+    add_tooltip(app.fallback_combobox, "Backup strategy when primary mode finds nothing")
     add_tooltip(app.advanced_btn, "Dictionary, timing, trap endings, exceptions")
     add_tooltip(app.clear_used_btn, "Reset used words for a new game")
     add_tooltip(app.used_words_btn, "Show words played this session")
