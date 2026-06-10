@@ -2,7 +2,7 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-A pragmatic tool that searches 470,000+ words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for a word game where every move builds from the last 2-4 letters.
+A pragmatic tool that searches 477,000+ words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for a word game where every move builds from the last 2-4 letters.
 
 > No dictionary is included, and this repo is strictly code only. The game's word list isn't distributed here and won't be included.
 
@@ -142,16 +142,6 @@ Stop the engine from suggesting certain words:
 - **"Game: off" indicator** - Open the game window before hitting Play
 - **Dictionary won't load** - Check the file exists and is valid JSON or TXT
 - **Typing fails** - Run `python main.py` to see errors, or check `logs/letter_demon.log`
-
-## Testing
-
-Run all 105 tests:
-
-```bash
-python -m unittest discover -v
-```
-
-See [TESTING.md](TESTING.md) for full details.
 
 ## Learn More
 
