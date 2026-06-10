@@ -2,9 +2,9 @@
 
 > **The Demon knows every word your opponent doesn't.**
 
-A pragmatic tool that searches 470k words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for a word game where every move builds from the last 2-4 letters.
+A pragmatic tool that searches 470,000+ words in milliseconds, picks the hardest word your opponent can follow, and types it like a human. Built for a word game where every move builds from the last 2-4 letters.
 
-> **No dictionary is included.** This tool expects you to supply your own word list.
+> No dictionary is included, and this repo is strictly code only. The game's word list isn't distributed here and won't be included.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -14,11 +14,37 @@ A pragmatic tool that searches 470k words in milliseconds, picks the hardest wor
 
 ## Features
 
-- Finds the toughest words your opponent can play from 470k words in milliseconds
-- Types naturally with human-like speed and pauses
-- Auto-detects and focuses your game window
-- Blocks unwanted words and customize difficulty settings
-- Lightning-fast searches that adapt to your changes
+### 1. Strategy + Backup
+
+Pick a main strategy, then a backup for when things go sideways.
+
+- **Trap** → Lead your opponent into a dead end.
+- **Long** → To boost your ego by pretending you know obscure, ridiculously long words.
+- **Short** → Minimal effort, maximum efficiency.
+- **Random** → Let fate take the wheel.
+
+### 2. Typing That Feels Human
+
+Typing speed ranges from 10-200 ms per keystroke.
+
+Turn up the humanizer and the typing stops feeling like a machine gun and starts feeling like an actual person. A little hesitation here, a weird pause there, enough imperfection to look natural.
+
+At around **170 ms** with **75%+ humanization** in **Trap** mode, it starts looking suspiciously like a real player who somehow knows every obscure word in the dictionary.
+
+### 3. You're Still the Boss
+
+The app suggests. You decide.
+
+- Block words you never want to use.
+- Create custom trap endings.
+- Edit everything in an inline editor with search and undo.
+- Keep a log of every word played.
+
+### 4. Fast Enough to Be Boring
+
+Lookups happen in milliseconds and have been tested against the game's evolving 477k-word dictionary.
+
+The slowest part of the whole process is usually you: entering prefixes and pressing Ctrl + Enter between rounds. Fully automating everything would be boring, and probably a little suspicious.
 
 ## Installation
 
@@ -28,13 +54,12 @@ Windows, Python 3.10+. Run:
 git clone https://github.com/n6ufal/Letter-Demon.git
 cd letter-demon
 pip install -r requirements.txt
-python main.pyw       # normal use (no console)
-python main.py        # debug (shows console)
+python main.pyw
 ```
 
 ## Quick Start
 
-1. **Load a Dictionary** - Advanced > Load Dictionary, pick a .json or .txt file. Indexing takes 5-30s.
+1. **Load a Dictionary** - Advanced > Load Dictionary, pick a .json or .txt file. Indexing takes 5-30s depending on your system specs.
 2. **Configure Typing** - Set speed (default 170ms), jitter/humanizer intensity (default 75%), pre/post delays (default 500ms each).
 3. **Pick Strategy** - Trap Words (hardest), Long Words, Short Words, or Random. Choose a fallback.
 4. **Play** - Type starting letters, press Play or Ctrl+Enter.
@@ -52,22 +77,11 @@ Result: "cabinet" gets typed with delays that look natural.
 
 ## Configuration
 
-Settings save automatically to `settings.json`:
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `dict_path` | null | path to loaded dictionary |
-| `speed` | 170 | ms per keystroke |
-| `mode` | "Trap Words" | main strategy |
-| `fallback` | "Short Words" | backup strategy |
-| `pre_delay` | 500 | ms before typing starts |
-| `post_delay` | 500 | ms after typing finishes |
-| `jitter_intensity` | 75 | jitter/humanizer intensity (0-100, 0 = off) |
-
 <details>
 <summary><b>Dictionary Format</b></summary>
 
 **JSON:**
+
 ```json
 {
   "words": ["apple", "banana", "cherry"]
@@ -75,11 +89,13 @@ Settings save automatically to `settings.json`:
 ```
 
 **Text (one word per line):**
+
 ```
 apple
 banana
 cherry
 ```
+
 </details>
 
 <details>
@@ -119,10 +135,13 @@ Stop the engine from suggesting certain words:
 2. Add one word per line
 3. Useful for slurs, proper nouns, or anything you want blocked
 
-#### UI Colors
-
-Edit `ui/theme.py` and restart to customize colors.
 </details>
+
+## Troubleshooting
+
+- **"Game: off" indicator** - Open the game window before hitting Play
+- **Dictionary won't load** - Check the file exists and is valid JSON or TXT
+- **Typing fails** - Run `python main.py` to see errors, or check `logs/letter_demon.log`
 
 ## Testing
 
@@ -134,12 +153,6 @@ python -m unittest discover -v
 
 See [TESTING.md](TESTING.md) for full details.
 
-## Troubleshooting
-
-- **"Game: off" indicator** - Open the game window before hitting Play
-- **Dictionary won't load** - Check the file exists and is valid JSON or TXT
-- **Typing fails** - Run `python main.py` to see errors, or check `logs/letter_demon.log`
-
 ## Learn More
 
 - Full architecture and algorithms: [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -149,4 +162,3 @@ See [TESTING.md](TESTING.md) for full details.
 ## Disclaimer
 
 This is a personal Python learning project for personal use only.
-

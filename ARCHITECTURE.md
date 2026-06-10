@@ -289,7 +289,7 @@ All public methods (`find_completion`, `find_full_word`, `set_trap_endings`, `se
 
 ```python
 # ui/app.py
-self._playing_lock = threading.Lock()  # Regular — prevents double-fire
+self._playing_lock = threading.RLock()  # Reentrant — prevents double-fire
 ```
 
 Acquired at the start of `on_play_round()`, released in `_type_and_return()`. This prevents two "Play" presses from spawning concurrent typing threads.
