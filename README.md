@@ -126,7 +126,7 @@ Edit `ui/theme.py` and restart to customize colors.
 
 ## Testing
 
-Run all 105 tests:
+Run all 97 tests:
 
 ```bash
 python -m unittest discover -v

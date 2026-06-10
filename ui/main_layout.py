@@ -163,7 +163,7 @@ def build_main_layout(app, settings: dict) -> None:
         "Speed",
         app.speed_var,
         from_=10,
-        to=200,
+        to=250,
         resolution=5,
         length=160,
         suffix="",
@@ -279,7 +279,7 @@ def build_main_layout(app, settings: dict) -> None:
     add_tooltip(app.auto_prefix_label, "Suffix: types only the ending / Full: types the complete word")
     add_tooltip(app.roblox_status_label, "Green: Roblox running / Red: Roblox not found")
     add_tooltip(app.play_btn, "Type the word into Roblox (Ctrl+Enter)", delay_ms=200)
-    add_tooltip(app.speed_slider, "Keystroke delay in milliseconds")
+    add_tooltip(app.speed_slider, "Average keystroke delay in ms (actual delays vary around this)")
     add_tooltip(app.humanizer_slider, "Human-like timing variation (0 = robotic)")
     add_tooltip(app.mode_combobox, "Primary strategy for picking the word")
     add_tooltip(app.fallback_combobox, "Backup strategy when primary mode finds nothing")
