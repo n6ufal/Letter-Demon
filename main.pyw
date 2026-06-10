@@ -7,7 +7,7 @@ Run this file to launch the application:
 import os
 import sys
 
-# Ensure the project root (letter_demon/) is on sys.path
+# Ensure the project root is on sys.path
 # This is critical when double-clicking the .pyw file from Explorer,
 # because the working directory may not be the script's directory.
 _PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -38,9 +38,9 @@ import tkinter as tk
 
 
 def main() -> None:
-    from ui.app import LastLetterApp
+    from ui.app import LetterDemonApp
     root = tk.Tk()
-    LastLetterApp(root)
+    LetterDemonApp(root)
     root.mainloop()
 
 

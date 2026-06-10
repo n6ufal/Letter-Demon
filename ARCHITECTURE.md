@@ -22,7 +22,7 @@ Two launch files, same core:
 | `main.py` | Visible | DEBUG (console + file) | Crash visible in terminal |
 | `main.pyw` | Hidden | WARNING (file only) | Shows message box with log path |
 
-Both insert the project root onto `sys.path`, enable DPI awareness via `ctypes.windll.shcore.SetProcessDpiAwareness(1)`, then start the tkinter `LastLetterApp`.
+Both insert the project root onto `sys.path`, enable DPI awareness via `ctypes.windll.shcore.SetProcessDpiAwareness(1)`, then start the tkinter `LetterDemonApp`.
 
 ## Module Layers
 

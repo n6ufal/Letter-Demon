@@ -33,9 +33,9 @@ import tkinter as tk
 
 
 def main() -> None:
-    from ui.app import LastLetterApp
+    from ui.app import LetterDemonApp
     root = tk.Tk()
-    LastLetterApp(root)
+    LetterDemonApp(root)
     root.mainloop()
 
 

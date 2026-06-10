@@ -1,1 +1,1 @@
-from .app import LastLetterApp
+from .app import LetterDemonApp

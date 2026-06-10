@@ -1,4 +1,3 @@
-# app.py main window orchestration
 """Main application window — wires UI modules to engines."""
 
 import logging
@@ -44,7 +43,7 @@ from .theme import (
 )
 
 
-class LastLetterApp:
+class LetterDemonApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("😈")
