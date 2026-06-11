@@ -10,7 +10,7 @@ The game's suffix-matching system rewards dead-end patterns more than vocabulary
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
-<img src="screenshots/main-GUI.png" width="600" alt="Letter Demon main window">
+<img src="docs/screenshots/main-GUI.png" width="600" alt="Letter Demon main window">
 
 ## Features
 
@@ -99,7 +99,7 @@ cherry
 <details>
 <summary><b>Advanced Configuration</b></summary>
 
-<img src="screenshots/advanced-window-GUI.png" width="600" alt="Advanced configuration window">
+<img src="docs/screenshots/advanced-window-GUI.png" width="600" alt="Advanced configuration window">
 
 #### Custom Trap Endings
 
@@ -123,7 +123,7 @@ sz
 osa
 ```
 
-<img src="screenshots/editor-GUI.png" width="600" alt="Trap endings editor">
+<img src="docs/screenshots/editor-GUI.png" width="600" alt="Trap endings editor">
 
 #### Word Exceptions
 
