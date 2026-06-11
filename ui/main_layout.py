@@ -278,7 +278,7 @@ def build_main_layout(app, settings: dict) -> None:
 
     add_tooltip(app.auto_prefix_label, "Suffix: types only the ending / Full: types the complete word")
     add_tooltip(app.roblox_status_label, f"Green: {app._window_title} running / Red: {app._window_title} not found")
-    add_tooltip(app.play_btn, "Type the word into Roblox (Ctrl+Enter)", delay_ms=200)
+    app.play_btn_tip = add_tooltip(app.play_btn, "Type the word into Roblox (Ctrl+Enter)", delay_ms=200)
     add_tooltip(app.speed_slider, "Average keystroke delay in ms (actual delays vary around this)")
     add_tooltip(app.humanizer_slider, "Human-like timing variation (0 = robotic)")
     add_tooltip(app.mode_combobox, "Primary strategy for picking the word")

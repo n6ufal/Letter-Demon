@@ -41,7 +41,6 @@ from .theme import (
     C_PLAY_ACT,
     C_PLAY_BG,
     C_PLAY_FG,
-    C_TEXT,
 )
 
 
@@ -149,29 +148,32 @@ class LetterDemonApp:
         self.status_label.unbind("<Leave>")
         if not self.engine.has_wordlist():
             self.play_btn.config(
-                text="Load a dictionary first!",
+                text="Click to load a dictionary",
+                command=self.on_load_dict,
                 state=tk.NORMAL,
                 fg=C_DOT_RED,
                 bg=C_BG_PANEL,
                 activeforeground="#c0392b",
                 activebackground="#ddd",
             )
-            self.status_var.set("Load Dictionary...")
-            self.status_label.config(fg=C_MUTED, cursor="hand2")
-            self.status_label.bind("<Button-1>", lambda e: self.on_load_dict())
-            self.status_label.bind("<Enter>", lambda e: self.status_label.config(fg=C_TEXT))
-            self.status_label.bind("<Leave>", lambda e: self.status_label.config(fg=C_MUTED))
+            self.status_var.set("")
+            self.status_label.config(fg=C_MUTED, cursor="")
+            if hasattr(self, "play_btn_tip"):
+                self.play_btn_tip.text = "No dictionary — click to load one"
         else:
             self.play_btn.bind("<Enter>", lambda e: self.play_btn.config(bg=C_PLAY_ACT))
             self.play_btn.bind("<Leave>", lambda e: self.play_btn.config(bg=C_PLAY_BG))
             self.play_btn.config(
                 text="Start (Ctrl+Enter)",
+                command=self.on_play_round,
                 state=tk.NORMAL,
                 fg=C_PLAY_FG,
                 bg=C_PLAY_BG,
                 activebackground=C_PLAY_ACT,
                 activeforeground=C_PLAY_FG,
             )
+            if hasattr(self, "play_btn_tip"):
+                self.play_btn_tip.text = "Type the word into Roblox (Ctrl+Enter)"
 
     def show_advanced(self) -> None:
         dialogs.show_advanced(self)
@@ -345,7 +347,10 @@ class LetterDemonApp:
             logger.exception("Thread creation failed")
 
     def on_ctrl_enter(self, event):
-        self.on_play_round()
+        if not self.engine.has_wordlist():
+            self.on_load_dict()
+        else:
+            self.on_play_round()
         return "break"
 
     def _type_and_return(self, completion: str, pre: float, post: float) -> None:
