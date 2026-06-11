@@ -138,7 +138,7 @@ Stop the engine from suggesting certain words:
 
 ## Testing
 
-Run all 97 tests:
+Run all 104 tests:
 
 ```bash
 python -m unittest discover -v

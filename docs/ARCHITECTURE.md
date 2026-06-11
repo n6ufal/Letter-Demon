@@ -5,15 +5,15 @@
 Letter Demon is a Windows desktop typing assistant for a Roblox word game. It searches a 470k+ word dictionary in milliseconds, picks the most difficult continuation for your opponent, and types it with human-like keystroke timing.
 
 ```
-core/      pure logic (no UI/OS deps)
+core/      pure logic (session.py, word_engine.py, dictionary.py — no UI/OS deps)
 config/    file I/O for settings, trap endings, exceptions
 system/    WinAPI (roblox.py), keyboard simulation (typer.py)
-ui/        tkinter: app.py, main_layout.py, dialogs.py, modes.py, theme.py, widgets.py, file_editors.py
+ui/        tkinter: app.py (controller), view.py, dialogs.py, modes.py, theme.py, widgets.py, file_editors.py
 data/      config files: settings.json, trap_endings.txt, exceptions.txt
 data/runtime/   runtime data: cache, logs, dictionaries (gitignored)
 docs/      ARCHITECTURE.md, TESTING.md, screenshots/
 scripts/   release.py (automated dev -> main merge + versioning)
-tests/     97 unittest.TestCase tests
+tests/     104 unittest.TestCase tests
 ```
 
 ## Entry Points
@@ -37,6 +37,47 @@ Both insert the project root onto `sys.path`, enable DPI awareness via `ctypes.w
 | **ui/** | tkinter application | Main window, dialogs, modes, theme, tooltips, file editors |
 
 Data flows **down**: ui → system/config → core. The `WordEngine` has no knowledge of tkinter, `keyboard`, or Roblox.
+
+## MVC Architecture
+
+The app follows a lightweight Model-View-Controller pattern:
+
+### Model — `core/session.py` (`AppSession`)
+
+Owns `WordEngine`, `Typer`, `SettingsManager`, play guard lock, dict path, and window title. No tkinter imports. Thread-safe via `RLock` on play state.
+
+```python
+session = AppSession()
+session.load_dictionary("words.txt")
+word = session.prepare_play_round(prefix, mode, fallback, auto_type_prefix)
+session.configure_typer(speed_ms=170, jitter_intensity=75, pre_delay_s=0.5, post_delay_s=0.5)
+session.finish_play_round()
+```
+
+### View — `ui/view.py` (`MainView`)
+
+Owns all widgets and tkinter variables. The controller constructs one instance, then reads/writes state through properties and update methods. Dialogs manage their own `Toplevel` windows.
+
+```python
+view = MainView(root, controller, window_title, settings)
+view.prefix             # reads entry text
+view.speed_ms           # reads slider
+view.show_feedback("error", "No match found")
+view.set_roblox_indicator(running)
+view.update_play_button(has_wordlist)
+```
+
+### Controller — `ui/app.py` (`LetterDemonApp`, ~300 lines)
+
+Creates session + view, wires event handlers, owns thread creation and Roblox polling. Pure orchestration — no direct widget access, no engine access, no typer access.
+
+```python
+class LetterDemonApp:
+    def __init__(self, root: tk.Tk, session: AppSession | None = None):
+        self.session = session or AppSession()
+        self.view = MainView(root, self, ...)
+        # ... wire bindings, start polling
+```
 
 ## Word Selection Pipeline
 
@@ -286,14 +327,14 @@ self._lock = threading.RLock()  # Reentrant — same thread can re-acquire
 
 All public methods (`find_completion`, `find_full_word`, `set_trap_endings`, `set_wordlist`, etc.) acquire this lock. Reentrant (`RLock`) means methods that call into each other won't deadlock.
 
-### 2. App's Play Guard Lock
+### 2. Session's Play Guard Lock
 
 ```python
-# ui/app.py
+# core/session.py
 self._playing_lock = threading.RLock()  # Reentrant — prevents double-fire
 ```
 
-Acquired at the start of `on_play_round()`, released in `_type_and_return()`. This prevents two "Play" presses from spawning concurrent typing threads.
+Acquired at the start of `session.prepare_play_round()`, released in `session.finish_play_round()`. The controller delegates play state management to `AppSession` — no lock lives in the controller.
 
 ### Daemon Thread Pattern
 
@@ -302,7 +343,7 @@ All blocking operations run on daemon threads so the UI stays responsive:
 ```python
 threading.Thread(
     target=self._type_and_return,
-    args=(completion, pre, post),
+    args=(completion,),
     daemon=True
 ).start()
 ```
@@ -312,13 +353,18 @@ threading.Thread(
 Tkinter requires all UI operations on the main thread. The `root.after(0, ...)` pattern schedules work back to the main thread:
 
 ```python
-def _type_and_return(self, completion, pre, post):
+def _type_and_return(self, completion) -> None:
     try:
-        self.typer.type_text(completion, pre_delay_s=pre, post_delay_s=post)
+        success, message = self.session.typer.type_text(
+            completion,
+            pre_delay_s=self.session.pre_delay,
+            post_delay_s=self.session.post_delay,
+        )
+        if not success:
+            logger.warning("Typing failed: %s", message)
     finally:
-        with self._playing_lock:
-            self._is_playing = False
-        self.root.after(0, self.root.deiconify)     # main thread restores window
+        self.session.finish_play_round()
+        self.root.after(0, self.root.deiconify)
 ```
 
 Dictionary loading also happens on a background thread with `after(0)` callbacks for status updates and UI re-enable.
