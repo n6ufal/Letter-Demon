@@ -31,8 +31,6 @@ Turn up the humanizer and the typing stops feeling like a machine gun and starts
 
 At around **170 ms** with **75%+ humanization** in **Trap** mode, it starts looking suspiciously like a real player who somehow knows every obscure word in the dictionary.
 
-Custom error sounds play when something goes wrong (empty prefix, no dictionary, no matching word) — no more harsh system beeps.
-
 ### 3. Full Control
 
 The app suggests. You decide.
