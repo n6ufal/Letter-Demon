@@ -4,27 +4,27 @@ Run this file to launch the application:
     python main.pyw
 """
 
-import os
 import sys
+from pathlib import Path
 
 # Ensure the project root is on sys.path
 # This is critical when double-clicking the .pyw file from Explorer,
 # because the working directory may not be the script's directory.
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = str(Path(__file__).resolve().parent)
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 import logging
-log_dir = os.path.join(_PROJECT_ROOT, "data", "runtime", "logs")
-os.makedirs(log_dir, exist_ok=True)
+log_dir = Path(_PROJECT_ROOT) / "data" / "runtime" / "logs"
+log_dir.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.WARNING,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
-        logging.FileHandler(os.path.join(log_dir, "letter_demon.log"), mode="a", encoding="utf-8"),
+        logging.FileHandler(str(log_dir / "letter_demon.log"), mode="a", encoding="utf-8"),
     ],
 )
-log_path = os.path.join(log_dir, "letter_demon.log")
+log_path = str(log_dir / "letter_demon.log")
 
 import ctypes
 

@@ -1,14 +1,14 @@
 """Main application window — wires UI modules to engines."""
 
 import logging
-import os
 import sys
 import threading
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 if sys.platform == "win32":
     import winsound
-    SOUND_ERROR = os.path.join(os.path.dirname(__file__), "error.wav")
+    SOUND_ERROR = str(Path(__file__).parent / "error.wav")
 else:
     winsound = None
     SOUND_ERROR = None
@@ -103,7 +103,7 @@ class LetterDemonApp:
 
         self._poll_roblox()
 
-        if self._dict_path and os.path.exists(self._dict_path):
+        if self._dict_path and Path(self._dict_path).exists():
             if hasattr(self, "play_btn") and self.play_btn.winfo_exists():
                 self.play_btn.config(text="Loading...", state=tk.DISABLED)
             threading.Thread(
@@ -180,7 +180,7 @@ class LetterDemonApp:
 
     def _dict_display_name(self) -> str:
         if self._dict_path:
-            return f"Dict: {os.path.basename(self._dict_path)}"
+            return f"Dict: {Path(self._dict_path).name}"
         return "Dict: none"
 
     def on_load_dict(self) -> None:

@@ -1,14 +1,16 @@
 """Tests for config/ — settings, trap_endings, exceptions persistence."""
 
+import json
 import os
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from config.settings import get_project_root, load_settings, save_settings
+from config.settings import get_project_root, load_settings, save_settings, SettingsManager
 from config.trap_endings import (
     load_trap_endings,
     save_trap_endings,
@@ -20,21 +22,21 @@ from config.exceptions import load_exceptions, save_exceptions
 class GetProjectRootTest(unittest.TestCase):
     def test_returns_absolute_path(self):
         root = get_project_root()
-        self.assertTrue(os.path.isabs(root))
+        self.assertTrue(root.is_absolute())
 
     def test_contains_core_directory(self):
         root = get_project_root()
-        self.assertTrue(os.path.isdir(os.path.join(root, "core")))
+        self.assertTrue((root / "core").is_dir())
 
 
 class SettingsRoundTripTest(unittest.TestCase):
     def setUp(self):
         import config.settings as cs
         self.tmp_dir = tempfile.TemporaryDirectory()
-        data_dir = os.path.join(self.tmp_dir.name, "data")
-        os.makedirs(data_dir, exist_ok=True)
+        data_dir = Path(self.tmp_dir.name) / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
         self._orig_settings_file = cs.SETTINGS_FILE
-        cs.SETTINGS_FILE = os.path.join(data_dir, "settings.json")
+        cs.SETTINGS_FILE = data_dir / "settings.json"
 
     def tearDown(self):
         import config.settings as cs
@@ -179,6 +181,70 @@ class ExceptionsRoundTripTest(unittest.TestCase):
             self.assertEqual(result, set())
             self.assertTrue(os.path.exists(self.file_path))
         self._patch_file(test)
+
+
+class SettingsManagerTest(unittest.TestCase):
+    """Tests for the SettingsManager class."""
+
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp_dir.name) / "settings.json"
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
+    def test_load_missing_returns_defaults(self):
+        mgr = SettingsManager(self.path)
+        self.assertEqual(mgr.get("mode"), "Trap Words")
+        self.assertEqual(mgr.get("speed"), 170.0)
+        self.assertEqual(mgr.get("jitter_intensity"), 75)
+
+    def test_save_and_reload(self):
+        mgr = SettingsManager(self.path)
+        mgr.set("speed", 200)
+        mgr.set("mode", "Short Words")
+        mgr.save()
+
+        mgr2 = SettingsManager(self.path)
+        self.assertEqual(mgr2.get("speed"), 200)
+        self.assertEqual(mgr2.get("mode"), "Short Words")
+
+    def test_merge_preserves_unknown_keys(self):
+        self.path.write_text(json.dumps({"unknown_key": "hello"}), "utf-8")
+        mgr = SettingsManager(self.path)
+        mgr.set("speed", 150)
+        mgr.save()
+
+        saved = json.loads(self.path.read_text("utf-8"))
+        self.assertEqual(saved["unknown_key"], "hello")
+        self.assertEqual(saved["speed"], 150)
+
+    def test_range_clamps_int(self):
+        self.path.write_text(json.dumps({"speed": 999}), "utf-8")
+        mgr = SettingsManager(self.path)
+        self.assertEqual(mgr.get("speed"), 250)
+
+    def test_range_clamps_low(self):
+        self.path.write_text(json.dumps({"jitter_intensity": -5}), "utf-8")
+        mgr = SettingsManager(self.path)
+        self.assertEqual(mgr.get("jitter_intensity"), 0)
+
+    def test_wrong_type_falls_back_to_default(self):
+        self.path.write_text(json.dumps({"speed": "fast"}), "utf-8")
+        mgr = SettingsManager(self.path)
+        self.assertEqual(mgr.get("speed"), 170.0)
+
+    def test_update_and_as_dict(self):
+        mgr = SettingsManager(self.path)
+        mgr.set("mode", "Long Words")
+        mgr.set("jitter_intensity", 50)
+        self.assertEqual(mgr.get("mode"), "Long Words")
+        self.assertEqual(mgr.get("jitter_intensity", 50), 50)
+
+        d = mgr.as_dict()
+        self.assertIsInstance(d, dict)
+        self.assertEqual(d["mode"], "Long Words")
+        self.assertEqual(d["jitter_intensity"], 50)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ import os
 import sys
 import threading
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -35,7 +36,7 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_path = self.tmp_dir.name
         self._cache_patch = patch("core.dictionary.CACHE_DIR",
-                                  os.path.join(self.tmp_path, "cache"))
+                                  Path(self.tmp_path) / "cache")
         self._cache_patch.start()
 
     def tearDown(self):
@@ -44,7 +45,7 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
 
     def test_load_dict_and_find_word_end_to_end(self):
         """Load dictionary, create engine, find word."""
-        dict_path = os.path.join(self.tmp_path, "words.txt")
+        dict_path = str(Path(self.tmp_path) / "words.txt")
         with open(dict_path, "w") as f:
             f.write("apple\napplication\napple\n")  # Duplicate to test dedup
 
@@ -60,7 +61,7 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
 
     def test_cache_speeds_up_subsequent_loads(self):
         """First load from file, second from cache."""
-        dict_path = os.path.join(self.tmp_path, "words.txt")
+        dict_path = str(Path(self.tmp_path) / "words.txt")
         with open(dict_path, "w") as f:
             f.write("apple\nbanana\ncherry\n" * 100)  # Larger dict
 
@@ -80,7 +81,7 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
 
     def test_invalid_dict_path_returns_none(self):
         """Missing dictionary path handled gracefully."""
-        nonexistent_path = os.path.join(self.tmp_path, "nonexistent.txt")
+        nonexistent_path = str(Path(self.tmp_path) / "nonexistent.txt")
         try:
             wordlist, from_cache = load_wordlist_from_dict(nonexistent_path)
             # Function may raise or return empty; both acceptable
@@ -90,7 +91,7 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
 
     def test_empty_dictionary_creates_engine(self):
         """Empty dictionary file doesn't crash engine creation."""
-        dict_path = os.path.join(self.tmp_path, "empty.txt")
+        dict_path = str(Path(self.tmp_path) / "empty.txt")
         with open(dict_path, "w") as f:
             f.write("")
 
@@ -103,7 +104,7 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
 
     def test_dictionary_with_extra_columns_loads(self):
         """Dictionary with extra columns (e.g., frequency) loads correctly."""
-        dict_path = os.path.join(self.tmp_path, "freq.txt")
+        dict_path = str(Path(self.tmp_path) / "freq.txt")
         with open(dict_path, "w") as f:
             f.write("apple 100\nbanana 50\ncherry 30\n")
 
@@ -123,7 +124,7 @@ class WordSearchingIntegrationTest(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_path = self.tmp_dir.name
         self._cache_patch = patch("core.dictionary.CACHE_DIR",
-                                  os.path.join(self.tmp_path, "cache"))
+                                  Path(self.tmp_path) / "cache")
         self._cache_patch.start()
 
     def tearDown(self):
@@ -132,18 +133,17 @@ class WordSearchingIntegrationTest(unittest.TestCase):
 
     def _create_engine_from_files(self, words, trap_endings, exceptions):
         """Helper: create engine with files."""
-        # Create dictionary
-        dict_path = os.path.join(self.tmp_path, "dict.txt")
+        dict_path = str(Path(self.tmp_path) / "dict.txt")
         with open(dict_path, "w") as f:
             f.write("\n".join(words) + "\n")
 
         # Create trap endings file
-        trap_path = os.path.join(self.tmp_path, "trap.txt")
+        trap_path = str(Path(self.tmp_path) / "trap.txt")
         with open(trap_path, "w") as f:
             f.write("\n".join(trap_endings) + "\n")
 
         # Create exceptions file
-        exc_path = os.path.join(self.tmp_path, "exc.txt")
+        exc_path = str(Path(self.tmp_path) / "exc.txt")
         with open(exc_path, "w") as f:
             f.write("\n".join(exceptions) + "\n")
 
@@ -237,7 +237,7 @@ class SettingsPersistenceIntegrationTest(unittest.TestCase):
         import tempfile
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_path = self.tmp_dir.name
-        self.settings_file = os.path.join(self.tmp_path, "settings.json")
+        self.settings_file = Path(self.tmp_path) / "settings.json"
 
     def tearDown(self):
         self.tmp_dir.cleanup()
@@ -290,7 +290,7 @@ class TypingIntegrationTest(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_path = self.tmp_dir.name
         self._cache_patch = patch("core.dictionary.CACHE_DIR",
-                                  os.path.join(self.tmp_path, "cache"))
+                                  Path(self.tmp_path) / "cache")
         self._cache_patch.start()
 
     def tearDown(self):
@@ -302,7 +302,7 @@ class TypingIntegrationTest(unittest.TestCase):
         """End-to-end: find word and type it."""
         # Create dictionary and engine
         words = ["apple", "application"]
-        dict_path = os.path.join(self.tmp_path, "dict.txt")
+        dict_path = str(Path(self.tmp_path) / "dict.txt")
         with open(dict_path, "w") as f:
             f.write("\n".join(words) + "\n")
 

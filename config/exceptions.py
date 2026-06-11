@@ -1,13 +1,12 @@
 """Word exceptions — load/save exceptions.txt."""
 
 import logging
-import os
 
 from .settings import get_project_root
 
 logger = logging.getLogger(__name__)
 
-EXCEPTIONS_FILE = os.path.join(get_project_root(), "data", "exceptions.txt")
+EXCEPTIONS_FILE = get_project_root() / "data" / "exceptions.txt"
 
 DEFAULT_EXCEPTIONS: list[str] = []
 
