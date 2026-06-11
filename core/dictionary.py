@@ -8,7 +8,7 @@ import os
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CACHE_DIR = os.path.join(BASE_DIR, "cache")
+CACHE_DIR = os.path.join(BASE_DIR, "data", "runtime", "cache")
 
 
 def get_cache_path(dict_path: str) -> str:

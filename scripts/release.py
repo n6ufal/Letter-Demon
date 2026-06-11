@@ -4,9 +4,12 @@ Run from the `dev` branch. Performs pre-flight checks, generates
 changelog from conventional commits, bumps version, merges dev to
 main, tags, and pushes.
 
-Usage: python scripts/release.py
+Usage:
+  python scripts/release.py          # full release
+  python scripts/release.py --dry-run  # preview only
 """
 
+import argparse
 import re
 import subprocess
 import sys
@@ -20,7 +23,7 @@ PYPROJECT_FILE = REPO / "pyproject.toml"
 RELEASE_NOTES = REPO / "RELEASE_NOTES.md"
 
 CONVENTIONAL_RE = re.compile(
-    r"^(feat|fix|chore|docs|refactor|test|BREAKING)(\(.+\))?: (.+)$"
+    r"^(feat|fix|chore|docs|refactor|test|BREAKING)(\(.+\))?(!)?: (.+)$"
 )
 
 
@@ -94,8 +97,9 @@ def parse_commits(commit_lines):
         m = CONVENTIONAL_RE.match(msg)
         if m:
             prefix = m.group(1)
-            description = m.group(3)
-            if "BREAKING" in msg.upper():
+            breaking_marker = m.group(3)
+            description = m.group(4)
+            if breaking_marker == "!":
                 sections["breaking"].append(description)
             elif prefix == "BREAKING":
                 sections["breaking"].append(description)
@@ -151,7 +155,13 @@ def generate_changelog(sections, new_version):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Automated release script for Letter Demon.")
+    parser.add_argument("--dry-run", action="store_true", help="Preview the release without making changes")
+    args = parser.parse_args()
+
     print("=== Letter Demon Release Script ===")
+    if args.dry_run:
+        print("         [DRY RUN — no changes will be made]")
     print()
 
     # ---- Pre-flight ----
@@ -203,6 +213,11 @@ def main():
     changelog = generate_changelog(sections, new_version)
     print(f"\n--- Changelog Preview ---{changelog}\n------------------------")
 
+    if args.dry_run:
+        print("\n--- Dry Run Complete ---")
+        print("No changes were made. Run without --dry-run to execute.")
+        sys.exit(0)
+
     confirm = input("Proceed with release? [Y/n]: ").strip().lower()
     if confirm not in ("", "y", "yes"):
         print("Aborted.")
@@ -237,7 +252,17 @@ def main():
 
     run(["git", "checkout", "main"], check=True)
     merge_msg = f"Merge dev -> main: release v{new_version}"
-    run(["git", "merge", "dev", "--no-ff", "-m", merge_msg], check=True)
+    try:
+        run(["git", "merge", "dev", "--no-ff", "-m", merge_msg], check=True)
+    except subprocess.CalledProcessError:
+        print()
+        print("ERROR: Merge conflict detected.")
+        print("Resolve conflicts manually, then run:")
+        print("  git commit")
+        print(f"  git tag v{new_version}")
+        print("  git push --all && git push --tags")
+        print("  git checkout dev")
+        sys.exit(1)
     print(f"  merged to main: {merge_msg}")
 
     run(["git", "tag", f"v{new_version}"], check=True)

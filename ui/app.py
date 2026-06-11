@@ -1,4 +1,3 @@
-# app.py main window orchestration
 """Main application window — wires UI modules to engines."""
 
 import logging
@@ -9,8 +8,10 @@ import threading
 logger = logging.getLogger(__name__)
 if sys.platform == "win32":
     import winsound
+    SOUND_ERROR = os.path.join(os.path.dirname(__file__), "error.wav")
 else:
     winsound = None
+    SOUND_ERROR = None
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
@@ -40,11 +41,10 @@ from .theme import (
     C_PLAY_ACT,
     C_PLAY_BG,
     C_PLAY_FG,
-    C_TEXT,
 )
 
 
-class LastLetterApp:
+class LetterDemonApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("😈")
@@ -69,6 +69,7 @@ class LastLetterApp:
 
         settings = load_settings()
         self._dict_path = settings.get("dict_path", None)
+        self._window_title = settings.get("window_title", "Roblox")
 
         self.prefix_var = tk.StringVar()
         self._validate_prefix_cmd = root.register(lambda v: v == "" or v.isalpha())
@@ -147,29 +148,32 @@ class LastLetterApp:
         self.status_label.unbind("<Leave>")
         if not self.engine.has_wordlist():
             self.play_btn.config(
-                text="Load a dictionary first!",
+                text="Click to load a dictionary",
+                command=self.on_load_dict,
                 state=tk.NORMAL,
                 fg=C_DOT_RED,
                 bg=C_BG_PANEL,
                 activeforeground="#c0392b",
                 activebackground="#ddd",
             )
-            self.status_var.set("Load Dictionary...")
-            self.status_label.config(fg=C_MUTED, cursor="hand2")
-            self.status_label.bind("<Button-1>", lambda e: self.on_load_dict())
-            self.status_label.bind("<Enter>", lambda e: self.status_label.config(fg=C_TEXT))
-            self.status_label.bind("<Leave>", lambda e: self.status_label.config(fg=C_MUTED))
+            self.status_var.set("")
+            self.status_label.config(fg=C_MUTED, cursor="")
+            if hasattr(self, "play_btn_tip"):
+                self.play_btn_tip.text = "No dictionary — click to load one"
         else:
             self.play_btn.bind("<Enter>", lambda e: self.play_btn.config(bg=C_PLAY_ACT))
             self.play_btn.bind("<Leave>", lambda e: self.play_btn.config(bg=C_PLAY_BG))
             self.play_btn.config(
                 text="Start (Ctrl+Enter)",
+                command=self.on_play_round,
                 state=tk.NORMAL,
                 fg=C_PLAY_FG,
                 bg=C_PLAY_BG,
                 activebackground=C_PLAY_ACT,
                 activeforeground=C_PLAY_FG,
             )
+            if hasattr(self, "play_btn_tip"):
+                self.play_btn_tip.text = "Type the word into Roblox (Ctrl+Enter)"
 
     def show_advanced(self) -> None:
         dialogs.show_advanced(self)
@@ -248,7 +252,7 @@ class LastLetterApp:
         )
 
     def _poll_roblox(self) -> None:
-        running = is_roblox_running()
+        running = is_roblox_running(self._window_title)
         self._update_roblox_indicator(running)
         self._poll_id = self.root.after(15000, self._poll_roblox)
 
@@ -260,7 +264,7 @@ class LastLetterApp:
 
     def _update_roblox_indicator(self, running: bool) -> None:
         self.roblox_status_label.config(fg=C_DOT_GREEN if running else C_DOT_RED)
-        self.roblox_status_var.set("Roblox")
+        self.roblox_status_var.set(self._window_title)
 
     def on_play_round(self) -> None:
         with self._playing_lock:
@@ -310,8 +314,8 @@ class LastLetterApp:
             self.root.withdraw()
             self.prefix_var.set("")
 
-            if is_roblox_running():
-                focus_roblox_window()
+            if is_roblox_running(self._window_title):
+                focus_roblox_window(self._window_title)
                 self._update_roblox_indicator(True)
             else:
                 self._update_roblox_indicator(False)
@@ -343,7 +347,10 @@ class LastLetterApp:
             logger.exception("Thread creation failed")
 
     def on_ctrl_enter(self, event):
-        self.on_play_round()
+        if not self.engine.has_wordlist():
+            self.on_load_dict()
+        else:
+            self.on_play_round()
         return "break"
 
     def _type_and_return(self, completion: str, pre: float, post: float) -> None:
@@ -411,7 +418,13 @@ class LastLetterApp:
         )
 
         if beep and winsound:
-            winsound.Beep(800, 100)
+            try:
+                winsound.PlaySound(
+                    SOUND_ERROR,
+                    winsound.SND_ASYNC | winsound.SND_NOSTOP | winsound.SND_FILENAME,
+                )
+            except Exception:
+                winsound.Beep(800, 100)
 
         self._feedback_after_id = self.root.after(
             duration_ms, self._clear_feedback_strip
@@ -445,6 +458,7 @@ class LastLetterApp:
             "post_delay": self.post_delay_var.get(),
             "jitter_intensity": self.jitter_intensity.get(),
             "auto_type_prefix": self.auto_type_prefix.get() == "On",
+            "window_title": self._window_title,
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
         })
