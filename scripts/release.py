@@ -99,7 +99,7 @@ def parse_commits(commit_lines):
             prefix = m.group(1)
             breaking_marker = m.group(3)
             description = m.group(4)
-            if breaking_marker == "!" or "BREAKING" in msg.upper():
+            if breaking_marker == "!":
                 sections["breaking"].append(description)
             elif prefix == "BREAKING":
                 sections["breaking"].append(description)
