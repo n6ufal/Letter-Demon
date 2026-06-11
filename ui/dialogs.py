@@ -128,7 +128,7 @@ class AdvancedDialog:
         ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 4))
         row += 1
 
-        self._view.dict_label_var.set(self._controller._dict_display_name())
+        self._view.update_dict_label(self._controller.session.dict_path)
         tk.Label(
             f, textvariable=self._view.dict_label_var, fg=C_MUTED, font=FONT_MAIN,
             anchor="w", bg=C_BG,

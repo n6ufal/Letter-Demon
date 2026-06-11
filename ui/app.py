@@ -2,7 +2,6 @@
 
 import logging
 import threading
-from pathlib import Path
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
@@ -54,17 +53,15 @@ class LetterDemonApp:
         dict_path = self.session.try_load_dict_at_startup()
         if dict_path:
             self.view.set_loading_state()
-            threading.Thread(
-                target=self._load_wordlist_thread,
-                args=(dict_path,),
-                daemon=True,
-            ).start()
+            self._run_thread(self._load_wordlist_thread, (dict_path,))
         else:
             self.view.update_play_button(False)
 
-    # ------------------------------------------------------------------
-    # Focus helpers
-    # ------------------------------------------------------------------
+    # -- Focus helpers --
+
+    @staticmethod
+    def _run_thread(target, args=()) -> None:
+        threading.Thread(target=target, args=args, daemon=True).start()
 
     def _on_root_focus_in(self, event: tk.Event) -> None:
         self.root.after_idle(self._maybe_focus_prefix_entry)
@@ -88,14 +85,7 @@ class LetterDemonApp:
         except tk.TclError:
             pass
 
-    # ------------------------------------------------------------------
-    # Dictionary
-    # ------------------------------------------------------------------
-
-    def _dict_display_name(self) -> str:
-        if self.session.dict_path:
-            return f"Dict: {Path(self.session.dict_path).name}"
-        return "Dict: none"
+    # -- Dictionary --
 
     def on_load_dict(self) -> None:
         path = askopenfilename(
@@ -111,10 +101,8 @@ class LetterDemonApp:
             return
         self.session.dict_path = path
         self.view.set_loading_state()
-        self.view.set_dict_label(self._dict_display_name())
-        threading.Thread(
-            target=self._load_wordlist_thread, args=(path,), daemon=True,
-        ).start()
+        self.view.update_dict_label(self.session.dict_path)
+        self._run_thread(self._load_wordlist_thread, (path,))
 
     def _load_wordlist_thread(self, dict_path: str) -> None:
         try:
@@ -131,9 +119,7 @@ class LetterDemonApp:
 
             self.root.after(0, _on_fail)
 
-    # ------------------------------------------------------------------
-    # Trap endings / exceptions
-    # ------------------------------------------------------------------
+    # -- Trap endings / exceptions --
 
     def reload_trap_endings(self) -> None:
         self.session.reload_trap_endings()
@@ -167,18 +153,38 @@ class LetterDemonApp:
             default_content="# Word exceptions - one per line\n",
         )
 
-    # ------------------------------------------------------------------
-    # Roblox polling
-    # ------------------------------------------------------------------
+    # -- Roblox polling --
 
     def _poll_roblox(self) -> None:
         running = is_roblox_running(self.session.window_title)
         self.view.set_roblox_indicator(running)
         self._poll_id = self.root.after(15000, self._poll_roblox)
 
-    # ------------------------------------------------------------------
-    # Play round
-    # ------------------------------------------------------------------
+    # -- Play round --
+
+    def _prepare_for_typing(self) -> bool:
+        """Hide window, focus Roblox, configure typer. Returns False on error."""
+        try:
+            self.root.withdraw()
+            self.view.clear_prefix()
+            if is_roblox_running(self.session.window_title):
+                focus_roblox_window(self.session.window_title)
+                self.view.set_roblox_indicator(True)
+            else:
+                self.view.set_roblox_indicator(False)
+            self.session.configure_typer(
+                speed_ms=self.view.speed_ms,
+                jitter_intensity=self.view.jitter_intensity,
+                pre_delay_s=self.view.pre_delay_ms / 1000.0,
+                post_delay_s=self.view.post_delay_ms / 1000.0,
+            )
+            return True
+        except Exception:
+            self.session.finish_play_round()
+            self.view.show_feedback("error", "Failed to prepare for typing.",
+                                    duration_ms=6000)
+            logger.exception("Failed to prepare for typing")
+            return False
 
     def on_play_round(self) -> None:
         prefix = self.view.prefix
@@ -204,41 +210,10 @@ class LetterDemonApp:
             self.view.show_feedback("error", "No matching word found.", beep=True)
             return
 
-        try:
-            self.root.withdraw()
-            self.view.clear_prefix()
-
-            if is_roblox_running(self.session.window_title):
-                focus_roblox_window(self.session.window_title)
-                self.view.set_roblox_indicator(True)
-            else:
-                self.view.set_roblox_indicator(False)
-
-            self.session.configure_typer(
-                speed_ms=self.view.speed_ms,
-                jitter_intensity=self.view.jitter_intensity,
-                pre_delay_s=self.view.pre_delay_ms / 1000.0,
-                post_delay_s=self.view.post_delay_ms / 1000.0,
-            )
-        except Exception:
-            self.session.finish_play_round()
-            self.view.show_feedback("error", "Failed to prepare for typing.",
-                                    duration_ms=6000)
-            logger.exception("Failed to prepare for typing")
+        if not self._prepare_for_typing():
             return
 
-        try:
-            threading.Thread(
-                target=self._type_and_return,
-                args=(word_to_type,),
-                daemon=True,
-            ).start()
-        except Exception:
-            self.session.finish_play_round()
-            self.root.deiconify()
-            self.view.show_feedback("error", "Failed to start typing thread.",
-                                    duration_ms=6000)
-            logger.exception("Thread creation failed")
+        self._run_thread(self._type_and_return, (word_to_type,))
 
     def on_ctrl_enter(self, event: tk.Event) -> str:
         if not self.session.has_wordlist():
@@ -265,11 +240,10 @@ class LetterDemonApp:
         finally:
             self.session.finish_play_round()
             self.root.after(0, lambda: self._try_tcl(self.root.deiconify))
-            self.root.after(0, self._update_used_words_if_open)
-
-    # ------------------------------------------------------------------
-    # Dialogs
-    # ------------------------------------------------------------------
+            self.root.after(
+                0, lambda: self._used_words_dialog
+                and self._used_words_dialog.update_list()
+            )
 
     def show_advanced(self) -> None:
         if self._advanced_dialog is None:
@@ -293,13 +267,7 @@ class LetterDemonApp:
         if self._used_words_dialog is not None:
             self._used_words_dialog.update_list()
 
-    # ------------------------------------------------------------------
-    # Utilities
-    # ------------------------------------------------------------------
-
-    def _update_used_words_if_open(self) -> None:
-        if self._used_words_dialog is not None:
-            self._used_words_dialog.update_list()
+    # -- Utilities --
 
     @staticmethod
     def _try_tcl(fn, *args, **kwargs):
@@ -308,15 +276,13 @@ class LetterDemonApp:
         except tk.TclError:
             pass
 
-    # ------------------------------------------------------------------
-    # Cleanup
-    # ------------------------------------------------------------------
+    # -- Cleanup --
 
     def on_quit(self) -> None:
         self.view.dismiss_feedback()
         if self._poll_id is not None:
             self.root.after_cancel(self._poll_id)
-            self._poll_id = None
+        self._poll_id = None
         self.session.persist_settings({
             "speed": self.view.speed_ms,
             "mode": modes.to_internal_mode(self.view.mode),

@@ -575,8 +575,11 @@ class MainView:
         self._auto_prefix_var.set(text)
         self.auto_prefix_label.config(fg=C_DOT_GREEN)
 
-    def set_dict_label(self, text: str) -> None:
-        self._dict_label_var.set(text)
+    def update_dict_label(self, path: str | None) -> None:
+        if path:
+            self._dict_label_var.set(f"Dict: {Path(path).name}")
+        else:
+            self._dict_label_var.set("Dict: none")
 
     def set_trap_status(self, text: str) -> None:
         self._trap_status_var.set(text)
