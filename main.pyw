@@ -15,7 +15,7 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 import logging
-log_dir = os.path.join(_PROJECT_ROOT, "logs")
+log_dir = os.path.join(_PROJECT_ROOT, "data", "runtime", "logs")
 os.makedirs(log_dir, exist_ok=True)
 logging.basicConfig(
     level=logging.WARNING,

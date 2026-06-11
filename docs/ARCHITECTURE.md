@@ -9,8 +9,9 @@ core/      pure logic (no UI/OS deps)
 config/    file I/O for settings, trap endings, exceptions
 system/    WinAPI (roblox.py), keyboard simulation (typer.py)
 ui/        tkinter: app.py, main_layout.py, dialogs.py, modes.py, theme.py, file_editors.py
-data/      runtime files: settings.json, trap_endings.txt, exceptions.txt
-cache/     disk cache for dictionary (gitignored)
+data/      config files: settings.json, trap_endings.txt, exceptions.txt
+data/runtime/   runtime data: cache, logs, dictionaries (gitignored)
+data/runtime/cache/     disk cache for dictionary (gitignored)
 ```
 
 ## Entry Points
@@ -47,7 +48,7 @@ Prefix → [Prefix Search] → [Score Candidates] → [Filter Exceptions] → [F
 
 Loading 500k words from scratch takes ~1 second. A disk cache drops this to ~50ms.
 
-The cache file path is deterministic — `cache/cache_{md5[:10]}.txt` where the hash is derived from the dictionary's absolute path.
+The cache file path is deterministic — `data/runtime/cache/cache_{md5[:10]}.txt` where the hash is derived from the dictionary's absolute path.
 
 ```python
 def load_wordlist_from_dict(dict_path):
@@ -198,7 +199,7 @@ Reset via the "Clear Used" button in the UI — not to be confused with the disk
 
 Trap scores are computed lazily at query time in `_select`. The scoring index (`_ending_scores` and `_max_ending_len`) is rebuilt when trap endings change via `set_trap_endings`. No per-word cache is maintained — scores are computed fresh for each query's candidate set.
 
-The disk cache (`cache/cache_*.txt`) is only invalidated when the dictionary file's mtime changes.
+The disk cache (`data/runtime/cache/cache_*.txt`) is only invalidated when the dictionary file's mtime changes.
 
 ## Mode System
 

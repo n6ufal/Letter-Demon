@@ -10,7 +10,7 @@ The game's suffix-matching system rewards dead-end patterns more than vocabulary
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
-<img src="screenshots/main-GUI.png" width="600" alt="Letter Demon main window">
+<img src="docs/screenshots/main-GUI.png" width="600" alt="Letter Demon main window">
 
 ## Features
 
@@ -99,7 +99,7 @@ cherry
 <details>
 <summary><b>Advanced Configuration</b></summary>
 
-<img src="screenshots/advanced-window-GUI.png" width="600" alt="Advanced configuration window">
+<img src="docs/screenshots/advanced-window-GUI.png" width="600" alt="Advanced configuration window">
 
 #### Custom Trap Endings
 
@@ -123,7 +123,7 @@ sz
 osa
 ```
 
-<img src="screenshots/editor-GUI.png" width="600" alt="Trap endings editor">
+<img src="docs/screenshots/editor-GUI.png" width="600" alt="Trap endings editor">
 
 #### Word Exceptions
 
@@ -143,18 +143,18 @@ Run all 97 tests:
 python -m unittest discover -v
 ```
 
-See [TESTING.md](TESTING.md) for full details.
+See [TESTING.md](docs/TESTING.md) for full details.
 
 ## Troubleshooting
 
 - **"Game: off" indicator** - Open the game window before hitting Play
 - **Dictionary won't load** - Check the file exists and is valid JSON or TXT
-- **Typing fails** - Run `python main.py` to see errors, or check `logs/letter_demon.log`
+- **Typing fails** - Run `python main.py` to see errors, or check `data/runtime/logs/letter_demon.log`
 
 ## Learn More
 
-- Full architecture and algorithms: [ARCHITECTURE.md](ARCHITECTURE.md)
-- Test suite guide: [TESTING.md](TESTING.md)
+- Full architecture and algorithms: [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Test suite guide: [TESTING.md](docs/TESTING.md)
 - Blog post: [What Happens When You Take a Word Game Too Seriously](https://alifnaufal.me/posts/what-happens-when-you-take-a-word-game-too-seriously/)
 
 ## Disclaimer

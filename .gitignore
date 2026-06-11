@@ -48,15 +48,15 @@ Thumbs.db
 desktop.ini
 
 # Project-specific — Runtime & Config
-cache/
-logs/
 crash.log
 *.log
 settings.json
 validator/
 testenv/
-dictionaries/
 lookuptool/
+data/runtime/cache/
+data/runtime/logs/
+data/runtime/dicts/
 
 # Backups & Temporary
 *.backup
@@ -71,6 +71,7 @@ typer backup/
 dist/
 
 # Build & Debug
+.ruff_cache/
 .pytest_cache/
 .coverage
 htmlcov/
