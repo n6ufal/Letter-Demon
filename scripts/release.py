@@ -4,9 +4,12 @@ Run from the `dev` branch. Performs pre-flight checks, generates
 changelog from conventional commits, bumps version, merges dev to
 main, tags, and pushes.
 
-Usage: python scripts/release.py
+Usage:
+  python scripts/release.py          # full release
+  python scripts/release.py --dry-run  # preview only
 """
 
+import argparse
 import re
 import subprocess
 import sys
@@ -152,7 +155,13 @@ def generate_changelog(sections, new_version):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Automated release script for Letter Demon.")
+    parser.add_argument("--dry-run", action="store_true", help="Preview the release without making changes")
+    args = parser.parse_args()
+
     print("=== Letter Demon Release Script ===")
+    if args.dry_run:
+        print("         [DRY RUN — no changes will be made]")
     print()
 
     # ---- Pre-flight ----
@@ -203,6 +212,11 @@ def main():
 
     changelog = generate_changelog(sections, new_version)
     print(f"\n--- Changelog Preview ---{changelog}\n------------------------")
+
+    if args.dry_run:
+        print("\n--- Dry Run Complete ---")
+        print("No changes were made. Run without --dry-run to execute.")
+        sys.exit(0)
 
     confirm = input("Proceed with release? [Y/n]: ").strip().lower()
     if confirm not in ("", "y", "yes"):
