@@ -8,8 +8,10 @@ import threading
 logger = logging.getLogger(__name__)
 if sys.platform == "win32":
     import winsound
+    SOUND_ERROR = os.path.join(os.path.dirname(__file__), "error.wav")
 else:
     winsound = None
+    SOUND_ERROR = None
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
@@ -411,7 +413,13 @@ class LetterDemonApp:
         )
 
         if beep and winsound:
-            winsound.Beep(800, 100)
+            try:
+                winsound.PlaySound(
+                    SOUND_ERROR,
+                    winsound.SND_ASYNC | winsound.SND_NOSTOP | winsound.SND_FILENAME,
+                )
+            except Exception:
+                winsound.Beep(800, 100)
 
         self._feedback_after_id = self.root.after(
             duration_ms, self._clear_feedback_strip
@@ -445,6 +453,7 @@ class LetterDemonApp:
             "post_delay": self.post_delay_var.get(),
             "jitter_intensity": self.jitter_intensity.get(),
             "auto_type_prefix": self.auto_type_prefix.get() == "On",
+            "window_title": self._window_title,
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
         })
