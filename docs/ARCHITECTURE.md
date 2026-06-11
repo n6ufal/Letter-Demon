@@ -2,16 +2,18 @@
 
 ## Project Overview
 
-Letter Demon is a Windows desktop typing assistant for the Roblox game *Last Letter*. It searches a 470k+ word dictionary in milliseconds, picks the most difficult continuation for your opponent, and types it with human-like keystroke timing.
+Letter Demon is a Windows desktop typing assistant for a Roblox word game. It searches a 470k+ word dictionary in milliseconds, picks the most difficult continuation for your opponent, and types it with human-like keystroke timing.
 
 ```
 core/      pure logic (no UI/OS deps)
 config/    file I/O for settings, trap endings, exceptions
 system/    WinAPI (roblox.py), keyboard simulation (typer.py)
-ui/        tkinter: app.py, main_layout.py, dialogs.py, modes.py, theme.py, file_editors.py
+ui/        tkinter: app.py, main_layout.py, dialogs.py, modes.py, theme.py, widgets.py, file_editors.py
 data/      config files: settings.json, trap_endings.txt, exceptions.txt
 data/runtime/   runtime data: cache, logs, dictionaries (gitignored)
-data/runtime/cache/     disk cache for dictionary (gitignored)
+docs/      ARCHITECTURE.md, TESTING.md, screenshots/
+scripts/   release.py (automated dev -> main merge + versioning)
+tests/     97 unittest.TestCase tests
 ```
 
 ## Entry Points
@@ -32,7 +34,7 @@ Both insert the project root onto `sys.path`, enable DPI awareness via `ctypes.w
 | **core/** | Pure logic, testable without any OS/UI | `WordEngine`, dictionary parsing |
 | **config/** | File I/O for user-editable configs | `settings.json`, `trap_endings.txt` |
 | **system/** | OS-specific operations | WinAPI window detection, keyboard simulation |
-| **ui/** | tkinter application | Main window, dialogs, modes, theme |
+| **ui/** | tkinter application | Main window, dialogs, modes, theme, tooltips, file editors |
 
 Data flows **down**: ui → system/config → core. The `WordEngine` has no knowledge of tkinter, `keyboard`, or Roblox.
 
@@ -227,9 +229,9 @@ The full "play a round" flow:
 7. App window reappears (`root.deiconify()`)
 
 ```python
-def focus_roblox_window():
+def focus_roblox_window(window_title: str = "Roblox") -> None:
     user32 = ctypes.WinDLL("user32", use_last_error=True)
-    hwnd = user32.FindWindowW(None, "Roblox")
+    hwnd = user32.FindWindowW(None, window_title)
     if hwnd:
         if user32.IsIconic(hwnd):
             user32.ShowWindow(hwnd, 9)   # SW_RESTORE
@@ -338,6 +340,8 @@ Saved on quit, loaded on start. Includes dict path, speed, mode, fallback, jitte
   "jitter_intensity": 75,
   "pre_delay": 500,
   "post_delay": 500,
+  "auto_type_prefix": true,
+  "window_title": "Roblox",
   "win_x": 100,
   "win_y": 200
 }
@@ -347,7 +351,7 @@ Saved on quit, loaded on start. Includes dict path, speed, mode, fallback, jitte
 
 One per line, hardest first. Lines starting with `#` are comments. On missing file, defaults are written automatically.
 
-Omission before comments. Empty lines skipped. Lowercased on load. Duplicates removed while preserving order.
+Comments and blank lines are skipped. Lowercased on load. Duplicates removed while preserving first-occurrence order.
 
 ### exceptions.txt
 
@@ -359,3 +363,4 @@ Words never chosen by the engine. On missing file, an empty set is used.
 - EditorConfig: CRLF, 4-space indent, UTF-8
 - No docstrings on private methods
 - Minimal type annotations (no mypy/pyright configured — bare Python project)
+- Ruff linter with F + E4 rules (no E402) — run `ruff check .` before committing
