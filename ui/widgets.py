@@ -71,7 +71,17 @@ _GRID_KEYS = {"row", "column", "rowspan", "columnspan", "sticky", "ipadx", "ipad
 # ---------------------------------------------------------------------------
 
 def setup_ttk_styles():
-    """Configure the ttk theme once at startup."""
+    """Configure the ttk theme (safe to call multiple times)."""
+    _reconfigure_ttk_styles()
+
+
+def reconfigure_ttk_styles():
+    """Re-apply current C_* globals to ttk styles (call after theme switch)."""
+    _reconfigure_ttk_styles()
+
+
+def _reconfigure_ttk_styles():
+    """Apply current C_* globals to all ttk styles."""
     style = ttk.Style()
     style.theme_use("clam")
 
@@ -108,7 +118,6 @@ def setup_ttk_styles():
     style.configure("TFrame", background=C_BG)
     style.configure("TSeparator", background=C_SEP)
 
-    # Styles for the new ttk.Scale sliders
     style.configure("Panel.Horizontal.TScale", background=C_BG_PANEL)
     style.configure("Bg.Horizontal.TScale", background=C_BG)
 

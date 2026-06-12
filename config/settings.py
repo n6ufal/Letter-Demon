@@ -63,6 +63,7 @@ class SettingsManager:
         "pre_delay": (int, 500),
         "post_delay": (int, 500),
         "auto_type_prefix": (bool, True),
+        "theme": (str, "Default"),
         "win_x": ((int, type(None)), None),
         "win_y": ((int, type(None)), None),
     }
