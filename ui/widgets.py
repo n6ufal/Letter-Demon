@@ -144,7 +144,7 @@ def make_slider(parent, label: str, variable, from_: int, to: int,
     """
     val_label = tk.Label(parent, text=f"{int(variable.get())}{suffix}",
                          font=FONT_MONO, bg=bg, fg=C_TEXT,
-                         width=5, anchor="e")
+                         width=8, anchor="e")
 
     def _on_move(val):
         # Snap to exact resolution
