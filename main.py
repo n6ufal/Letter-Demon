@@ -24,12 +24,14 @@ logging.basicConfig(
 )
 
 from PySide6.QtWidgets import QApplication
+from ui.theme import QSS
 
 
 def main() -> None:
     from ui import MainWindow
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
+    app.setStyleSheet(QSS)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

@@ -1,43 +1,206 @@
-"""Color palette and fonts — single source of truth for all UI styling."""
+"""QSS stylesheet — single source of truth for all UI styling."""
 
-# --- Colors ---
-C_BG          = "#fafafa"   # main background
-C_BG_PANEL    = "#f4f4f5"   # subtle inset panel for controls
-C_TEXT        = "#18181b"   # primary text
-C_MUTED       = "#71717a"   # labels, hints, secondary text
-C_ENTRY_BG    = "#ffffff"   # entry field background
-C_ENTRY_BD    = "#d4d4d4"   # entry border (unfocused) — subtle but visible
-C_ENTRY_FOCUS = "#16a34a"   # entry border (focused) — matches Play button green
-C_PLAY_BG     = "#16a34a"   # Play round button — green
-C_PLAY_FG     = "#ffffff"   # Play round text
-C_PLAY_ACT    = "#15803d"   # Play round hover/active
-C_BTN_BG      = "#e4e4e7"   # secondary button background
-C_BTN_FG      = "#18181b"   # secondary button text
-C_SEP         = "#e4e4e7"   # separator color
-C_DOT_GREEN   = "#16a34a"   # connected / suffix / dict loaded
-C_DOT_RED     = "#dc2626"   # disconnected
-C_DOT_BLUE    = "#2563eb"   # full-word mode
-C_ACTIVE_BG   = "#e4e4e7"   # button active / pressed background
-C_ACTIVE_FG   = "#991b1b"   # button active foreground (error variant)
-C_TOOLTIP_BG  = "#1f2937"   # tooltip popup background
-C_TOOLTIP_FG  = "#f9fafb"   # tooltip popup foreground
+QSS = """
+/* Main background */
+QMainWindow, QWidget#mainWidget {
+    background: #fafafa;
+}
 
-# Inline feedback strip (no modal dialogs)
-C_FEEDBACK_WARN_BG  = "#fef3c7"   # light amber panel
-C_FEEDBACK_WARN_FG  = "#92400e"   # amber-brown text
-C_FEEDBACK_ERR_BG   = "#fee2e2"   # light red panel
-C_FEEDBACK_ERR_FG   = "#991b1b"   # red text
+/* Header */
+QLabel#headerLabel {
+    font: 8pt "Segoe UI";
+    font-weight: bold;
+    color: #18181b;
+}
 
-# Search highlight in text editors
-C_SEARCH_BG = "#fef08a"   # soft yellow
-C_SEARCH_FG = "#1a1a1a"   # black text on yellow
+/* Feedback label */
+QLabel#feedbackLabel {
+    font: 8pt "Segoe UI";
+    padding: 1px 6px;
+    border-radius: 3px;
+}
+QLabel#feedbackLabel[feedbackLevel="warn"] {
+    background: #fef3c7;
+    color: #92400e;
+}
+QLabel#feedbackLabel[feedbackLevel="error"] {
+    background: #fee2e2;
+    color: #991b1b;
+}
 
-# --- Fonts ---
-FONT_MAIN      = ("Segoe UI", 8)
-FONT_MAIN_BOLD = ("Segoe UI", 8, "bold")
-FONT_TITLE     = ("Segoe UI", 16)
-FONT_H1        = ("Segoe UI", 13, "bold")
-FONT_BTN       = ("Segoe UI", 10, "bold")
-FONT_SMALL     = ("Segoe UI", 7)
-FONT_MONO      = ("Consolas", 8)
-FONT_MONO_M    = ("Consolas", 10)
+/* Prefix entry */
+QLineEdit#prefixEntry {
+    font: 16pt "Segoe UI";
+    padding: 6px 8px;
+    border: 1px solid #d4d4d4;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #18181b;
+    selection-background-color: #16a34a;
+    selection-color: #ffffff;
+}
+QLineEdit#prefixEntry:focus {
+    border: 2px solid #16a34a;
+}
+
+/* Play button */
+QPushButton#playBtnActive {
+    font: 10pt "Segoe UI";
+    font-weight: bold;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    background: #16a34a;
+    color: #ffffff;
+}
+QPushButton#playBtnActive:hover {
+    background: #15803d;
+}
+QPushButton#playBtnActive:pressed {
+    background: #166534;
+}
+QPushButton#playBtnInactive {
+    font: 10pt "Segoe UI";
+    font-weight: bold;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    background: #f4f4f5;
+    color: #991b1b;
+}
+QPushButton#playBtnInactive:hover {
+    background: #e4e4e7;
+}
+QPushButton#playBtnInactive:pressed {
+    background: #d4d4d8;
+}
+QPushButton#playBtnActive:disabled,
+QPushButton#playBtnInactive:disabled {
+    background: #e4e4e7;
+    color: #a1a1aa;
+}
+
+/* Slider labels */
+QLabel#sliderLabel {
+    font: 8pt "Segoe UI";
+    color: #18181b;
+}
+QLabel#sliderValue {
+    font: 8pt "Consolas";
+    color: #18181b;
+}
+QLabel#comboLabel {
+    font: 8pt "Segoe UI";
+    color: #18181b;
+}
+
+/* Sliders */
+QSlider::groove:horizontal {
+    border: none;
+    height: 6px;
+    background: #e4e4e7;
+    border-radius: 3px;
+}
+QSlider::handle:horizontal {
+    background: #18181b;
+    border: none;
+    width: 14px;
+    height: 14px;
+    margin: -4px 0;
+    border-radius: 7px;
+}
+QSlider::handle:horizontal:hover {
+    background: #16a34a;
+}
+QSlider::sub-page:horizontal {
+    background: #16a34a;
+    border-radius: 3px;
+}
+
+/* Comboboxes */
+QComboBox {
+    font: 8pt "Segoe UI";
+    padding: 2px 4px;
+    border: 1px solid #d4d4d4;
+    border-radius: 3px;
+    background: #ffffff;
+    color: #18181b;
+}
+QComboBox:focus {
+    border: 1px solid #16a34a;
+}
+QComboBox::drop-down {
+    border: none;
+    width: 18px;
+}
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #71717a;
+    margin-right: 4px;
+}
+QComboBox:hover {
+    border: 1px solid #a1a1aa;
+}
+
+/* Separator */
+QFrame#separator {
+    color: #e4e4e7;
+    max-height: 1px;
+}
+
+/* Action buttons */
+QPushButton#actionBtn {
+    font: 8pt "Segoe UI";
+    padding: 4px 12px;
+    border: none;
+    border-radius: 3px;
+    background: #e4e4e7;
+    color: #18181b;
+}
+QPushButton#actionBtn:hover {
+    background: #d4d4d8;
+}
+QPushButton#actionBtn:pressed {
+    background: #a1a1aa;
+}
+
+/* Info bar dots */
+QLabel#dictDot, QLabel#autoPrefixDot, QLabel#robloxDot {
+    font: 8pt "Segoe UI";
+}
+
+/* Info bar labels */
+QLabel#dictCountLabel, QLabel#autoPrefixLabel, QLabel#robloxStatusLabel {
+    font: 8pt "Segoe UI";
+    padding-left: 2px;
+}
+
+/* Bottom row */
+QLabel#usedWordsLabel {
+    font: 8pt "Segoe UI";
+    color: #71717a;
+}
+QLabel#usedWordsLabel:hover {
+    color: #18181b;
+}
+QLabel#creditLabel {
+    font: 7pt "Segoe UI";
+    color: #71717a;
+}
+QLabel#creditLabel:hover {
+    color: #18181b;
+}
+
+/* Tooltips */
+QToolTip {
+    background: #1f2937;
+    color: #f9fafb;
+    border: none;
+    padding: 4px 6px;
+    font: 8pt "Segoe UI";
+}
+"""
+
+__all__ = ["QSS"]
