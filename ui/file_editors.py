@@ -12,6 +12,8 @@ from .theme import (
     C_PLAY_ACT,
     C_PLAY_BG,
     C_PLAY_FG,
+    C_SEARCH_BG,
+    C_SEARCH_FG,
     C_TEXT,
     FONT_MAIN,
     FONT_MONO_M,
@@ -69,7 +71,7 @@ class EditorDialog:
         except FileNotFoundError:
             content = self._default_content
         text_widget.insert("1.0", content)
-        text_widget.tag_configure("search", background="yellow", foreground="black")
+        text_widget.tag_configure("search", background=C_SEARCH_BG, foreground=C_SEARCH_FG)
 
         search_var = tk.StringVar()
         search_frame = tk.Frame(frame, bg=C_BG)

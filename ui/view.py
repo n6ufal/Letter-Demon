@@ -6,8 +6,11 @@ from pathlib import Path
 
 from . import modes
 from .theme import (
+    C_ACTIVE_BG,
+    C_ACTIVE_FG,
     C_BG,
     C_BG_PANEL,
+    C_DOT_BLUE,
     C_DOT_GREEN,
     C_DOT_RED,
     C_ENTRY_BD,
@@ -164,37 +167,47 @@ class MainView:
         for col in range(3):
             bar.grid_columnconfigure(col, weight=1)
 
-        self._status_var = tk.StringVar(value="")
-        self.status_label = tk.Label(
-            bar,
-            textvariable=self._status_var,
-            fg=C_TEXT,
-            anchor="w",
-            font=FONT_MAIN,
-            bg=C_BG,
+        # Left: dictionary word count  ● N,NNN words  /  ● No dictionary
+        dict_frame = tk.Frame(bar, bg=C_BG)
+        dict_frame.grid(row=0, column=0, sticky="w")
+        self._dict_dot = tk.Label(
+            dict_frame, text="\u25cf", fg=C_MUTED, font=FONT_MAIN, bg=C_BG,
         )
-        self.status_label.grid(row=0, column=0, sticky="w")
+        self._dict_dot.pack(side="left")
+        self._dict_count_var = tk.StringVar(value="No dictionary")
+        self.dict_count_label = tk.Label(
+            dict_frame, textvariable=self._dict_count_var,
+            fg=C_MUTED, font=FONT_MAIN, bg=C_BG,
+        )
+        self.dict_count_label.pack(side="left", padx=(2, 0))
 
+        # Center: typing mode  ● Suffix  /  ● Full
+        prefix_frame = tk.Frame(bar, bg=C_BG)
+        prefix_frame.grid(row=0, column=1)
+        self._auto_prefix_dot = tk.Label(
+            prefix_frame, text="\u25cf", fg=C_DOT_GREEN, font=FONT_MAIN, bg=C_BG,
+        )
+        self._auto_prefix_dot.pack(side="left")
         self._auto_prefix_var = tk.StringVar(value="")
         self.auto_prefix_label = tk.Label(
-            bar,
-            textvariable=self._auto_prefix_var,
-            fg=C_DOT_GREEN,
-            font=FONT_MAIN,
-            bg=C_BG,
+            prefix_frame, textvariable=self._auto_prefix_var,
+            fg=C_DOT_GREEN, font=FONT_MAIN, bg=C_BG,
         )
-        self.auto_prefix_label.grid(row=0, column=1)
+        self.auto_prefix_label.pack(side="left", padx=(2, 0))
 
-        self._roblox_status_var = tk.StringVar(value="Roblox")
-        self.roblox_status_label = tk.Label(
-            bar,
-            textvariable=self._roblox_status_var,
-            fg=C_DOT_RED,
-            anchor="e",
-            font=FONT_MAIN,
-            bg=C_BG,
+        # Right: Roblox status  ● {window_title}
+        roblox_frame = tk.Frame(bar, bg=C_BG)
+        roblox_frame.grid(row=0, column=2, sticky="e")
+        self._roblox_dot = tk.Label(
+            roblox_frame, text="\u25cf", fg=C_DOT_RED, font=FONT_MAIN, bg=C_BG,
         )
-        self.roblox_status_label.grid(row=0, column=2, sticky="e")
+        self._roblox_dot.pack(side="left")
+        self._roblox_status_var = tk.StringVar(value=self._window_title)
+        self.roblox_status_label = tk.Label(
+            roblox_frame, textvariable=self._roblox_status_var,
+            fg=C_DOT_RED, font=FONT_MAIN, bg=C_BG, anchor="e",
+        )
+        self.roblox_status_label.pack(side="left", padx=(2, 0))
 
     def _build_play_button(self) -> None:
         self.play_btn = tk.Button(
@@ -204,9 +217,9 @@ class MainView:
             font=FONT_BTN,
             pady=6,
             bg=C_BG_PANEL,
-            fg=C_DOT_RED,
-            activebackground="#ddd",
-            activeforeground="#c0392b",
+            fg=C_ACTIVE_FG,
+            activebackground=C_ACTIVE_BG,
+            activeforeground=C_ACTIVE_FG,
             relief="flat",
             bd=0,
             cursor="hand2",
@@ -372,19 +385,24 @@ class MainView:
         self._auto_type_prefix_var.trace_add(
             "write", lambda *_: self._update_auto_prefix_indicator()
         )
+        self._update_auto_prefix_indicator()
 
     def _wire_tooltips(self) -> None:
         add_tooltip(
+            self.dict_count_label,
+            "Dictionary word count",
+        )
+        add_tooltip(
             self.auto_prefix_label,
-            "Suffix: types only the ending / Full: types the complete word",
+            "Suffix \u2014 types only the ending / "
+            "Full \u2014 types the complete word",
         )
         add_tooltip(
             self.roblox_status_label,
-            f"Green: {self._window_title} running / "
-            f"Red: {self._window_title} not found",
+            f"{self._window_title} connection status",
         )
         self._play_btn_tip = add_tooltip(
-            self.play_btn, "No dictionary — click to load one", delay_ms=200
+            self.play_btn, "No dictionary \u2014 click to load one", delay_ms=200
         )
         add_tooltip(
             self.speed_slider,
@@ -474,14 +492,15 @@ class MainView:
                 text="Click to load a dictionary",
                 command=self._controller.on_load_dict,
                 state=tk.NORMAL,
-                fg=C_DOT_RED,
+                fg=C_ACTIVE_FG,
                 bg=C_BG_PANEL,
-                activeforeground="#c0392b",
-                activebackground="#ddd",
+                activeforeground=C_ACTIVE_FG,
+                activebackground=C_ACTIVE_BG,
             )
-            self._status_var.set("")
-            self.status_label.config(fg=C_MUTED, cursor="")
-            self._play_btn_tip.text = "No dictionary — click to load one"
+            self._dict_count_var.set("No dictionary")
+            self._dict_dot.config(fg=C_MUTED)
+            self.dict_count_label.config(fg=C_MUTED)
+            self._play_btn_tip.text = "No dictionary \u2014 click to load one"
         else:
             self.play_btn.bind(
                 "<Enter>", lambda e: self.play_btn.config(bg=C_PLAY_ACT)
@@ -503,8 +522,15 @@ class MainView:
     def set_loading_state(self) -> None:
         self.play_btn.config(text="Loading...", state=tk.DISABLED)
 
-    def set_status(self, text: str) -> None:
-        self._status_var.set(text)
+    def update_dict_word_count(self, count: int | None) -> None:
+        if count is not None:
+            self._dict_count_var.set(f"{count:,} words")
+            self._dict_dot.config(fg=C_DOT_GREEN)
+            self.dict_count_label.config(fg=C_DOT_GREEN)
+        else:
+            self._dict_count_var.set("No dictionary")
+            self._dict_dot.config(fg=C_MUTED)
+            self.dict_count_label.config(fg=C_MUTED)
 
     def clear_prefix(self) -> None:
         self._prefix_var.set("")
@@ -565,15 +591,18 @@ class MainView:
             pass
 
     def set_roblox_indicator(self, running: bool) -> None:
-        self.roblox_status_label.config(
-            fg=C_DOT_GREEN if running else C_DOT_RED
-        )
+        color = C_DOT_GREEN if running else C_DOT_RED
+        self.roblox_status_label.config(fg=color)
+        self._roblox_dot.config(fg=color)
         self._roblox_status_var.set(self._window_title)
 
     def _update_auto_prefix_indicator(self) -> None:
-        text = "Suffix" if self._auto_type_prefix_var.get() == "On" else "Full"
+        is_suffix = self._auto_type_prefix_var.get() == "On"
+        text = "Suffix" if is_suffix else "Full"
+        color = C_DOT_GREEN if is_suffix else C_DOT_BLUE
         self._auto_prefix_var.set(text)
-        self.auto_prefix_label.config(fg=C_DOT_GREEN)
+        self.auto_prefix_label.config(fg=color)
+        self._auto_prefix_dot.config(fg=color)
 
     def update_dict_label(self, path: str | None) -> None:
         if path:

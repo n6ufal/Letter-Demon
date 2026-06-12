@@ -6,7 +6,7 @@ import tkinter.ttk as ttk
 
 from .theme import (
     C_BG, C_BG_PANEL, C_TEXT, C_MUTED, C_ENTRY_BG, C_ENTRY_BD, C_PLAY_BG, C_PLAY_FG, C_PLAY_ACT, C_BTN_BG, C_BTN_FG,
-    C_SEP, FONT_BTN, FONT_MAIN, FONT_MONO, FONT_SMALL,
+    C_SEP, C_TOOLTIP_BG, C_TOOLTIP_FG, FONT_BTN, FONT_MAIN, FONT_MONO, FONT_SMALL,
 )
 
 
@@ -47,7 +47,7 @@ class ToolTip:
         tw.wm_overrideredirect(True)
         tw.wm_geometry(f"+{x}+{y}")
         tw.attributes("-topmost", True)
-        tk.Label(tw, text=self.text, background="#333333", foreground="#ffffff",
+        tk.Label(tw, text=self.text, background=C_TOOLTIP_BG, foreground=C_TOOLTIP_FG,
                  font=FONT_SMALL, padx=6, pady=3, wraplength=250).pack()
 
     def _hide(self) -> None:

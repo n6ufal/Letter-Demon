@@ -108,13 +108,15 @@ class LetterDemonApp:
         try:
             wordlist, from_cache = self.session.load_dictionary(dict_path)
             word_count = len(wordlist)
-            self.root.after(0, lambda: self.view.set_status(f"{word_count:,} words"))
+            self.root.after(
+                0, lambda: self.view.update_dict_word_count(word_count)
+            )
             self.root.after(0, lambda: self.view.update_play_button(True))
         except Exception:
             def _on_fail() -> None:
                 self.view.show_feedback("error", "Could not load dictionary.",
                                         duration_ms=6000)
-                self.view.set_status("")
+                self.view.update_dict_word_count(None)
                 self.view.update_play_button(False)
 
             self.root.after(0, _on_fail)
