@@ -48,16 +48,16 @@ class SettingsRoundTripTest(unittest.TestCase):
         self.assertEqual(result, {})
 
     def test_save_and_load_round_trip(self):
-        data = {"speed": 150, "mode": "Trap Words", "jitter_on": True}
+        data = {"wpm": 70, "mode": "Trap Words", "jitter_on": True}
         save_settings(data)
         loaded = load_settings()
         self.assertEqual(loaded, data)
 
     def test_save_updates_existing(self):
-        save_settings({"speed": 100})
-        save_settings({"speed": 200, "mode": "Short"})
+        save_settings({"wpm": 80})
+        save_settings({"wpm": 120, "mode": "Short"})
         loaded = load_settings()
-        self.assertEqual(loaded["speed"], 200)
+        self.assertEqual(loaded["wpm"], 120)
         self.assertEqual(loaded["mode"], "Short")
 
 
@@ -196,33 +196,33 @@ class SettingsManagerTest(unittest.TestCase):
     def test_load_missing_returns_defaults(self):
         mgr = SettingsManager(self.path)
         self.assertEqual(mgr.get("mode"), "Trap Words")
-        self.assertEqual(mgr.get("speed"), 170.0)
+        self.assertEqual(mgr.get("wpm"), 70)
         self.assertEqual(mgr.get("jitter_intensity"), 75)
 
     def test_save_and_reload(self):
         mgr = SettingsManager(self.path)
-        mgr.set("speed", 200)
+        mgr.set("wpm", 120)
         mgr.set("mode", "Short Words")
         mgr.save()
 
         mgr2 = SettingsManager(self.path)
-        self.assertEqual(mgr2.get("speed"), 200)
+        self.assertEqual(mgr2.get("wpm"), 120)
         self.assertEqual(mgr2.get("mode"), "Short Words")
 
     def test_merge_preserves_unknown_keys(self):
         self.path.write_text(json.dumps({"unknown_key": "hello"}), "utf-8")
         mgr = SettingsManager(self.path)
-        mgr.set("speed", 150)
+        mgr.set("wpm", 90)
         mgr.save()
 
         saved = json.loads(self.path.read_text("utf-8"))
         self.assertEqual(saved["unknown_key"], "hello")
-        self.assertEqual(saved["speed"], 150)
+        self.assertEqual(saved["wpm"], 90)
 
     def test_range_clamps_int(self):
-        self.path.write_text(json.dumps({"speed": 999}), "utf-8")
+        self.path.write_text(json.dumps({"wpm": 999}), "utf-8")
         mgr = SettingsManager(self.path)
-        self.assertEqual(mgr.get("speed"), 250)
+        self.assertEqual(mgr.get("wpm"), 200)
 
     def test_range_clamps_low(self):
         self.path.write_text(json.dumps({"jitter_intensity": -5}), "utf-8")
@@ -230,9 +230,9 @@ class SettingsManagerTest(unittest.TestCase):
         self.assertEqual(mgr.get("jitter_intensity"), 0)
 
     def test_wrong_type_falls_back_to_default(self):
-        self.path.write_text(json.dumps({"speed": "fast"}), "utf-8")
+        self.path.write_text(json.dumps({"wpm": "fast"}), "utf-8")
         mgr = SettingsManager(self.path)
-        self.assertEqual(mgr.get("speed"), 170.0)
+        self.assertEqual(mgr.get("wpm"), 70)
 
     def test_update_and_as_dict(self):
         mgr = SettingsManager(self.path)

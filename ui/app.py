@@ -286,7 +286,7 @@ class LetterDemonApp:
             self.root.after_cancel(self._poll_id)
         self._poll_id = None
         self.session.persist_settings({
-            "speed": self.view.speed_ms,
+            "wpm": self.view.speed_wpm,
             "mode": modes.to_internal_mode(self.view.mode),
             "fallback": modes.to_internal_fallback(self.view.fallback),
             "pre_delay": self.view.pre_delay_ms,

@@ -229,10 +229,10 @@ class MainView:
             speed_frame, text="Speed:", anchor="e", font=FONT_MAIN,
             bg=C_BG, fg=C_TEXT, width=7,
         ).grid(row=0, column=0, sticky="e")
-        self._speed_var = tk.DoubleVar(value=settings.get("speed", 170.0))
+        self._wpm_var = tk.IntVar(value=settings.get("wpm", 70))
         self.speed_slider, self.speed_val_label = make_slider(
-            speed_frame, "Speed", self._speed_var,
-            from_=10, to=250, resolution=5, length=140, suffix="", bg=C_BG,
+            speed_frame, "Speed", self._wpm_var,
+            from_=50, to=200, resolution=5, length=140, suffix=" WPM", bg=C_BG,
         )
         self.speed_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
         self.speed_val_label.grid(row=0, column=2, sticky="e")
@@ -377,7 +377,7 @@ class MainView:
         )
         add_tooltip(
             self.speed_slider,
-            "Average keystroke delay in ms (actual delays vary around this)",
+            "Typing speed in WPM (words per minute; 70\u2013200 is typical)",
         )
         add_tooltip(
             self.humanizer_slider, "Human-like timing variation (0 = robotic)"
@@ -409,7 +409,12 @@ class MainView:
 
     @property
     def speed_ms(self) -> float:
-        return self._speed_var.get()
+        wpm = self._wpm_var.get()
+        return 12000.0 / wpm if wpm > 0 else 120.0
+
+    @property
+    def speed_wpm(self) -> int:
+        return self._wpm_var.get()
 
     @property
     def jitter_intensity(self) -> int:

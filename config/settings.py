@@ -58,7 +58,7 @@ class SettingsManager:
         "window_title": (str, "Roblox"),
         "mode": (str, "Trap Words"),
         "fallback": (str, "Short Words"),
-        "speed": ((int, float), 170.0),
+        "wpm": (int, 70),
         "jitter_intensity": (int, 75),
         "pre_delay": (int, 500),
         "post_delay": (int, 500),
@@ -68,7 +68,7 @@ class SettingsManager:
     }
 
     RANGES: dict[str, tuple[int | float, int | float]] = {
-        "speed": (10, 250),
+        "wpm": (50, 200),
         "jitter_intensity": (0, 100),
         "pre_delay": (100, 5000),
         "post_delay": (100, 5000),
