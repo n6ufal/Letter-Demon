@@ -36,10 +36,6 @@ class LetterDemonApp:
         s = self.session.settings
         self.view = MainView(root, self, self.session.window_title, dict(s.as_dict()))
 
-        # Restore saved theme
-        theme_name = s.get("theme", "Default")
-        self.view.apply_theme(str(theme_name))
-
         win_x = s.get("win_x")
         win_y = s.get("win_y")
         if win_x is not None and win_y is not None:
@@ -297,7 +293,6 @@ class LetterDemonApp:
             "post_delay": self.view.post_delay_ms,
             "jitter_intensity": self.view.jitter_intensity,
             "auto_type_prefix": self.view.auto_type_prefix_enabled,
-            "theme": str(self.session.settings.get("theme", "Default")),
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
         })

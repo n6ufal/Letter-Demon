@@ -16,7 +16,6 @@ from .theme import (
     FONT_MAIN,
     FONT_MAIN_BOLD,
     FONT_MONO_M,
-    palette_names,
 )
 from .widgets import make_secondary_button, make_separator, make_slider, add_tooltip
 from .window_utils import center_window
@@ -209,24 +208,6 @@ class AdvancedDialog:
         )
         row += 1
 
-        tk.Label(
-            f, text="Theme:", font=FONT_MAIN, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, sticky="w")
-        self._theme_var = tk.StringVar(
-            value=str(self._controller.session.settings.get("theme", "Default"))
-        )
-        theme_combo = tk.ttk.Combobox(
-            f,
-            textvariable=self._theme_var,
-            values=palette_names(),
-            state="readonly",
-            width=14,
-        )
-        theme_combo.grid(row=row, column=1, sticky="e")
-        add_tooltip(theme_combo, "Switch between color palettes")
-        theme_combo.bind("<<ComboboxSelected>>", self._on_theme_changed)
-        row += 1
-
         make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
         row += 1
 
@@ -291,11 +272,6 @@ class AdvancedDialog:
         if self._win is not None:
             self._win.destroy()
             self._win = None
-
-    def _on_theme_changed(self, event=None) -> None:
-        name = self._theme_var.get()
-        self._view.apply_theme(name)
-        self._controller.session.settings.set("theme", name)
 
 
 # ---------------------------------------------------------------------------

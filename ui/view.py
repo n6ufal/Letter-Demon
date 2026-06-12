@@ -10,8 +10,6 @@ from .theme import (
     C_ACTIVE_FG,
     C_BG,
     C_BG_PANEL,
-    C_BTN_BG,
-    C_BTN_FG,
     C_DOT_BLUE,
     C_DOT_GREEN,
     C_DOT_RED,
@@ -26,20 +24,17 @@ from .theme import (
     C_PLAY_ACT,
     C_PLAY_BG,
     C_PLAY_FG,
-    C_SEP,
     C_TEXT,
     FONT_BTN,
     FONT_MAIN,
     FONT_MAIN_BOLD,
     FONT_SMALL,
     FONT_TITLE,
-    apply_theme,
 )
 from .widgets import (
     make_secondary_button,
     make_separator,
     make_slider,
-    reconfigure_ttk_styles,
     setup_ttk_styles,
     add_tooltip,
 )
@@ -68,7 +63,6 @@ class MainView:
         self._controller = controller
         self._window_title = window_title
         self._feedback_after_id = None
-        self._has_wordlist = False
 
         self._build(settings)
         self._wire_tooltips()
@@ -98,19 +92,18 @@ class MainView:
             self.main_frame.grid_columnconfigure(col, weight=1)
 
     def _build_header(self) -> None:
-        self._header_frame = tk.Frame(self.main_frame, bg=C_BG)
-        self._header_frame.grid(row=0, column=0, columnspan=4, sticky="we", pady=(0, 2))
-        self._header_label = tk.Label(
-            self._header_frame,
+        header = tk.Frame(self.main_frame, bg=C_BG)
+        header.grid(row=0, column=0, columnspan=4, sticky="we", pady=(0, 2))
+        tk.Label(
+            header,
             text="Starting letters:",
             anchor="w",
             font=FONT_MAIN_BOLD,
             bg=C_BG,
             fg=C_TEXT,
-        )
-        self._header_label.pack(side="left")
+        ).pack(side="left")
         self.feedback_label = tk.Label(
-            self._header_frame,
+            header,
             text="",
             anchor="w",
             font=FONT_MAIN,
@@ -157,49 +150,49 @@ class MainView:
         )
 
     def _build_info_bar(self) -> None:
-        self._info_bar = tk.Frame(self.main_frame, bg=C_BG)
-        self._info_bar.grid(row=8, column=0, columnspan=4, sticky="we", pady=(0, 2))
+        bar = tk.Frame(self.main_frame, bg=C_BG)
+        bar.grid(row=8, column=0, columnspan=4, sticky="we", pady=(0, 2))
         for col in range(3):
-            self._info_bar.grid_columnconfigure(col, weight=1)
+            bar.grid_columnconfigure(col, weight=1)
 
         # Left: dictionary word count  ● N,NNN words  /  ● No dictionary
-        self._info_dict_frame = tk.Frame(self._info_bar, bg=C_BG)
-        self._info_dict_frame.grid(row=0, column=0, sticky="w")
+        dict_frame = tk.Frame(bar, bg=C_BG)
+        dict_frame.grid(row=0, column=0, sticky="w")
         self._dict_dot = tk.Label(
-            self._info_dict_frame, text="\u25cf", fg=C_MUTED, font=FONT_MAIN, bg=C_BG,
+            dict_frame, text="\u25cf", fg=C_MUTED, font=FONT_MAIN, bg=C_BG,
         )
         self._dict_dot.pack(side="left")
         self._dict_count_var = tk.StringVar(value="No dictionary")
         self.dict_count_label = tk.Label(
-            self._info_dict_frame, textvariable=self._dict_count_var,
+            dict_frame, textvariable=self._dict_count_var,
             fg=C_MUTED, font=FONT_MAIN, bg=C_BG,
         )
         self.dict_count_label.pack(side="left", padx=(2, 0))
 
         # Center: typing mode  ● Suffix  /  ● Full
-        self._info_prefix_frame = tk.Frame(self._info_bar, bg=C_BG)
-        self._info_prefix_frame.grid(row=0, column=1)
+        prefix_frame = tk.Frame(bar, bg=C_BG)
+        prefix_frame.grid(row=0, column=1)
         self._auto_prefix_dot = tk.Label(
-            self._info_prefix_frame, text="\u25cf", fg=C_DOT_GREEN, font=FONT_MAIN, bg=C_BG,
+            prefix_frame, text="\u25cf", fg=C_DOT_GREEN, font=FONT_MAIN, bg=C_BG,
         )
         self._auto_prefix_dot.pack(side="left")
         self._auto_prefix_var = tk.StringVar(value="")
         self.auto_prefix_label = tk.Label(
-            self._info_prefix_frame, textvariable=self._auto_prefix_var,
+            prefix_frame, textvariable=self._auto_prefix_var,
             fg=C_DOT_GREEN, font=FONT_MAIN, bg=C_BG,
         )
         self.auto_prefix_label.pack(side="left", padx=(2, 0))
 
         # Right: Roblox status  ● {window_title}
-        self._info_roblox_frame = tk.Frame(self._info_bar, bg=C_BG)
-        self._info_roblox_frame.grid(row=0, column=2, sticky="e")
+        roblox_frame = tk.Frame(bar, bg=C_BG)
+        roblox_frame.grid(row=0, column=2, sticky="e")
         self._roblox_dot = tk.Label(
-            self._info_roblox_frame, text="\u25cf", fg=C_DOT_RED, font=FONT_MAIN, bg=C_BG,
+            roblox_frame, text="\u25cf", fg=C_DOT_RED, font=FONT_MAIN, bg=C_BG,
         )
         self._roblox_dot.pack(side="left")
         self._roblox_status_var = tk.StringVar(value=self._window_title)
         self.roblox_status_label = tk.Label(
-            self._info_roblox_frame, textvariable=self._roblox_status_var,
+            roblox_frame, textvariable=self._roblox_status_var,
             fg=C_DOT_RED, font=FONT_MAIN, bg=C_BG, anchor="e",
         )
         self.roblox_status_label.pack(side="left", padx=(2, 0))
@@ -222,91 +215,87 @@ class MainView:
         self.play_btn.grid(row=3, column=0, columnspan=4, sticky="we", pady=(4, 8))
 
     def _build_settings_panel(self, settings: dict) -> None:
-        self._settings_panel = tk.Frame(self.main_frame, bg=C_BG)
-        self._settings_panel.grid(row=4, column=0, columnspan=4, sticky="we", pady=(0, 6))
-        self._settings_panel.columnconfigure(0, weight=1)
+        panel = tk.Frame(self.main_frame, bg=C_BG)
+        panel.grid(row=4, column=0, columnspan=4, sticky="we", pady=(0, 6))
+        panel.columnconfigure(0, weight=1)
 
         # Row 0 in panel: Speed slider (left) + Mode combo (right)
-        self._speed_frame = tk.Frame(self._settings_panel, bg=C_BG)
-        self._speed_frame.grid(row=0, column=0, sticky="we", pady=(0, 2))
-        self._speed_frame.columnconfigure(0, weight=0)
-        self._speed_frame.columnconfigure(1, weight=1)
-        self._speed_frame.columnconfigure(2, weight=0)
-        self._speed_label = tk.Label(
-            self._speed_frame, text="Speed:", anchor="e", font=FONT_MAIN,
+        speed_frame = tk.Frame(panel, bg=C_BG)
+        speed_frame.grid(row=0, column=0, sticky="we", pady=(0, 2))
+        speed_frame.columnconfigure(0, weight=0)
+        speed_frame.columnconfigure(1, weight=1)
+        speed_frame.columnconfigure(2, weight=0)
+        tk.Label(
+            speed_frame, text="Speed:", anchor="e", font=FONT_MAIN,
             bg=C_BG, fg=C_TEXT, width=7,
-        )
-        self._speed_label.grid(row=0, column=0, sticky="e")
+        ).grid(row=0, column=0, sticky="e")
         self._speed_var = tk.DoubleVar(value=settings.get("speed", 170.0))
         self.speed_slider, self.speed_val_label = make_slider(
-            self._speed_frame, "Speed", self._speed_var,
+            speed_frame, "Speed", self._speed_var,
             from_=10, to=250, resolution=5, length=140, suffix="", bg=C_BG,
         )
         self.speed_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
         self.speed_val_label.grid(row=0, column=2, sticky="e")
 
-        self._mode_frame = tk.Frame(self._settings_panel, bg=C_BG)
-        self._mode_frame.grid(row=0, column=1, sticky="e", padx=(12, 0))
-        self._mode_label = tk.Label(
-            self._mode_frame, text="Mode:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
-        )
-        self._mode_label.pack(side="left", padx=(0, 4))
+        mode_frame = tk.Frame(panel, bg=C_BG)
+        mode_frame.grid(row=0, column=1, sticky="e", padx=(12, 0))
+        tk.Label(
+            mode_frame, text="Mode:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
+        ).pack(side="left", padx=(0, 4))
         self._mode_var = tk.StringVar(
             value=modes.to_display_mode(settings.get("mode", "Trap Words"))
         )
         self.mode_combobox = tk.ttk.Combobox(
-            self._mode_frame, textvariable=self._mode_var,
+            mode_frame, textvariable=self._mode_var,
             values=modes.MODE_DISPLAY, state="readonly", width=7,
         )
         self.mode_combobox.pack(side="left")
 
         # Row 1 in panel: Humanizer slider (left) + Fallback combo (right)
-        self._human_frame = tk.Frame(self._settings_panel, bg=C_BG)
-        self._human_frame.grid(row=1, column=0, sticky="we")
-        self._human_frame.columnconfigure(0, weight=0)
-        self._human_frame.columnconfigure(1, weight=1)
-        self._human_frame.columnconfigure(2, weight=0)
-        self._human_label = tk.Label(
-            self._human_frame, text="Human:", anchor="e", font=FONT_MAIN,
+        human_frame = tk.Frame(panel, bg=C_BG)
+        human_frame.grid(row=1, column=0, sticky="we")
+        human_frame.columnconfigure(0, weight=0)
+        human_frame.columnconfigure(1, weight=1)
+        human_frame.columnconfigure(2, weight=0)
+        tk.Label(
+            human_frame, text="Human:", anchor="e", font=FONT_MAIN,
             bg=C_BG, fg=C_TEXT, width=7,
-        )
-        self._human_label.grid(row=0, column=0, sticky="e")
+        ).grid(row=0, column=0, sticky="e")
         self._jitter_var = tk.IntVar(value=settings.get("jitter_intensity", 75))
         self.humanizer_slider, self.humanizer_val_label = make_slider(
-            self._human_frame, "Humanizer", self._jitter_var,
+            human_frame, "Humanizer", self._jitter_var,
             from_=0, to=100, resolution=5, length=140, suffix="%", bg=C_BG,
         )
         self.humanizer_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
         self.humanizer_val_label.grid(row=0, column=2, sticky="e")
 
-        self._fallback_frame = tk.Frame(self._settings_panel, bg=C_BG)
-        self._fallback_frame.grid(row=1, column=1, sticky="e", padx=(12, 0))
-        self._fallback_label = tk.Label(
-            self._fallback_frame, text="Fall:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
-        )
-        self._fallback_label.pack(side="left", padx=(0, 4))
+        fallback_frame = tk.Frame(panel, bg=C_BG)
+        fallback_frame.grid(row=1, column=1, sticky="e", padx=(12, 0))
+        tk.Label(
+            fallback_frame, text="Fall:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
+        ).pack(side="left", padx=(0, 4))
         self._fallback_var = tk.StringVar(
             value=modes.to_display_fallback(settings.get("fallback", "Short Words"))
         )
         self.fallback_combobox = tk.ttk.Combobox(
-            self._fallback_frame, textvariable=self._fallback_var,
+            fallback_frame, textvariable=self._fallback_var,
             values=modes.FALLBACK_DISPLAY, state="readonly", width=7,
         )
         self.fallback_combobox.pack(side="left")
 
     def _build_separator(self) -> None:
-        self._separator = make_separator(
+        make_separator(
             self.main_frame, 6, column=0, columnspan=4, sticky="we", pady=(4, 6)
         )
 
     def _build_action_buttons(self) -> None:
-        self._btn_row = tk.Frame(self.main_frame, bg=C_BG)
-        self._btn_row.grid(row=7, column=0, columnspan=4, sticky="we", pady=(0, 4))
+        btn_row = tk.Frame(self.main_frame, bg=C_BG)
+        btn_row.grid(row=7, column=0, columnspan=4, sticky="we", pady=(0, 4))
         for col in range(2):
-            self._btn_row.grid_columnconfigure(col, weight=1)
+            btn_row.grid_columnconfigure(col, weight=1)
 
         self.advanced_btn = make_secondary_button(
-            self._btn_row,
+            btn_row,
             "Advanced",
             self._controller.show_advanced,
             row=0,
@@ -315,7 +304,7 @@ class MainView:
             padx=2,
         )
         self.clear_used_btn = make_secondary_button(
-            self._btn_row,
+            btn_row,
             "Clear Used",
             self._controller.on_clear_used_words,
             row=0,
@@ -325,11 +314,11 @@ class MainView:
         )
 
     def _build_bottom_row(self) -> None:
-        self._bottom_row = tk.Frame(self.main_frame, bg=C_BG)
-        self._bottom_row.grid(row=9, column=0, columnspan=4, sticky="we", pady=(2, 0))
+        row = tk.Frame(self.main_frame, bg=C_BG)
+        row.grid(row=9, column=0, columnspan=4, sticky="we", pady=(2, 0))
 
         self.used_words_label = tk.Label(
-            self._bottom_row, text="Used words", fg=C_MUTED, font=FONT_MAIN, bg=C_BG, cursor="hand2",
+            row, text="Used words", fg=C_MUTED, font=FONT_MAIN, bg=C_BG, cursor="hand2",
         )
         self.used_words_label.pack(side="left")
         self.used_words_label.bind(
@@ -343,7 +332,7 @@ class MainView:
         )
 
         self._credit_label = tk.Label(
-            self._bottom_row, text="Made by n6ufal", fg=C_MUTED, font=FONT_SMALL, bg=C_BG,
+            row, text="Made by n6ufal", fg=C_MUTED, font=FONT_SMALL, bg=C_BG,
             cursor="hand2",
         )
         self._credit_label.pack(side="right")
@@ -367,75 +356,6 @@ class MainView:
         self._auto_type_prefix_var.trace_add(
             "write", lambda *_: self._update_auto_prefix_indicator()
         )
-        self._update_auto_prefix_indicator()
-
-    def apply_theme(self, name: str) -> None:
-        apply_theme(name)
-        reconfigure_ttk_styles()
-
-        self.root.configure(bg=C_BG)
-        self.main_frame.configure(bg=C_BG)
-
-        # Header
-        self._header_frame.configure(bg=C_BG)
-        self._header_label.configure(bg=C_BG, fg=C_TEXT)
-        self.feedback_label.configure(bg=C_BG, fg=C_BG)
-
-        # Entry
-        self.entry.configure(
-            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
-            selectbackground=C_ENTRY_FOCUS, selectforeground=C_PLAY_FG,
-            highlightbackground=C_ENTRY_BD, highlightcolor=C_ENTRY_FOCUS,
-        )
-
-        # Play button (restore correct state)
-        self.update_play_button(self._has_wordlist)
-
-        # Settings panel
-        self._settings_panel.configure(bg=C_BG)
-        self._speed_frame.configure(bg=C_BG)
-        self._speed_label.configure(bg=C_BG, fg=C_TEXT)
-        self.speed_val_label.configure(bg=C_BG, fg=C_TEXT)
-        self._mode_frame.configure(bg=C_BG)
-        self._mode_label.configure(bg=C_BG, fg=C_TEXT)
-        self._human_frame.configure(bg=C_BG)
-        self._human_label.configure(bg=C_BG, fg=C_TEXT)
-        self.humanizer_val_label.configure(bg=C_BG, fg=C_TEXT)
-        self._fallback_frame.configure(bg=C_BG)
-        self._fallback_label.configure(bg=C_BG, fg=C_TEXT)
-
-        # Separator
-        self._separator.configure(bg=C_SEP)
-
-        # Action buttons
-        self.advanced_btn.configure(
-            bg=C_BTN_BG, fg=C_BTN_FG,
-            activebackground=C_ENTRY_BD, activeforeground=C_TEXT,
-        )
-        self.clear_used_btn.configure(
-            bg=C_BTN_BG, fg=C_BTN_FG,
-            activebackground=C_ENTRY_BD, activeforeground=C_TEXT,
-        )
-        self._btn_row.configure(bg=C_BG)
-
-        # Info bar
-        self._info_bar.configure(bg=C_BG)
-        self._info_dict_frame.configure(bg=C_BG)
-        self._dict_dot.configure(bg=C_BG)
-        self.dict_count_label.configure(bg=C_BG)
-        self._info_prefix_frame.configure(bg=C_BG)
-        self._auto_prefix_dot.configure(bg=C_BG)
-        self.auto_prefix_label.configure(bg=C_BG)
-        self._info_roblox_frame.configure(bg=C_BG)
-        self._roblox_dot.configure(bg=C_BG)
-        self.roblox_status_label.configure(bg=C_BG)
-
-        # Bottom row
-        self._bottom_row.configure(bg=C_BG)
-        self.used_words_label.configure(bg=C_BG)
-        self._credit_label.configure(bg=C_BG)
-
-        # Refresh indicator colors
         self._update_auto_prefix_indicator()
 
     def _wire_tooltips(self) -> None:
@@ -537,7 +457,6 @@ class MainView:
     # ------------------------------------------------------------------
 
     def update_play_button(self, has_wordlist: bool) -> None:
-        self._has_wordlist = has_wordlist
         self.play_btn.unbind("<Enter>")
         self.play_btn.unbind("<Leave>")
         if not has_wordlist:
