@@ -1,93 +1,90 @@
-"""Secondary window classes: Advanced, About, Used Words."""
+"""Secondary window classes: Advanced, About, Used Words (Qt)."""
 
-import tkinter as tk
-import webbrowser
-
-from .theme import (
-    C_BG,
-    C_BG_PANEL,
-    C_ENTRY_BG,
-    C_MUTED,
-    C_PLAY_BG,
-    C_PLAY_FG,
-    C_SEP,
-    C_TEXT,
-    FONT_H1,
-    FONT_MAIN,
-    FONT_MAIN_BOLD,
-    FONT_MONO_M,
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QPushButton,
+    QSpinBox,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from .widgets import make_secondary_button, make_separator, make_slider, add_tooltip
-from .window_utils import center_window
+
 from core import version_string
+from .file_editors import EditorDialog
 
 
-class AboutDialog:
+# ---------------------------------------------------------------------------
+# About dialog
+# ---------------------------------------------------------------------------
+
+
+class AboutDialog(QDialog):
     """Stateless about window."""
 
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("About")
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setFixedSize(360, 220)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 20, 24, 20)
+
+        title = QLabel("Letter Demon \U0001f608")
+        title.setStyleSheet("font: 13pt 'Segoe UI'; font-weight: bold; color: #18181b;")
+        layout.addWidget(title)
+
+        ver = QLabel(version_string)
+        ver.setStyleSheet("font: 8pt 'Segoe UI'; color: #71717a;")
+        layout.addWidget(ver)
+
+        tagline = QLabel(
+            "The Demon knows every word your opponent doesn't."
+        )
+        tagline.setStyleSheet("font: 8pt 'Segoe UI'; color: #71717a; "
+                              "padding: 2px 0 12px 0;")
+        layout.addWidget(tagline)
+
+        sep = QWidget()
+        sep.setFixedHeight(1)
+        sep.setStyleSheet("background: #e4e4e7;")
+        layout.addWidget(sep)
+
+        credit = QLabel("Made by n6ufal with \U0001f49c")
+        credit.setStyleSheet("font: 8pt 'Segoe UI'; color: #18181b; "
+                             "padding: 8px 0 2px 0;")
+        layout.addWidget(credit)
+
+        email = QLabel('<a href="mailto:boxcarr@proton.me" '
+                       'style="color: #18181b; text-decoration: none;">'
+                       'Email: boxcarr@proton.me</a>')
+        email.setOpenExternalLinks(True)
+        email.setCursor(Qt.PointingHandCursor)
+        email.setStyleSheet("font: 8pt 'Segoe UI';")
+        layout.addWidget(email)
+
+        gh = QLabel('<a href="https://github.com/n6ufal/Letter-Demon" '
+                    'style="color: #18181b; text-decoration: none;">'
+                    'GitHub: n6ufal/Letter-Demon</a>')
+        gh.setOpenExternalLinks(True)
+        gh.setCursor(Qt.PointingHandCursor)
+        gh.setStyleSheet("font: 8pt 'Segoe UI';")
+        layout.addWidget(gh)
+
+        layout.addStretch()
+
     @staticmethod
-    def show(root: tk.Misc) -> None:
-        win = tk.Toplevel(root)
-        win.title("About")
-        win.resizable(False, False)
-        win.attributes("-topmost", True)
-        win.configure(bg=C_BG)
-
-        f = tk.Frame(win, bg=C_BG, padx=24, pady=20)
-        f.pack(fill="both", expand=True)
-
-        title_row = tk.Frame(f, bg=C_BG)
-        title_row.pack(anchor="w", fill="x")
-        tk.Label(title_row, text="Letter Demon \U0001f608", font=FONT_H1, bg=C_BG, fg=C_TEXT).pack(
-            side="left"
-        )
-        tk.Label(
-            f, text=version_string, font=FONT_MAIN, bg=C_BG, fg=C_MUTED
-        ).pack(anchor="w", pady=(2, 0))
-
-        tk.Label(
-            f,
-            text="The Demon knows every word your opponent doesn't.",
-            font=FONT_MAIN,
-            bg=C_BG,
-            fg=C_MUTED,
-        ).pack(anchor="w", pady=(2, 12))
-
-        sep = tk.Frame(f, height=1, bg=C_SEP)
-        sep.pack(fill="x", pady=(0, 12))
-
-        tk.Label(f, text="Made by n6ufal with \U0001f49c", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(
-            anchor="w"
-        )
-
-        email_label = tk.Label(
-            f,
-            text="Email: boxcarr@proton.me",
-            font=FONT_MAIN,
-            bg=C_BG,
-            fg=C_TEXT,
-            cursor="hand2",
-        )
-        email_label.pack(anchor="w", pady=(2, 0))
-        email_label.bind(
-            "<Button-1>", lambda e: webbrowser.open("mailto:boxcarr@proton.me")
-        )
-
-        gh_label = tk.Label(
-            f,
-            text="GitHub: n6ufal/Letter-Demon",
-            font=FONT_MAIN,
-            bg=C_BG,
-            fg=C_TEXT,
-            cursor="hand2",
-        )
-        gh_label.pack(anchor="w", pady=(2, 0))
-        gh_label.bind(
-            "<Button-1>",
-            lambda e: webbrowser.open("https://github.com/n6ufal/Letter-Demon"),
-        )
-
-        center_window(win, root)
+    def show(parent) -> "AboutDialog":
+        dlg = AboutDialog(parent)
+        dlg.show()
+        return dlg
 
 
 # ---------------------------------------------------------------------------
@@ -95,183 +92,222 @@ class AboutDialog:
 # ---------------------------------------------------------------------------
 
 
-class AdvancedDialog:
-    """Advanced settings window — timing, dictionary, trap endings, exceptions."""
+class AdvancedDialog(QDialog):
+    """Singleton advanced settings window — timing, dictionary, traps."""
 
-    def __init__(self, root: tk.Misc, controller, view) -> None:
-        self._controller = controller
-        self._view = view
-        self._win: tk.Toplevel | None = None
+    def __init__(self, main_window) -> None:
+        super().__init__(main_window)
+        self._main = main_window
+        self._session = main_window.session
+        self._view = main_window.view
+        self.setWindowTitle("Advanced")
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
-    def show(self) -> None:
-        if self._win is not None and self._win.winfo_exists():
-            self._win.lift()
-            self._win.focus_force()
-            return
-        self._build()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-    def _build(self) -> None:
-        win = tk.Toplevel(self._view.root)
-        win.title("Advanced")
-        win.resizable(False, False)
-        win.attributes("-topmost", True)
-        win.configure(bg=C_BG)
-        self._win = win
+        tabs = QTabWidget()
+        tabs.addTab(self._build_dict_tab(), "Dictionary")
+        tabs.addTab(self._build_timing_tab(), "Timing")
+        tabs.addTab(self._build_typing_tab(), "Typing")
+        tabs.addTab(self._build_traps_tab(), "Trap Endings")
+        layout.addWidget(tabs)
 
-        f = tk.Frame(win, padx=14, pady=12, bg=C_BG)
-        f.pack(fill="both", expand=True)
+        self.setFixedSize(420, 320)
 
-        row = 0
+    def _build_dict_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(14, 12, 14, 12)
 
-        tk.Label(
-            f, text="Dictionary", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 4))
-        row += 1
+        self._dict_label = QLabel(self._view.dict_label)
+        self._dict_label.setStyleSheet("font: 8pt 'Segoe UI'; color: #71717a;")
+        layout.addWidget(self._dict_label)
 
-        self._view.update_dict_label(self._controller.session.dict_path)
-        tk.Label(
-            f, textvariable=self._view.dict_label_var, fg=C_MUTED, font=FONT_MAIN,
-            anchor="w", bg=C_BG,
-        ).grid(row=row, column=0, sticky="w")
-        load_btn = make_secondary_button(
-            f, "Load Dictionary", self._controller.on_load_dict,
-            row=row, column=1, sticky="e", padx=(12, 0),
+        load_btn = QPushButton("Load Dictionary")
+        load_btn.setCursor(Qt.PointingHandCursor)
+        load_btn.clicked.connect(self._main.on_load_dict)
+        load_btn.setToolTip("Open a .json or .txt word list file")
+        layout.addWidget(load_btn)
+
+        layout.addStretch()
+        return tab
+
+    def _build_timing_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(14, 12, 14, 12)
+
+        pre_label = QLabel("Pre-type delay:")
+        pre_label.setStyleSheet("font: 8pt 'Segoe UI'; color: #18181b;")
+        layout.addWidget(pre_label)
+
+        pre_row = QHBoxLayout()
+        self._pre_spin = QSpinBox()
+        self._pre_spin.setRange(100, 2000)
+        self._pre_spin.setSingleStep(50)
+        self._pre_spin.setSuffix(" ms")
+        self._pre_spin.setValue(self._view.pre_delay_ms)
+        self._pre_spin.valueChanged.connect(self._on_pre_changed)
+        self._pre_spin.setToolTip("Pause before typing the first character")
+        pre_row.addWidget(self._pre_spin)
+        pre_row.addStretch()
+        layout.addLayout(pre_row)
+
+        post_label = QLabel("Post-type delay:")
+        post_label.setStyleSheet("font: 8pt 'Segoe UI'; color: #18181b; "
+                                 "padding-top: 6px;")
+        layout.addWidget(post_label)
+
+        post_row = QHBoxLayout()
+        self._post_spin = QSpinBox()
+        self._post_spin.setRange(100, 2000)
+        self._post_spin.setSingleStep(50)
+        self._post_spin.setSuffix(" ms")
+        self._post_spin.setValue(self._view.post_delay_ms)
+        self._post_spin.valueChanged.connect(self._on_post_changed)
+        self._post_spin.setToolTip("Pause after pressing Enter")
+        post_row.addWidget(self._post_spin)
+        post_row.addStretch()
+        layout.addLayout(post_row)
+
+        layout.addStretch()
+        return tab
+
+    def _on_pre_changed(self, val: int) -> None:
+        self._view.set_shared_delays(val, self._view.post_delay_ms)
+
+    def _on_post_changed(self, val: int) -> None:
+        self._view.set_shared_delays(self._view.pre_delay_ms, val)
+
+    def _build_typing_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(14, 12, 14, 12)
+
+        auto_row = QHBoxLayout()
+        auto_label = QLabel("Auto Type Prefix:")
+        auto_label.setStyleSheet("font: 8pt 'Segoe UI'; color: #18181b;")
+        auto_row.addWidget(auto_label)
+
+        self._auto_type_combo = QComboBox()
+        self._auto_type_combo.addItems(["On", "Off"])
+        self._auto_type_combo.setCurrentText(
+            "On" if self._view.auto_type_prefix_enabled else "Off"
         )
-        add_tooltip(load_btn, "Open a .json or .txt word list file")
-        row += 1
-        make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
-        row += 1
-
-        tk.Label(
-            f, text="Timing", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 4))
-        row += 1
-
-        tk.Label(
-            f, text="Pre-type delay:", font=FONT_MAIN, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, columnspan=2, sticky="w")
-        row += 1
-
-        def on_adv_pre_move(v):
-            adv_pre_val.config(text=f"{int(v)}ms")
-
-        adv_pre_slider, adv_pre_val = make_slider(
-            f, "Pre-type", self._view.pre_delay_var,
-            from_=100, to=2000, resolution=50, length=200, bg=C_BG,
-            command=on_adv_pre_move,
+        self._auto_type_combo.currentTextChanged.connect(self._on_auto_type_changed)
+        self._auto_type_combo.setToolTip(
+            "On: types only the ending / Off: types the full word"
         )
-        adv_pre_slider.grid(row=row, column=0, sticky="we", pady=(0, 6))
-        adv_pre_val.grid(row=row, column=1, sticky="e")
-        add_tooltip(adv_pre_slider, "Pause before typing the first character")
-        row += 1
+        auto_row.addWidget(self._auto_type_combo)
+        auto_row.addStretch()
+        layout.addLayout(auto_row)
 
-        tk.Label(
-            f, text="Post-type delay:", font=FONT_MAIN, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, columnspan=2, sticky="w")
-        row += 1
+        layout.addStretch()
+        return tab
 
-        def on_adv_post_move(v):
-            adv_post_val.config(text=f"{int(v)}ms")
+    def _on_auto_type_changed(self, text: str) -> None:
+        self._view.set_auto_type_prefix(text == "On")
 
-        adv_post_slider, adv_post_val = make_slider(
-            f, "Post-type", self._view.post_delay_var,
-            from_=100, to=2000, resolution=50, length=200, bg=C_BG,
-            command=on_adv_post_move,
+    def _build_traps_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(14, 12, 14, 12)
+
+        # Trap endings section
+        trap_header = QLabel("Trap endings")
+        trap_header.setStyleSheet("font: 8pt 'Segoe UI'; font-weight: bold; "
+                                  "color: #18181b;")
+        layout.addWidget(trap_header)
+
+        self._trap_status = QLabel(
+            f"{len(self._session.engine.trap_endings)} loaded"
         )
-        adv_post_slider.grid(row=row, column=0, sticky="we", pady=(0, 4))
-        adv_post_val.grid(row=row, column=1, sticky="e")
-        add_tooltip(adv_post_slider, "Pause after pressing Enter")
-        row += 1
+        self._trap_status.setStyleSheet("font: 8pt 'Segoe UI'; color: #18181b;")
+        layout.addWidget(self._trap_status)
 
-        make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
-        row += 1
+        trap_btn_row = QHBoxLayout()
+        trap_reload = QPushButton("Reload")
+        trap_reload.setCursor(Qt.PointingHandCursor)
+        trap_reload.clicked.connect(self._reload_traps)
+        trap_reload.setToolTip("Reload trap endings from the file")
+        trap_btn_row.addWidget(trap_reload)
 
-        tk.Label(
-            f, text="Typing Mode", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 4))
-        row += 1
+        trap_edit = QPushButton("Edit")
+        trap_edit.setCursor(Qt.PointingHandCursor)
+        trap_edit.clicked.connect(self._edit_traps)
+        trap_edit.setToolTip("Edit the trap endings list")
+        trap_btn_row.addWidget(trap_edit)
+        trap_btn_row.addStretch()
+        layout.addLayout(trap_btn_row)
 
-        tk.Label(
-            f, text="Auto Type Prefix:", font=FONT_MAIN, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, sticky="w")
-        auto_type_combo = tk.ttk.Combobox(
-            f,
-            textvariable=self._view.auto_type_prefix_var,
-            values=["On", "Off"],
-            state="readonly",
-            width=6,
+        # Exceptions section
+        exc_header = QLabel("Exceptions")
+        exc_header.setStyleSheet("font: 8pt 'Segoe UI'; font-weight: bold; "
+                                 "color: #18181b; padding-top: 12px;")
+        layout.addWidget(exc_header)
+
+        self._exc_status = QLabel(
+            f"{len(self._session.engine.word_exceptions)} loaded"
         )
-        auto_type_combo.grid(row=row, column=1, sticky="e")
-        add_tooltip(
-            auto_type_combo,
-            "On: types only the ending / Off: types the full word",
+        self._exc_status.setStyleSheet("font: 8pt 'Segoe UI'; color: #18181b;")
+        layout.addWidget(self._exc_status)
+
+        exc_btn_row = QHBoxLayout()
+        exc_reload = QPushButton("Reload")
+        exc_reload.setCursor(Qt.PointingHandCursor)
+        exc_reload.clicked.connect(self._reload_exceptions)
+        exc_reload.setToolTip("Reload exceptions from the file")
+        exc_btn_row.addWidget(exc_reload)
+
+        exc_edit = QPushButton("Edit")
+        exc_edit.setCursor(Qt.PointingHandCursor)
+        exc_edit.clicked.connect(self._edit_exceptions)
+        exc_edit.setToolTip("Edit the word exceptions list")
+        exc_btn_row.addWidget(exc_edit)
+        exc_btn_row.addStretch()
+        layout.addLayout(exc_btn_row)
+
+        layout.addStretch()
+        return tab
+
+    def _reload_traps(self) -> None:
+        self._session.reload_trap_endings()
+        self._trap_status.setText(
+            f"{len(self._session.engine.trap_endings)} loaded"
         )
-        row += 1
 
-        make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
-        row += 1
-
-        tk.Label(
-            f, text="Trap endings", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=0, sticky="nw", pady=(0, 2), padx=(0, 12))
-        tk.Label(
-            f, text="Exceptions", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
-        ).grid(row=row, column=1, sticky="nw", pady=(0, 2))
-        row += 1
-
-        self._view.trap_status_var.set(
-            f"{len(self._controller.session.engine.trap_endings)} loaded"
+    def _reload_exceptions(self) -> None:
+        self._session.reload_exceptions()
+        self._exc_status.setText(
+            f"{len(self._session.engine.word_exceptions)} loaded"
         )
-        tk.Label(
-            f, textvariable=self._view.trap_status_var, fg=C_TEXT, font=FONT_MAIN,
-            anchor="w", bg=C_BG,
-        ).grid(row=row, column=0, sticky="nw", padx=(0, 12))
-        self._view.exceptions_status_var.set(
-            f"{len(self._controller.session.engine.word_exceptions)} loaded"
-        )
-        tk.Label(
-            f, textvariable=self._view.exceptions_status_var, fg=C_TEXT, font=FONT_MAIN,
-            anchor="w", bg=C_BG,
-        ).grid(row=row, column=1, sticky="nw")
-        row += 1
 
-        btn_row_trap = tk.Frame(f, bg=C_BG)
-        btn_row_trap.grid(row=row, column=0, sticky="nw", pady=(4, 0), padx=(0, 12))
-        trap_reload = make_secondary_button(
-            btn_row_trap, "Reload", self._controller.reload_trap_endings
+    def _edit_traps(self) -> None:
+        from config.trap_endings import TRAP_ENDINGS_FILE
+        EditorDialog(
+            self._main,
+            title="Edit Trap Endings",
+            file_path=TRAP_ENDINGS_FILE,
+            reload_callback=self._session.reload_trap_endings,
+            default_content="# Trap endings - one per line, hardest first\n",
+            status_callback=lambda c: self._trap_status.setText(f"{c} loaded"),
         )
-        trap_reload.pack(side="left", padx=(0, 4))
-        add_tooltip(trap_reload, "Reload trap endings from the file")
-        trap_edit = make_secondary_button(
-            btn_row_trap, "Edit", self._controller.edit_trap_endings
+
+    def _edit_exceptions(self) -> None:
+        from config.exceptions import EXCEPTIONS_FILE
+        EditorDialog(
+            self._main,
+            title="Edit Exceptions",
+            file_path=EXCEPTIONS_FILE,
+            reload_callback=self._session.reload_exceptions,
+            default_content="# Word exceptions - one per line\n",
+            status_callback=lambda c: self._exc_status.setText(f"{c} loaded"),
         )
-        trap_edit.pack(side="left")
-        add_tooltip(trap_edit, "Edit the trap endings list")
 
-        btn_row_exc = tk.Frame(f, bg=C_BG)
-        btn_row_exc.grid(row=row, column=1, sticky="nw", pady=(4, 0))
-        exc_reload = make_secondary_button(
-            btn_row_exc, "Reload", self._controller.reload_exceptions
-        )
-        exc_reload.pack(side="left", padx=(0, 4))
-        add_tooltip(exc_reload, "Reload exceptions from the file")
-        exc_edit = make_secondary_button(
-            btn_row_exc, "Edit", self._controller.edit_exceptions
-        )
-        exc_edit.pack(side="left")
-        add_tooltip(exc_edit, "Edit the word exceptions list")
-        row += 1
-
-        f.grid_columnconfigure(0, weight=1)
-        f.grid_columnconfigure(1, weight=1)
-        center_window(win, self._view.root)
-
-        win.protocol("WM_DELETE_WINDOW", self._on_close)
-
-    def _on_close(self) -> None:
-        if self._win is not None:
-            self._win.destroy()
-            self._win = None
+    def refresh_dict_label(self) -> None:
+        self._dict_label.setText(self._view.dict_label)
 
 
 # ---------------------------------------------------------------------------
@@ -279,93 +315,42 @@ class AdvancedDialog:
 # ---------------------------------------------------------------------------
 
 
-class UsedWordsDialog:
+class UsedWordsDialog(QDialog):
     """Persistent window showing previously used words."""
 
-    def __init__(self, root: tk.Misc, controller) -> None:
-        self._controller = controller
-        self._root = root
-        self._win: tk.Toplevel | None = None
-        self._listbox: tk.Listbox | None = None
-        self._count_label: tk.Label | None = None
+    def __init__(self, main_window) -> None:
+        super().__init__(main_window)
+        self._main = main_window
+        self._session = main_window.session
+        self.setWindowTitle("Used Words")
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.resize(280, 350)
 
-    def show(self) -> None:
-        if self._win is not None and self._win.winfo_exists():
-            self.update_list()
-            self._win.lift()
-            self._win.focus_force()
-            return
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
 
-        self._win = tk.Toplevel(self._root)
-        self._win.title("Used Words")
-        self._win.resizable(True, True)
-        self._win.attributes("-topmost", True)
-        self._win.configure(bg=C_BG)
+        self._listbox = QListWidget()
+        self._listbox.setFont(QFont("Consolas", 10))
+        self._listbox.setAlternatingRowColors(True)
+        layout.addWidget(self._listbox)
 
-        outer = tk.Frame(self._win, bg=C_BG, padx=8, pady=8)
-        outer.pack(fill="both", expand=True)
-
-        list_frame = tk.Frame(outer, bg=C_BG_PANEL, padx=1, pady=1)
-        list_frame.pack(fill="both", expand=True)
-
-        scrollbar = tk.ttk.Scrollbar(list_frame)
-        scrollbar.pack(side="right", fill="y")
-
-        self._listbox = tk.Listbox(
-            list_frame,
-            yscrollcommand=scrollbar.set,
-            font=FONT_MONO_M,
-            width=28,
-            height=15,
-            bg=C_ENTRY_BG,
-            fg=C_TEXT,
-            selectbackground=C_PLAY_BG,
-            selectforeground=C_PLAY_FG,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
+        self._count_label = QLabel("0 words used")
+        self._count_label.setStyleSheet(
+            "font: 8pt 'Segoe UI'; color: #71717a;"
         )
-        self._listbox.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=self._listbox.yview)
+        layout.addWidget(self._count_label)
 
-        _, n_used = self._controller.session.used_words_for_display()
-        self._count_label = tk.Label(
-            outer,
-            text=f"{n_used} words used",
-            anchor="w",
-            font=FONT_MAIN,
-            bg=C_BG,
-            fg=C_MUTED,
-        )
-        self._count_label.pack(fill="x", pady=(6, 4))
-
-        make_secondary_button(outer, "Close", self.close).pack()
-
-        center_window(self._win, self._root)
-        self._win.protocol("WM_DELETE_WINDOW", self.close)
+        close_btn = QPushButton("Close")
+        close_btn.setCursor(Qt.PointingHandCursor)
+        close_btn.clicked.connect(self.close)
+        layout.addWidget(close_btn)
 
         self.update_list()
 
-    def close(self) -> None:
-        if self._win is not None:
-            self._win.destroy()
-            self._win = None
-            self._listbox = None
-            self._count_label = None
-
-    def is_alive(self) -> bool:
-        try:
-            return self._win is not None and self._win.winfo_exists()
-        except tk.TclError:
-            self._win = None
-            return False
-
     def update_list(self) -> None:
-        if not self.is_alive():
-            return
-        words, n = self._controller.session.used_words_for_display()
-        self._listbox.delete(0, tk.END)
+        words, count = self._session.used_words_for_display()
+        self._listbox.clear()
         for word in words:
-            self._listbox.insert(tk.END, word)
-        if self._count_label is not None:
-            self._count_label.config(text=f"{n} words used")
+            self._listbox.addItem(word)
+        self._count_label.setText(f"{count} words used")

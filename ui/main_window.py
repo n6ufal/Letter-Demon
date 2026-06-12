@@ -8,6 +8,8 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow
 
 from core.session import AppSession
 from . import modes
+from .dialogs import AboutDialog, AdvancedDialog, UsedWordsDialog
+from .file_editors import EditorDialog
 from .main_widget import MainWidget
 from .workers import DictWorker, TypeWorker
 
@@ -37,6 +39,8 @@ class MainWindow(QMainWindow):
         self._dict_thread: QThread | None = None
         self._typing_thread: QThread | None = None
         self._poll_timer: QTimer | None = None
+        self._advanced_dialog: AdvancedDialog | None = None
+        self._used_words_dialog: UsedWordsDialog | None = None
 
         self._wire_view_signals()
         self._wire_shortcuts()
@@ -148,6 +152,8 @@ class MainWindow(QMainWindow):
         self.view.update_dict_word_count(count)
         self.view.update_play_button(True)
         self.view.set_ready_state()
+        if self._advanced_dialog is not None:
+            self._advanced_dialog.refresh_dict_label()
 
     def _on_dict_error(self, msg: str) -> None:
         self.view.show_feedback("error", f"Could not load dictionary: {msg}",
@@ -241,27 +247,83 @@ class MainWindow(QMainWindow):
         self.show()
         self.raise_()
         self.activateWindow()
+        if self._used_words_dialog is not None:
+            self._used_words_dialog.update_list()
         if not success:
             logger.warning("Typing failed: %s", message)
             self.view.show_feedback("error", f"Typing failed: {message}",
                                     duration_ms=8000)
 
     # ------------------------------------------------------------------
-    # Dialogs (stubs — Phase 6)
+    # Trap endings / exceptions
+    # ------------------------------------------------------------------
+
+    def reload_trap_endings(self) -> None:
+        self.session.reload_trap_endings()
+        if self._advanced_dialog is not None:
+            self._advanced_dialog._trap_status.setText(
+                f"{len(self.session.engine.trap_endings)} loaded"
+            )
+
+    def reload_exceptions(self) -> None:
+        self.session.reload_exceptions()
+        if self._advanced_dialog is not None:
+            self._advanced_dialog._exc_status.setText(
+                f"{len(self.session.engine.word_exceptions)} loaded"
+            )
+
+    def edit_trap_endings(self) -> None:
+        from config.trap_endings import TRAP_ENDINGS_FILE
+        EditorDialog(
+            self,
+            title="Edit Trap Endings",
+            file_path=TRAP_ENDINGS_FILE,
+            reload_callback=self.reload_trap_endings,
+            default_content="# Trap endings - one per line, hardest first\n",
+            status_callback=lambda c: self._advanced_dialog._trap_status.setText(
+                f"{c} loaded"
+            ) if self._advanced_dialog else None,
+        )
+
+    def edit_exceptions(self) -> None:
+        from config.exceptions import EXCEPTIONS_FILE
+        EditorDialog(
+            self,
+            title="Edit Exceptions",
+            file_path=EXCEPTIONS_FILE,
+            reload_callback=self.reload_exceptions,
+            default_content="# Word exceptions - one per line\n",
+            status_callback=lambda c: self._advanced_dialog._exc_status.setText(
+                f"{c} loaded"
+            ) if self._advanced_dialog else None,
+        )
+
+    # ------------------------------------------------------------------
+    # Dialogs
     # ------------------------------------------------------------------
 
     def show_advanced(self) -> None:
-        logger.info("Advanced dialog — Phase 6")
+        if self._advanced_dialog is None:
+            self._advanced_dialog = AdvancedDialog(self)
+        self._advanced_dialog.show()
+        self._advanced_dialog.raise_()
+        self._advanced_dialog.activateWindow()
 
     def show_used_words(self) -> None:
-        logger.info("Used words dialog — Phase 6")
+        if self._used_words_dialog is None:
+            self._used_words_dialog = UsedWordsDialog(self)
+        self._used_words_dialog.show()
+        self._used_words_dialog.update_list()
+        self._used_words_dialog.raise_()
+        self._used_words_dialog.activateWindow()
 
     def show_about(self) -> None:
-        logger.info("About dialog — Phase 6")
+        AboutDialog(self).show()
 
     def on_clear_used_words(self) -> None:
         self.session.clear_used_words()
-        logger.info("Used words cleared")
+        if self._used_words_dialog is not None:
+            self._used_words_dialog.update_list()
 
     # ------------------------------------------------------------------
     # Helpers
