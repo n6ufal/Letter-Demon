@@ -80,7 +80,6 @@ class MainView:
 
         self._build_header()
         self._build_entry()
-        self._build_feedback()
         self._build_play_button()
         self._build_settings_panel(settings)
         self._build_separator()
@@ -103,6 +102,15 @@ class MainView:
             bg=C_BG,
             fg=C_TEXT,
         ).pack(side="left")
+        self.feedback_label = tk.Label(
+            header,
+            text="",
+            anchor="w",
+            font=FONT_MAIN,
+            bg=C_BG,
+            fg=C_BG,
+        )
+        self.feedback_label.pack(side="left", padx=(8, 0))
 
     def _build_entry(self) -> None:
         validate = self.root.register(lambda v: v == "" or v.isalpha())
@@ -140,23 +148,6 @@ class MainView:
                 highlightbackground=C_ENTRY_BD, highlightthickness=1
             ),
         )
-
-    def _build_feedback(self) -> None:
-        self.feedback_frame = tk.Frame(self.main_frame, bg=C_BG, height=22)
-        self.feedback_frame.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 4))
-        self.feedback_frame.grid_propagate(False)
-        self.feedback_label = tk.Label(
-            self.feedback_frame,
-            text="",
-            anchor="w",
-            justify="left",
-            font=FONT_MAIN,
-            bg=C_BG,
-            fg=C_BG,
-            padx=8,
-            pady=2,
-        )
-        self.feedback_label.pack(fill="both", expand=True)
 
     def _build_info_bar(self) -> None:
         bar = tk.Frame(self.main_frame, bg=C_BG)
@@ -224,26 +215,29 @@ class MainView:
         self.play_btn.grid(row=3, column=0, columnspan=4, sticky="we", pady=(4, 8))
 
     def _build_settings_panel(self, settings: dict) -> None:
-        # Row 4: Speed slider (left) + Mode combo (right)
-        row4 = tk.Frame(self.main_frame, bg=C_BG)
-        row4.grid(row=4, column=0, columnspan=4, sticky="we", pady=(0, 2))
-        row4.columnconfigure(0, weight=1)
+        panel = tk.Frame(self.main_frame, bg=C_BG)
+        panel.grid(row=4, column=0, columnspan=4, sticky="we", pady=(0, 6))
+        panel.columnconfigure(0, weight=1)
 
-        speed_frame = tk.Frame(row4, bg=C_BG)
-        speed_frame.grid(row=0, column=0, sticky="we")
+        # Row 0 in panel: Speed slider (left) + Mode combo (right)
+        speed_frame = tk.Frame(panel, bg=C_BG)
+        speed_frame.grid(row=0, column=0, sticky="we", pady=(0, 2))
+        speed_frame.columnconfigure(0, weight=0)
+        speed_frame.columnconfigure(1, weight=1)
+        speed_frame.columnconfigure(2, weight=0)
         tk.Label(
             speed_frame, text="Speed:", anchor="e", font=FONT_MAIN,
             bg=C_BG, fg=C_TEXT, width=7,
-        ).pack(side="left")
+        ).grid(row=0, column=0, sticky="e")
         self._speed_var = tk.DoubleVar(value=settings.get("speed", 170.0))
         self.speed_slider, self.speed_val_label = make_slider(
             speed_frame, "Speed", self._speed_var,
-            from_=10, to=250, resolution=5, length=140, suffix="",
+            from_=10, to=250, resolution=5, length=140, suffix="", bg=C_BG,
         )
-        self.speed_slider.pack(side="left", fill="x", expand=True, padx=(4, 2))
-        self.speed_val_label.pack(side="left")
+        self.speed_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
+        self.speed_val_label.grid(row=0, column=2, sticky="e")
 
-        mode_frame = tk.Frame(row4, bg=C_BG)
+        mode_frame = tk.Frame(panel, bg=C_BG)
         mode_frame.grid(row=0, column=1, sticky="e", padx=(12, 0))
         tk.Label(
             mode_frame, text="Mode:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
@@ -257,27 +251,26 @@ class MainView:
         )
         self.mode_combobox.pack(side="left")
 
-        # Row 5: Humanizer slider (left) + Fallback combo (right)
-        row5 = tk.Frame(self.main_frame, bg=C_BG)
-        row5.grid(row=5, column=0, columnspan=4, sticky="we", pady=(0, 6))
-        row5.columnconfigure(0, weight=1)
-
-        human_frame = tk.Frame(row5, bg=C_BG)
-        human_frame.grid(row=0, column=0, sticky="we")
+        # Row 1 in panel: Humanizer slider (left) + Fallback combo (right)
+        human_frame = tk.Frame(panel, bg=C_BG)
+        human_frame.grid(row=1, column=0, sticky="we")
+        human_frame.columnconfigure(0, weight=0)
+        human_frame.columnconfigure(1, weight=1)
+        human_frame.columnconfigure(2, weight=0)
         tk.Label(
             human_frame, text="Human:", anchor="e", font=FONT_MAIN,
             bg=C_BG, fg=C_TEXT, width=7,
-        ).pack(side="left")
+        ).grid(row=0, column=0, sticky="e")
         self._jitter_var = tk.IntVar(value=settings.get("jitter_intensity", 75))
         self.humanizer_slider, self.humanizer_val_label = make_slider(
             human_frame, "Humanizer", self._jitter_var,
-            from_=0, to=100, resolution=5, length=140, suffix="%",
+            from_=0, to=100, resolution=5, length=140, suffix="%", bg=C_BG,
         )
-        self.humanizer_slider.pack(side="left", fill="x", expand=True, padx=(4, 2))
-        self.humanizer_val_label.pack(side="left")
+        self.humanizer_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
+        self.humanizer_val_label.grid(row=0, column=2, sticky="e")
 
-        fallback_frame = tk.Frame(row5, bg=C_BG)
-        fallback_frame.grid(row=0, column=1, sticky="e", padx=(12, 0))
+        fallback_frame = tk.Frame(panel, bg=C_BG)
+        fallback_frame.grid(row=1, column=1, sticky="e", padx=(12, 0))
         tk.Label(
             fallback_frame, text="Fall:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
         ).pack(side="left", padx=(0, 4))
@@ -531,11 +524,7 @@ class MainView:
         else:
             bg, fg = C_FEEDBACK_ERR_BG, C_FEEDBACK_ERR_FG
 
-        self.feedback_frame.config(bg=bg)
         self.feedback_label.config(text=message, bg=bg, fg=fg)
-        self.feedback_label.config(
-            wraplength=max(200, self.feedback_frame.winfo_width() - 16)
-        )
 
         if beep and winsound:
             try:
@@ -560,7 +549,6 @@ class MainView:
         self._feedback_after_id = None
         try:
             self.feedback_label.config(text="", bg=C_BG, fg=C_BG)
-            self.feedback_frame.config(bg=C_BG)
         except tk.TclError:
             pass
 
