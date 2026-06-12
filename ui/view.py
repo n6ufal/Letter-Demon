@@ -81,13 +81,12 @@ class MainView:
         self._build_header()
         self._build_entry()
         self._build_feedback()
-        self._build_info_bar()
         self._build_play_button()
-        self._build_sliders(settings)
-        self._build_combos(settings)
+        self._build_settings_panel(settings)
         self._build_separator()
         self._build_action_buttons()
-        self._build_credit()
+        self._build_info_bar()
+        self._build_bottom_row()
         self._build_shared_vars(settings)
 
         for col in range(4):
@@ -143,7 +142,9 @@ class MainView:
         )
 
     def _build_feedback(self) -> None:
-        self.feedback_frame = tk.Frame(self.main_frame, bg=C_BG)
+        self.feedback_frame = tk.Frame(self.main_frame, bg=C_BG, height=22)
+        self.feedback_frame.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 4))
+        self.feedback_frame.grid_propagate(False)
         self.feedback_label = tk.Label(
             self.feedback_frame,
             text="",
@@ -153,17 +154,13 @@ class MainView:
             bg=C_BG,
             fg=C_BG,
             padx=8,
-            pady=5,
+            pady=2,
         )
-        self.feedback_label.pack(fill="x")
-        self.feedback_frame.grid(
-            row=2, column=0, columnspan=4, sticky="we", pady=(0, 4)
-        )
-        self.feedback_frame.grid_remove()
+        self.feedback_label.pack(fill="both", expand=True)
 
     def _build_info_bar(self) -> None:
         bar = tk.Frame(self.main_frame, bg=C_BG)
-        bar.grid(row=3, column=0, columnspan=4, sticky="we", pady=(0, 4))
+        bar.grid(row=8, column=0, columnspan=4, sticky="we", pady=(0, 2))
         for col in range(3):
             bar.grid_columnconfigure(col, weight=1)
 
@@ -224,108 +221,84 @@ class MainView:
             bd=0,
             cursor="hand2",
         )
-        self.play_btn.grid(row=4, column=0, columnspan=4, sticky="we", pady=(4, 8))
+        self.play_btn.grid(row=3, column=0, columnspan=4, sticky="we", pady=(4, 8))
 
-    def _build_sliders(self, settings: dict) -> None:
-        panel = tk.Frame(self.main_frame, bg=C_BG)
-        panel.grid(row=5, column=0, columnspan=4, sticky="we", pady=(0, 6))
-        panel.grid_columnconfigure(0, weight=1)
+    def _build_settings_panel(self, settings: dict) -> None:
+        # Row 4: Speed slider (left) + Mode combo (right)
+        row4 = tk.Frame(self.main_frame, bg=C_BG)
+        row4.grid(row=4, column=0, columnspan=4, sticky="we", pady=(0, 2))
+        row4.columnconfigure(0, weight=1)
 
-        speed_frame = tk.Frame(panel, bg=C_BG)
+        speed_frame = tk.Frame(row4, bg=C_BG)
         speed_frame.grid(row=0, column=0, sticky="we")
-        speed_frame.columnconfigure(1, weight=1)
         tk.Label(
-            speed_frame,
-            text="Speed:",
-            anchor="e",
-            font=FONT_MAIN,
-            bg=C_BG,
-            fg=C_TEXT,
-            width=12,
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8))
+            speed_frame, text="Speed:", anchor="e", font=FONT_MAIN,
+            bg=C_BG, fg=C_TEXT, width=7,
+        ).pack(side="left")
         self._speed_var = tk.DoubleVar(value=settings.get("speed", 170.0))
         self.speed_slider, self.speed_val_label = make_slider(
-            speed_frame,
-            "Speed",
-            self._speed_var,
-            from_=10,
-            to=250,
-            resolution=5,
-            length=160,
-            suffix="",
+            speed_frame, "Speed", self._speed_var,
+            from_=10, to=250, resolution=5, length=140, suffix="",
         )
-        self.speed_slider.grid(row=0, column=1, sticky="ew", pady=(0, 2))
-        self.speed_val_label.grid(row=0, column=2, sticky="e", padx=(8, 0))
+        self.speed_slider.pack(side="left", fill="x", expand=True, padx=(4, 2))
+        self.speed_val_label.pack(side="left")
 
-        humanizer_frame = tk.Frame(panel, bg=C_BG)
-        humanizer_frame.grid(row=1, column=0, sticky="we", pady=(4, 0))
-        humanizer_frame.columnconfigure(1, weight=1)
+        mode_frame = tk.Frame(row4, bg=C_BG)
+        mode_frame.grid(row=0, column=1, sticky="e", padx=(12, 0))
         tk.Label(
-            humanizer_frame,
-            text="Humanizer:",
-            anchor="e",
-            font=FONT_MAIN,
-            bg=C_BG,
-            fg=C_TEXT,
-            width=12,
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8))
-        self._jitter_var = tk.IntVar(value=settings.get("jitter_intensity", 75))
-        self.humanizer_slider, self.humanizer_val_label = make_slider(
-            humanizer_frame,
-            "Humanizer",
-            self._jitter_var,
-            from_=0,
-            to=100,
-            resolution=5,
-            length=160,
-            suffix="%",
-        )
-        self.humanizer_slider.grid(row=0, column=1, sticky="ew", pady=(0, 2))
-        self.humanizer_val_label.grid(row=0, column=2, sticky="e", padx=(8, 0))
-
-    def _build_combos(self, settings: dict) -> None:
-        combo_row = tk.Frame(self.main_frame, bg=C_BG)
-        combo_row.grid(row=6, column=0, columnspan=4, sticky="we", pady=(0, 4))
-
+            mode_frame, text="Mode:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
+        ).pack(side="left", padx=(0, 4))
         self._mode_var = tk.StringVar(
             value=modes.to_display_mode(settings.get("mode", "Trap Words"))
         )
-        tk.Label(combo_row, text="Mode:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT).pack(
-            side="left", padx=(0, 8)
-        )
         self.mode_combobox = tk.ttk.Combobox(
-            combo_row,
-            textvariable=self._mode_var,
-            values=modes.MODE_DISPLAY,
-            state="readonly",
-            width=8,
+            mode_frame, textvariable=self._mode_var,
+            values=modes.MODE_DISPLAY, state="readonly", width=7,
         )
-        self.mode_combobox.pack(side="left", padx=(0, 12))
+        self.mode_combobox.pack(side="left")
 
+        # Row 5: Humanizer slider (left) + Fallback combo (right)
+        row5 = tk.Frame(self.main_frame, bg=C_BG)
+        row5.grid(row=5, column=0, columnspan=4, sticky="we", pady=(0, 6))
+        row5.columnconfigure(0, weight=1)
+
+        human_frame = tk.Frame(row5, bg=C_BG)
+        human_frame.grid(row=0, column=0, sticky="we")
+        tk.Label(
+            human_frame, text="Human:", anchor="e", font=FONT_MAIN,
+            bg=C_BG, fg=C_TEXT, width=7,
+        ).pack(side="left")
+        self._jitter_var = tk.IntVar(value=settings.get("jitter_intensity", 75))
+        self.humanizer_slider, self.humanizer_val_label = make_slider(
+            human_frame, "Humanizer", self._jitter_var,
+            from_=0, to=100, resolution=5, length=140, suffix="%",
+        )
+        self.humanizer_slider.pack(side="left", fill="x", expand=True, padx=(4, 2))
+        self.humanizer_val_label.pack(side="left")
+
+        fallback_frame = tk.Frame(row5, bg=C_BG)
+        fallback_frame.grid(row=0, column=1, sticky="e", padx=(12, 0))
+        tk.Label(
+            fallback_frame, text="Fall:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
+        ).pack(side="left", padx=(0, 4))
         self._fallback_var = tk.StringVar(
             value=modes.to_display_fallback(settings.get("fallback", "Short Words"))
         )
-        tk.Label(
-            combo_row, text="Fallback:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
-        ).pack(side="left", padx=(0, 8))
         self.fallback_combobox = tk.ttk.Combobox(
-            combo_row,
-            textvariable=self._fallback_var,
-            values=modes.FALLBACK_DISPLAY,
-            state="readonly",
-            width=8,
+            fallback_frame, textvariable=self._fallback_var,
+            values=modes.FALLBACK_DISPLAY, state="readonly", width=7,
         )
         self.fallback_combobox.pack(side="left")
 
     def _build_separator(self) -> None:
         make_separator(
-            self.main_frame, 7, column=0, columnspan=4, sticky="we", pady=(4, 6)
+            self.main_frame, 6, column=0, columnspan=4, sticky="we", pady=(4, 6)
         )
 
     def _build_action_buttons(self) -> None:
         btn_row = tk.Frame(self.main_frame, bg=C_BG)
-        btn_row.grid(row=8, column=0, columnspan=4, sticky="we", pady=(0, 2))
-        for col in range(3):
+        btn_row.grid(row=7, column=0, columnspan=4, sticky="we", pady=(0, 4))
+        for col in range(2):
             btn_row.grid_columnconfigure(col, weight=1)
 
         self.advanced_btn = make_secondary_button(
@@ -336,7 +309,6 @@ class MainView:
             column=0,
             sticky="we",
             padx=2,
-            pady=(0, 2),
         )
         self.clear_used_btn = make_secondary_button(
             btn_row,
@@ -346,32 +318,38 @@ class MainView:
             column=1,
             sticky="we",
             padx=2,
-            pady=(0, 2),
-        )
-        self.used_words_btn = make_secondary_button(
-            btn_row,
-            "Used Words",
-            self._controller.show_used_words,
-            row=0,
-            column=2,
-            sticky="we",
-            padx=2,
-            pady=(0, 2),
         )
 
-    def _build_credit(self) -> None:
-        credit = tk.Label(
-            self.main_frame,
-            text="Made by n6ufal",
-            fg=C_MUTED,
-            font=FONT_SMALL,
-            bg=C_BG,
+    def _build_bottom_row(self) -> None:
+        row = tk.Frame(self.main_frame, bg=C_BG)
+        row.grid(row=9, column=0, columnspan=4, sticky="we", pady=(2, 0))
+
+        self.used_words_label = tk.Label(
+            row, text="Used words", fg=C_MUTED, font=FONT_MAIN, bg=C_BG, cursor="hand2",
+        )
+        self.used_words_label.pack(side="left")
+        self.used_words_label.bind(
+            "<Button-1>", lambda e: self._controller.show_used_words()
+        )
+        self.used_words_label.bind(
+            "<Enter>", lambda e: self.used_words_label.config(fg=C_TEXT)
+        )
+        self.used_words_label.bind(
+            "<Leave>", lambda e: self.used_words_label.config(fg=C_MUTED)
+        )
+
+        self._credit_label = tk.Label(
+            row, text="Made by n6ufal", fg=C_MUTED, font=FONT_SMALL, bg=C_BG,
             cursor="hand2",
         )
-        credit.grid(row=9, column=0, columnspan=4, sticky="e", pady=(2, 0))
-        credit.bind("<Button-1>", lambda e: self._controller.show_about())
-        credit.bind("<Enter>", lambda e: credit.config(fg=C_TEXT))
-        credit.bind("<Leave>", lambda e: credit.config(fg=C_MUTED))
+        self._credit_label.pack(side="right")
+        self._credit_label.bind("<Button-1>", lambda e: self._controller.show_about())
+        self._credit_label.bind(
+            "<Enter>", lambda e: self._credit_label.config(fg=C_TEXT)
+        )
+        self._credit_label.bind(
+            "<Leave>", lambda e: self._credit_label.config(fg=C_MUTED)
+        )
 
     def _build_shared_vars(self, settings: dict) -> None:
         self._pre_delay_var = tk.IntVar(value=settings.get("pre_delay", 500))
@@ -417,7 +395,8 @@ class MainView:
         )
         add_tooltip(self.advanced_btn, "Dictionary, timing, trap endings, exceptions")
         add_tooltip(self.clear_used_btn, "Reset used words for a new game")
-        add_tooltip(self.used_words_btn, "Show words played this session")
+        add_tooltip(self.used_words_label, "Show words played this session")
+        add_tooltip(self._credit_label, "About Letter Demon")
 
     # ------------------------------------------------------------------
     # Controller-facing properties (read)
@@ -554,10 +533,6 @@ class MainView:
 
         self.feedback_frame.config(bg=bg)
         self.feedback_label.config(text=message, bg=bg, fg=fg)
-        self.feedback_frame.grid(
-            row=2, column=0, columnspan=4, sticky="we", pady=(0, 4)
-        )
-        self.feedback_frame.update_idletasks()
         self.feedback_label.config(
             wraplength=max(200, self.feedback_frame.winfo_width() - 16)
         )
@@ -566,7 +541,7 @@ class MainView:
             try:
                 winsound.PlaySound(
                     _SOUND_ERROR,
-                    winsound.SND_ASYNC | winsound.SND_NOSTOP | winsound.SND_FILENAME,
+                    winsound.SND_ASYNC | winsound.SND_FILENAME,
                 )
             except Exception:
                 winsound.Beep(800, 100)
@@ -586,7 +561,6 @@ class MainView:
         try:
             self.feedback_label.config(text="", bg=C_BG, fg=C_BG)
             self.feedback_frame.config(bg=C_BG)
-            self.feedback_frame.grid_remove()
         except tk.TclError:
             pass
 
