@@ -3,6 +3,7 @@
 from PySide6.QtCore import Qt, QRegularExpression, QTimer, Signal
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QFrame,
     QHBoxLayout,
@@ -44,6 +45,7 @@ class MainWidget(QWidget):
         self._feedback_timer: QTimer | None = None
         self._settings = settings
         self._build()
+        self._wire_tooltips()
         self._apply_defaults(settings)
         self._wire_signals()
 
@@ -431,7 +433,9 @@ class MainWidget(QWidget):
         self,
         level: str,
         message: str,
+        *,
         duration_ms: int = 5000,
+        beep: bool = False,
     ) -> None:
         if self._feedback_timer is not None and self._feedback_timer.isActive():
             self._feedback_timer.stop()
@@ -442,6 +446,9 @@ class MainWidget(QWidget):
         self.feedback_label.setProperty("feedbackLevel", css_class)
         self.feedback_label.style().unpolish(self.feedback_label)
         self.feedback_label.style().polish(self.feedback_label)
+
+        if beep:
+            QApplication.beep()
 
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
@@ -513,12 +520,4 @@ class MainWidget(QWidget):
         }
         label.setStyleSheet(f"color: {palette.get(color, '#71717a')};")
 
-    def set_play_button_command(self, has_wordlist: bool) -> None:
-        try:
-            self.play_btn.clicked.disconnect()
-        except TypeError:
-            pass
-        if has_wordlist:
-            self.play_btn.clicked.connect(self.play_requested.emit)
-        else:
-            self.play_btn.clicked.connect(self.dict_load_requested.emit)
+
