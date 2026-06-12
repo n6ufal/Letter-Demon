@@ -7,9 +7,6 @@ Run this file to launch the application:
 import sys
 from pathlib import Path
 
-# Ensure the project root is on sys.path
-# This is critical when double-clicking the .pyw file from Explorer,
-# because the working directory may not be the script's directory.
 _PROJECT_ROOT = str(Path(__file__).resolve().parent)
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
@@ -24,24 +21,17 @@ logging.basicConfig(
         logging.FileHandler(str(log_dir / "letter_demon.log"), mode="a", encoding="utf-8"),
     ],
 )
-log_path = str(log_dir / "letter_demon.log")
 
-import ctypes
-
-# HiDPI — must run before any window is created
-try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
-except Exception:
-    pass
-
-import tkinter as tk
+from PySide6.QtWidgets import QApplication
 
 
 def main() -> None:
-    from ui.app import LetterDemonApp
-    root = tk.Tk()
-    LetterDemonApp(root)
-    root.mainloop()
+    from ui import MainWindow
+    app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
@@ -49,13 +39,3 @@ if __name__ == "__main__":
         main()
     except Exception:
         logging.exception("Unhandled exception at startup")
-        try:
-            import tkinter.messagebox as mb
-            root = tk.Tk()
-            root.withdraw()
-            mb.showerror(
-                "Letter Demon — Startup Error",
-                f"An error occurred.\n\nDetails written to:\n{log_path}",
-            )
-        except Exception:
-            pass

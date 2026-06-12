@@ -1,1 +1,1 @@
-from .app import LetterDemonApp
+from .main_window import MainWindow

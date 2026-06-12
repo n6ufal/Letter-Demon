@@ -23,20 +23,16 @@ logging.basicConfig(
     ],
 )
 
-import ctypes
-try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
-except Exception:
-    pass
-
-import tkinter as tk
+from PySide6.QtWidgets import QApplication
 
 
 def main() -> None:
-    from ui.app import LetterDemonApp
-    root = tk.Tk()
-    LetterDemonApp(root)
-    root.mainloop()
+    from ui import MainWindow
+    app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
