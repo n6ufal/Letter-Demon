@@ -291,7 +291,7 @@ class UsedWordsDialog:
 
     def show(self) -> None:
         if self._win is not None and self._win.winfo_exists():
-            self._update_list()
+            self.update_list()
             self._win.lift()
             self._win.focus_force()
             return
@@ -344,7 +344,7 @@ class UsedWordsDialog:
         center_window(self._win, self._root)
         self._win.protocol("WM_DELETE_WINDOW", self.close)
 
-        self._update_list()
+        self.update_list()
 
     def close(self) -> None:
         if self._win is not None:
