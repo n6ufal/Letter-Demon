@@ -238,7 +238,7 @@ class MainView:
             speed_frame, "Speed", self._wpm_var,
             from_=50, to=200, resolution=5, length=140, suffix="", bg=C_BG,
         )
-        self.speed_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
+        self.speed_slider.grid(row=0, column=1, sticky="ew", padx=(4, 0))
         self.speed_val_label.grid(row=0, column=2, sticky="e")
 
         mode_frame = tk.Frame(panel, bg=C_BG)
@@ -270,7 +270,7 @@ class MainView:
             human_frame, "Humanizer", self._jitter_var,
             from_=0, to=100, resolution=5, length=140, suffix="%", bg=C_BG,
         )
-        self.humanizer_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
+        self.humanizer_slider.grid(row=0, column=1, sticky="ew", padx=(4, 0))
         self.humanizer_val_label.grid(row=0, column=2, sticky="e")
 
         fallback_frame = tk.Frame(panel, bg=C_BG)
