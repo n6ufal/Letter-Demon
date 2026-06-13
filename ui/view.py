@@ -230,13 +230,13 @@ class MainView:
         speed_frame.columnconfigure(1, weight=1)
         speed_frame.columnconfigure(2, weight=0)
         tk.Label(
-            speed_frame, text="Speed:", anchor="e", font=FONT_MAIN,
-            bg=C_BG, fg=C_TEXT, width=7,
+            speed_frame, text="Speed", anchor="e", font=FONT_MAIN,
+            bg=C_BG, fg=C_TEXT, width=6,
         ).grid(row=0, column=0, sticky="e")
         self._wpm_var = tk.IntVar(value=settings.get("wpm", 70))
         self.speed_slider, self.speed_val_label = make_slider(
             speed_frame, "Speed", self._wpm_var,
-            from_=50, to=200, resolution=5, length=140, suffix=" WPM", bg=C_BG,
+            from_=50, to=200, resolution=5, length=140, suffix="", bg=C_BG,
         )
         self.speed_slider.grid(row=0, column=1, sticky="ew", padx=(4, 2))
         self.speed_val_label.grid(row=0, column=2, sticky="e")
@@ -262,8 +262,8 @@ class MainView:
         human_frame.columnconfigure(1, weight=1)
         human_frame.columnconfigure(2, weight=0)
         tk.Label(
-            human_frame, text="Human:", anchor="e", font=FONT_MAIN,
-            bg=C_BG, fg=C_TEXT, width=7,
+            human_frame, text="Human", anchor="e", font=FONT_MAIN,
+            bg=C_BG, fg=C_TEXT, width=6,
         ).grid(row=0, column=0, sticky="e")
         self._jitter_var = tk.IntVar(value=settings.get("jitter_intensity", 75))
         self.humanizer_slider, self.humanizer_val_label = make_slider(
