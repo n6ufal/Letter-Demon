@@ -7,9 +7,7 @@ name = "letter-demon"
 version = "9.1.0"
 description = "Windows desktop typing assistant for a Roblox word game"
 requires-python = ">=3.10"
-dependencies = [
-    "keyboard>=0.13.5",
-]
+dependencies = []
 
 [project.urls]
 Repository = "https://github.com/n6ufal/Letter-Demon"

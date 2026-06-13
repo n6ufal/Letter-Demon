@@ -7,7 +7,7 @@ Letter Demon is a Windows desktop typing assistant for a Roblox word game. It se
 ```
 core/      pure logic (session.py, word_engine.py, dictionary.py — no UI/OS deps)
 config/    file I/O for settings, trap endings, exceptions
-system/    WinAPI (roblox.py), keyboard simulation (typer.py)
+system/    WinAPI (roblox.py), keystroke injection (typer.py via SendInput/ctypes)
 ui/        tkinter: app.py (controller), view.py, dialogs.py, modes.py, theme.py, widgets.py, file_editors.py
 data/      config files: settings.json, trap_endings.txt, exceptions.txt
 data/runtime/   runtime data: cache, logs, dictionaries (gitignored)
@@ -33,10 +33,10 @@ Both insert the project root onto `sys.path`, enable DPI awareness via `ctypes.w
 |-------|-------------|---------|
 | **core/** | Pure logic, testable without any OS/UI | `WordEngine`, dictionary parsing |
 | **config/** | File I/O for user-editable configs | `settings.json`, `trap_endings.txt` |
-| **system/** | OS-specific operations | WinAPI window detection, keyboard simulation |
+| **system/** | OS-specific operations | WinAPI window detection, keystroke injection via SendInput |
 | **ui/** | tkinter application | Main window, dialogs, modes, theme, tooltips, file editors |
 
-Data flows **down**: ui → system/config → core. The `WordEngine` has no knowledge of tkinter, `keyboard`, or Roblox.
+Data flows **down**: ui → system/config → core. The `WordEngine` has no knowledge of tkinter, keystroke injection, or Roblox.
 
 ## MVC Architecture
 
@@ -285,6 +285,8 @@ A 15-second timer polls `is_roblox_running()` to update the UI indicator (green 
 
 ## Typing Simulation
 
+Keystrokes are injected via the Windows `SendInput` API using the `KEYEVENTF_UNICODE` flag, which bypasses keyboard layout mapping and directly inserts the correct Unicode character. The Enter key is sent as a virtual-key (`VK_RETURN`) keystroke.
+
 Keystroke delay is sampled from a **log-normal distribution**. Log-normal is right-skewed: most keystrokes cluster around the base speed, but occasionally one takes much longer — exactly how people actually type. A uniform distribution would feel robotic.
 
 ```python
@@ -295,7 +297,7 @@ def _next_delay(self):
         return base_s
 
     scale = (self.jitter_pct / 100.0) * 0.75
-    mu = math.log(base_s)
+    mu = math.log(base_s) - 0.5 * scale ** 2
     delay = random.lognormvariate(mu, scale)
 
     return max(0.03, delay)   # 30ms floor — no upper bound
@@ -310,7 +312,7 @@ def _next_delay(self):
 | Pre-delay | 500ms | Pause before first keystroke |
 | Post-delay | 500ms | Pause after Enter |
 
-The `mu = log(base_s)` anchor guarantees the distribution's median equals the configured speed, regardless of jitter/humanizer level. The `max(0.03, delay)` clamp prevents sub-30ms intervals that would look inhuman. There is no upper-bound clamp — the log-normal distribution naturally makes very long delays rare.
+The `mu = log(base_s) - 0.5 * sigma^2` shift anchors the distribution's **mean** (not median) to the configured speed, so the slider is an honest average even at high jitter levels. The `max(0.03, delay)` clamp prevents sub-30ms intervals that would look inhuman. There is no upper-bound clamp — the log-normal distribution naturally makes very long delays rare.
 
 Every character gets its own independently sampled delay with no pattern between keystrokes.
 

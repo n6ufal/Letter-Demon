@@ -57,6 +57,7 @@ lookuptool/
 data/runtime/cache/
 data/runtime/logs/
 data/runtime/dicts/
+dicts/
 
 # Backups & Temporary
 *.backup

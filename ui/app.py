@@ -71,12 +71,12 @@ class LetterDemonApp:
             return
         try:
             w = self.root.focus_get()
-        except tk.TclError:
+        except (tk.TclError, KeyError):
             return
         if w is not None:
             try:
                 top = w.winfo_toplevel()
-            except tk.TclError:
+            except (tk.TclError, KeyError):
                 return
             if top is not self.root:
                 return
