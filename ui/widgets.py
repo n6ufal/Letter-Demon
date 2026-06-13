@@ -228,6 +228,7 @@ def make_slider(
         command=_on_move,
         style=style_name,
     )
+    slider.set(variable.get())
 
     return slider, val_label
 

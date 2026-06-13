@@ -78,13 +78,13 @@ class MainView:
         self.main_frame = tk.Frame(self.root, padx=12, pady=10, bg=C_BG)
         self.main_frame.pack(fill="both", expand=True)
 
+        self._build_info_bar()
         self._build_header()
         self._build_entry()
         self._build_play_button()
         self._build_settings_panel(settings)
         self._build_separator()
         self._build_action_buttons()
-        self._build_info_bar()
         self._build_bottom_row()
         self._build_shared_vars(settings)
 
@@ -93,7 +93,7 @@ class MainView:
 
     def _build_header(self) -> None:
         header = tk.Frame(self.main_frame, bg=C_BG)
-        header.grid(row=0, column=0, columnspan=4, sticky="we", pady=(0, 2))
+        header.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 2))
         tk.Label(
             header,
             text="Starting letters:",
@@ -134,7 +134,7 @@ class MainView:
             validatecommand=(validate, "%P"),
         )
         self.entry.grid(
-            row=1, column=0, columnspan=4, sticky="we", ipady=6, ipadx=8, pady=(0, 6)
+            row=3, column=0, columnspan=4, sticky="we", ipady=6, ipadx=8, pady=(0, 6)
         )
         self.entry.bind(
             "<FocusIn>",
@@ -151,7 +151,11 @@ class MainView:
 
     def _build_info_bar(self) -> None:
         bar = tk.Frame(self.main_frame, bg=C_BG)
-        bar.grid(row=8, column=0, columnspan=4, sticky="we", pady=(0, 2))
+        bar.grid(row=0, column=0, columnspan=4, sticky="we", pady=(0, 0))
+        # bottom border to visually anchor it as a toolbar
+        tk.Frame(self.main_frame, height=1, bg=C_ENTRY_BD).grid(
+            row=1, column=0, columnspan=4, sticky="we",
+        )
         for col in range(3):
             bar.grid_columnconfigure(col, weight=1)
 
@@ -212,11 +216,11 @@ class MainView:
             bd=0,
             cursor="hand2",
         )
-        self.play_btn.grid(row=3, column=0, columnspan=4, sticky="we", pady=(4, 8))
+        self.play_btn.grid(row=5, column=0, columnspan=4, sticky="we", pady=(4, 8))
 
     def _build_settings_panel(self, settings: dict) -> None:
         panel = tk.Frame(self.main_frame, bg=C_BG)
-        panel.grid(row=4, column=0, columnspan=4, sticky="we", pady=(0, 6))
+        panel.grid(row=6, column=0, columnspan=4, sticky="we", pady=(0, 6))
         panel.columnconfigure(0, weight=1)
 
         # Row 0 in panel: Speed slider (left) + Mode combo (right)
@@ -285,12 +289,12 @@ class MainView:
 
     def _build_separator(self) -> None:
         make_separator(
-            self.main_frame, 6, column=0, columnspan=4, sticky="we", pady=(4, 6)
+            self.main_frame, 8, column=0, columnspan=4, sticky="we", pady=(4, 6)
         )
 
     def _build_action_buttons(self) -> None:
         btn_row = tk.Frame(self.main_frame, bg=C_BG)
-        btn_row.grid(row=7, column=0, columnspan=4, sticky="we", pady=(0, 4))
+        btn_row.grid(row=9, column=0, columnspan=4, sticky="we", pady=(0, 4))
         for col in range(2):
             btn_row.grid_columnconfigure(col, weight=1)
 
@@ -315,7 +319,7 @@ class MainView:
 
     def _build_bottom_row(self) -> None:
         row = tk.Frame(self.main_frame, bg=C_BG)
-        row.grid(row=9, column=0, columnspan=4, sticky="we", pady=(2, 0))
+        row.grid(row=11, column=0, columnspan=4, sticky="we", pady=(2, 0))
 
         self.used_words_label = tk.Label(
             row, text="Used words", fg=C_MUTED, font=FONT_MAIN, bg=C_BG, cursor="hand2",
