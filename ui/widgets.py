@@ -204,17 +204,6 @@ def make_slider(
         anchor="e",
     )
 
-    def _on_move(val):
-        # Snap to exact resolution
-        v = float(val)
-        snapped = round(v / resolution) * resolution
-        variable.set(snapped)
-        val_label.config(text=f"{int(snapped)}{suffix}")
-
-        # Fire secondary command if passed (useful for updating multiple UIs)
-        if command:
-            command(snapped)
-
     style_name = (
         "Panel.Horizontal.TScale" if bg == C_BG_PANEL else "Bg.Horizontal.TScale"
     )
@@ -225,10 +214,25 @@ def make_slider(
         to=to,
         orient="horizontal",
         length=length,
-        command=_on_move,
         style=style_name,
     )
     slider.set(variable.get())
+
+    def _on_move(val):
+        v = float(val)
+        snapped = round(v / resolution) * resolution
+        val_label.config(text=f"{int(snapped)}{suffix}")
+        if command:
+            command(snapped)
+
+    def _on_release(event):
+        snapped = round(slider.get() / resolution) * resolution
+        variable.set(snapped)
+        slider.set(snapped)
+        val_label.config(text=f"{int(snapped)}{suffix}")
+
+    slider.configure(command=_on_move)
+    slider.bind("<ButtonRelease-1>", _on_release, add="+")
 
     return slider, val_label
 
