@@ -297,9 +297,8 @@ class TypingIntegrationTest(unittest.TestCase):
         self._cache_patch.stop()
         self.tmp_dir.cleanup()
 
-    @patch("system.typer._send_enter")
-    @patch("system.typer._send_char")
-    def test_find_word_then_type_it(self, mock_send_char, mock_send_enter):
+    @patch("system.typer.keyboard")
+    def test_find_word_then_type_it(self, mock_kb):
         """End-to-end: find word and type it."""
         # Create dictionary and engine
         words = ["apple", "application"]
@@ -320,13 +319,12 @@ class TypingIntegrationTest(unittest.TestCase):
         success, msg = typer.type_text(completion, pre_delay_s=0.01, post_delay_s=0.01)
 
         self.assertTrue(success)
-        mock_send_enter.assert_called_with()
+        mock_kb.send.assert_called_with("enter")
 
-    @patch("system.typer._send_enter")
-    @patch("system.typer._send_char")
-    def test_typing_failure_returns_error(self, mock_send_char, mock_send_enter):
+    @patch("system.typer.keyboard")
+    def test_typing_failure_returns_error(self, mock_kb):
         """Typing failure is caught and reported."""
-        mock_send_char.side_effect = Exception("keyboard failure")
+        mock_kb.press_and_release.side_effect = Exception("keyboard failure")
         
         typer = Typer(base_speed_ms=10.0, jitter_on=False)
         success, msg = typer.type_text("hello", pre_delay_s=0.01, post_delay_s=0.01)
@@ -334,15 +332,14 @@ class TypingIntegrationTest(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn("keyboard failure", msg)
 
-    @patch("system.typer._send_enter")
-    @patch("system.typer._send_char")
-    def test_empty_word_sends_enter(self, mock_send_char, mock_send_enter):
+    @patch("system.typer.keyboard")
+    def test_empty_word_sends_enter(self, mock_kb):
         """If no word found, typing still sends enter."""
         typer = Typer(base_speed_ms=10.0, jitter_on=False)
         success, msg = typer.type_text("", pre_delay_s=0.01, post_delay_s=0.01)
 
         self.assertTrue(success)
-        mock_send_enter.assert_called_with()
+        mock_kb.send.assert_called_with("enter")
 
 
 # ============================================================================
@@ -403,9 +400,8 @@ class ErrorRecoveryIntegrationTest(unittest.TestCase):
     """Test graceful degradation and error recovery."""
 
     @patch("system.roblox.is_roblox_running")
-    @patch("system.typer._send_enter")
-    @patch("system.typer._send_char")
-    def test_typing_continues_if_roblox_missing(self, mock_send_char, mock_send_enter, mock_roblox):
+    @patch("system.typer.keyboard")
+    def test_typing_continues_if_roblox_missing(self, mock_kb, mock_roblox):
         """If Roblox window missing, typing still works."""
         mock_roblox.return_value = False  # Roblox not found
         

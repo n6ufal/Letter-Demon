@@ -97,7 +97,7 @@ Follow the existing patterns:
 - Descriptive method names prefixed with `test_`
 - Docstrings on test methods explaining the expected behavior
 - Use `setUp` / `setUpClass` for shared setup
-- Use `@patch` for external dependencies (WinAPI, SendInput, filesystem)
+- Use `@patch` for external dependencies (WinAPI, keyboard, filesystem)
 
 ```python
 def test_trap_mode_prefers_scored_words(self):

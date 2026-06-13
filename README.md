@@ -63,6 +63,7 @@ Windows • Python 3.10+. Run:
 ```bash
 git clone https://github.com/n6ufal/Letter-Demon.git
 cd letter-demon
+pip install -r requirements.txt
 python main.pyw
 ```
 

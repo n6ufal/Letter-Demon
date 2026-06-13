@@ -7,7 +7,7 @@ Letter Demon is a Windows desktop typing assistant for a Roblox word game. It se
 ```
 core/      pure logic (session.py, word_engine.py, dictionary.py — no UI/OS deps)
 config/    file I/O for settings, trap endings, exceptions
-system/    WinAPI (roblox.py), keystroke injection (typer.py via SendInput/ctypes)
+system/    WinAPI (roblox.py), keystroke injection (typer.py via `keyboard` library)
 ui/        tkinter: app.py (controller), view.py, dialogs.py, modes.py, theme.py, widgets.py, file_editors.py
 data/      config files: settings.json, trap_endings.txt, exceptions.txt
 data/runtime/   runtime data: cache, logs, dictionaries (gitignored)
@@ -33,7 +33,7 @@ Both insert the project root onto `sys.path`, enable DPI awareness via `ctypes.w
 |-------|-------------|---------|
 | **core/** | Pure logic, testable without any OS/UI | `WordEngine`, dictionary parsing |
 | **config/** | File I/O for user-editable configs | `settings.json`, `trap_endings.txt` |
-| **system/** | OS-specific operations | WinAPI window detection, keystroke injection via SendInput |
+| **system/** | OS-specific operations | WinAPI window detection, keystroke injection via `keyboard` library |
 | **ui/** | tkinter application | Main window, dialogs, modes, theme, tooltips, file editors |
 
 Data flows **down**: ui → system/config → core. The `WordEngine` has no knowledge of tkinter, keystroke injection, or Roblox.
@@ -285,7 +285,7 @@ A 15-second timer polls `is_roblox_running()` to update the UI indicator (green 
 
 ## Typing Simulation
 
-Keystrokes are injected via the Windows `SendInput` API using the `KEYEVENTF_UNICODE` flag, which bypasses keyboard layout mapping and directly inserts the correct Unicode character. The Enter key is sent as a virtual-key (`VK_RETURN`) keystroke.
+Keystrokes are injected via the `keyboard` library, which uses scan-code-based `SendInput` calls compatible with both legacy and Raw Input applications (required by Roblox).
 
 Keystroke delay is sampled from a **log-normal distribution**. Log-normal is right-skewed: most keystrokes cluster around the base speed, but occasionally one takes much longer — exactly how people actually type. A uniform distribution would feel robotic.
 
