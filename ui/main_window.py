@@ -360,10 +360,9 @@ class MainWindow(QMainWindow):
         worker.error.connect(self._on_dict_error)
         worker.finished.connect(self._dict_thread.quit)
         worker.error.connect(self._dict_thread.quit)
-        self._dict_thread.finished.connect(worker.deleteLater)
-        self._dict_thread.finished.connect(self._dict_thread.deleteLater)
-        self._dict_thread.finished.connect(lambda: setattr(self, '_dict_thread', None))
         self._dict_thread.finished.connect(self._on_dict_load_finished)
+        self._dict_thread.finished.connect(worker.deleteLater)
+        self._dict_thread.finished.connect(lambda: setattr(self, '_dict_thread', None))
         self._dict_thread.start()
 
     def _on_dict_loaded(self, wordlist: list, from_cache: bool) -> None:
@@ -375,6 +374,7 @@ class MainWindow(QMainWindow):
             self._advanced_panel.refresh_dict_label()
 
     def _on_dict_error(self, msg: str) -> None:
+        self._progress_bar.setVisible(False)
         self.view.show_feedback("error", f"Could not load dictionary: {msg}",
                                 duration_ms=6000)
         self._set_status_dict("No dictionary", "muted")
