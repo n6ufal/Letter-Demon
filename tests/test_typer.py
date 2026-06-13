@@ -61,7 +61,7 @@ class TyperTypeTextTest(unittest.TestCase):
         self.typer._next_delay = MagicMock(return_value=0.001)
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_types_each_character(self, mock_send_char, mock_send_enter):
         success, msg = self.typer.type_text("abc", pre_delay_s=0.01, post_delay_s=0.01)
         self.assertTrue(success)
@@ -70,14 +70,14 @@ class TyperTypeTextTest(unittest.TestCase):
         mock_send_enter.assert_called_once_with()
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_returns_success_message(self, mock_send_char, mock_send_enter):
         success, msg = self.typer.type_text("hello", pre_delay_s=0.01, post_delay_s=0.01)
         self.assertTrue(success)
         self.assertEqual(msg, "Typing successful")
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_empty_string_still_sends_enter(self, mock_send_char, mock_send_enter):
         success, msg = self.typer.type_text("", pre_delay_s=0.01, post_delay_s=0.01)
         self.assertTrue(success)
@@ -85,7 +85,7 @@ class TyperTypeTextTest(unittest.TestCase):
         mock_send_enter.assert_called_once_with()
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_character_failure_returns_error(self, mock_send_char, mock_send_enter):
         mock_send_char.side_effect = Exception("mock fail")
         success, msg = self.typer.type_text("abc", pre_delay_s=0.01, post_delay_s=0.01)
@@ -93,7 +93,7 @@ class TyperTypeTextTest(unittest.TestCase):
         self.assertIn("mock fail", msg)
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_enter_failure_returns_error(self, mock_send_char, mock_send_enter):
         mock_send_enter.side_effect = Exception("enter fail")
         success, msg = self.typer.type_text("a", pre_delay_s=0.01, post_delay_s=0.01)
@@ -101,7 +101,7 @@ class TyperTypeTextTest(unittest.TestCase):
         self.assertIn("enter fail", msg)
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_pre_delay_respected(self, mock_send_char, mock_send_enter):
         import time
         typer = Typer(base_speed_ms=1000.0, jitter_on=False)

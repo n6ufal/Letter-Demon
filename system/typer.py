@@ -110,17 +110,27 @@ def _make_input(dwFlags: int, wVk: int = 0, wScan: int = 0) -> INPUT:
     )
 
 
-def _send_char_unicode(char: str) -> None:
-    """Send a single character via KEYEVENTF_UNICODE."""
+def _send_char(char: str) -> None:
+    """Send a single character via virtual-key code (Raw Input compatible).
+
+    Letter characters (a-z) use VK codes which propagate through the
+    full Windows input pipeline including Raw Input, required by games
+    like Roblox.  Non-letter characters fall back to KEYEVENTF_UNICODE.
+    """
     code = ord(char)
-    down = _make_input(KEYEVENTF_UNICODE, wScan=code)
-    up = _make_input(KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, wScan=code)
+    if 'a' <= char <= 'z':
+        vk = ord(char.upper())
+        down = _make_input(KEYEVENTF_KEYDOWN, wVk=vk)
+        up = _make_input(KEYEVENTF_KEYUP, wVk=vk)
+    else:
+        down = _make_input(KEYEVENTF_UNICODE, wScan=code)
+        up = _make_input(KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, wScan=code)
     inputs = (INPUT * 2)(down, up)
     sent = _SendInput(2, inputs, ctypes.sizeof(INPUT))
-    if sent == 0:
+    if sent != 2:
         err = ctypes.get_last_error()
         raise RuntimeError(
-            f"SendInput returned 0 for U+{code:04X} "
+            f"SendInput returned {sent}/2 for U+{code:04X} "
             f"(last_error={err})"
         )
 
@@ -131,10 +141,10 @@ def _send_enter() -> None:
     up = _make_input(KEYEVENTF_KEYUP, wVk=VK_RETURN, wScan=0x1C)
     inputs = (INPUT * 2)(down, up)
     sent = _SendInput(2, inputs, ctypes.sizeof(INPUT))
-    if sent == 0:
+    if sent != 2:
         err = ctypes.get_last_error()
         raise RuntimeError(
-            f"SendInput returned 0 for VK_RETURN "
+            f"SendInput returned {sent}/2 for VK_RETURN "
             f"(last_error={err})"
         )
 
@@ -170,7 +180,7 @@ class Typer:
         try:
             for i, ch in enumerate(text):
                 try:
-                    _send_char_unicode(ch)
+                    _send_char(ch)
                 except Exception as e:
                     return False, f"Failed at char {i+1}/{len(text)}: '{ch}' — {e}"
                 time.sleep(self._next_delay())

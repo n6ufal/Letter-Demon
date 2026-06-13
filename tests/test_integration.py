@@ -298,7 +298,7 @@ class TypingIntegrationTest(unittest.TestCase):
         self.tmp_dir.cleanup()
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_find_word_then_type_it(self, mock_send_char, mock_send_enter):
         """End-to-end: find word and type it."""
         # Create dictionary and engine
@@ -323,7 +323,7 @@ class TypingIntegrationTest(unittest.TestCase):
         mock_send_enter.assert_called_with()
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_typing_failure_returns_error(self, mock_send_char, mock_send_enter):
         """Typing failure is caught and reported."""
         mock_send_char.side_effect = Exception("keyboard failure")
@@ -335,7 +335,7 @@ class TypingIntegrationTest(unittest.TestCase):
         self.assertIn("keyboard failure", msg)
 
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_empty_word_sends_enter(self, mock_send_char, mock_send_enter):
         """If no word found, typing still sends enter."""
         typer = Typer(base_speed_ms=10.0, jitter_on=False)
@@ -404,7 +404,7 @@ class ErrorRecoveryIntegrationTest(unittest.TestCase):
 
     @patch("system.roblox.is_roblox_running")
     @patch("system.typer._send_enter")
-    @patch("system.typer._send_char_unicode")
+    @patch("system.typer._send_char")
     def test_typing_continues_if_roblox_missing(self, mock_send_char, mock_send_enter, mock_roblox):
         """If Roblox window missing, typing still works."""
         mock_roblox.return_value = False  # Roblox not found
