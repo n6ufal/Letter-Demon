@@ -231,8 +231,19 @@ def make_slider(
         slider.set(snapped)
         val_label.config(text=f"{int(snapped)}{suffix}")
 
+    def _on_scroll(event):
+        step = resolution if event.delta > 0 else -resolution
+        snapped = round(slider.get() / resolution) * resolution
+        new_val = max(from_, min(to, snapped + step))
+        variable.set(new_val)
+        slider.set(new_val)
+        val_label.config(text=f"{int(new_val)}{suffix}")
+        if command:
+            command(new_val)
+
     slider.configure(command=_on_move)
     slider.bind("<ButtonRelease-1>", _on_release, add="+")
+    slider.bind("<MouseWheel>", _on_scroll, add="+")
 
     return slider, val_label
 
