@@ -1,7 +1,7 @@
 """Main window widget — owns all widgets and Qt state."""
 
-from PySide6.QtCore import Qt, QRegularExpression, QTimer, Signal
-from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtCore import Qt, QPropertyAnimation, QRegularExpression, QTimer, Signal
+from PySide6.QtGui import QColor, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QSlider,
     QVBoxLayout,
     QWidget,
+    QGraphicsDropShadowEffect,
 )
 
 from . import modes
@@ -38,13 +39,20 @@ class MainWidget(QWidget):
     clear_used_requested = Signal()
     used_words_requested = Signal()
     about_requested = Signal()
+    dict_dropped = Signal(str)                # path
+
+    status_dict_changed = Signal(str, str)    # text, color name
+    status_prefix_changed = Signal(str, str)  # text, color name
+    status_roblox_changed = Signal(str, str)  # text, color name
 
     def __init__(self, settings: dict) -> None:
         super().__init__()
         self.setObjectName("mainWidget")
         self._feedback_timer: QTimer | None = None
+        self._feedback_anim: QPropertyAnimation | None = None
         self._settings = settings
         self._build()
+        self._add_drop_shadows()
         self._wire_tooltips()
         self._apply_defaults(settings)
         self._wire_signals()
@@ -64,7 +72,6 @@ class MainWidget(QWidget):
         self._build_settings_panel(layout)
         self._build_separator(layout)
         self._build_action_buttons(layout)
-        self._build_info_bar(layout)
         self._build_bottom_row(layout)
 
     def _build_header(self, parent: QVBoxLayout) -> None:
@@ -95,11 +102,19 @@ class MainWidget(QWidget):
         parent.addWidget(self.play_btn)
 
     def _build_settings_panel(self, parent: QVBoxLayout) -> None:
-        panel = QVBoxLayout()
+        self._settings_section = QWidget()
+        self._settings_section.setObjectName("settingsSection")
+        panel = QVBoxLayout(self._settings_section)
         panel.setContentsMargins(0, 0, 0, 0)
-        panel.setSpacing(2)
+        panel.setSpacing(4)
 
-        # Row 1: Speed + Mode
+        # Card 1: Speed + Mode
+        card1 = QFrame()
+        card1.setObjectName("settingsCard")
+        card1_layout = QVBoxLayout(card1)
+        card1_layout.setContentsMargins(8, 6, 8, 6)
+        card1_layout.setSpacing(4)
+
         row1 = QHBoxLayout()
         row1.setContentsMargins(0, 0, 0, 0)
 
@@ -136,9 +151,16 @@ class MainWidget(QWidget):
         self.mode_combo.setFixedWidth(80)
         mode_row.addWidget(self.mode_combo)
         row1.addLayout(mode_row)
-        parent.addLayout(row1)
+        card1_layout.addLayout(row1)
+        panel.addWidget(card1)
 
-        # Row 2: Humanizer + Fallback
+        # Card 2: Humanizer + Fallback
+        card2 = QFrame()
+        card2.setObjectName("settingsCard")
+        card2_layout = QVBoxLayout(card2)
+        card2_layout.setContentsMargins(8, 6, 8, 6)
+        card2_layout.setSpacing(4)
+
         row2 = QHBoxLayout()
         row2.setContentsMargins(0, 0, 0, 0)
 
@@ -175,17 +197,21 @@ class MainWidget(QWidget):
         self.fallback_combo.setFixedWidth(80)
         fallback_row.addWidget(self.fallback_combo)
         row2.addLayout(fallback_row)
-        parent.addLayout(row2)
+        card2_layout.addLayout(row2)
+        panel.addWidget(card2)
+        parent.addWidget(self._settings_section)
 
     def _build_separator(self, parent: QVBoxLayout) -> None:
-        sep = QFrame()
-        sep.setFrameShape(QFrame.HLine)
-        sep.setFrameShadow(QFrame.Sunken)
-        sep.setObjectName("separator")
-        parent.addWidget(sep)
+        self._separator = QFrame()
+        self._separator.setFrameShape(QFrame.HLine)
+        self._separator.setFrameShadow(QFrame.Sunken)
+        self._separator.setObjectName("separator")
+        parent.addWidget(self._separator)
 
     def _build_action_buttons(self, parent: QVBoxLayout) -> None:
-        row = QHBoxLayout()
+        self._actions_section = QWidget()
+        self._actions_section.setObjectName("actionsSection")
+        row = QHBoxLayout(self._actions_section)
         row.setContentsMargins(0, 0, 0, 0)
         self.advanced_btn = QPushButton("Advanced")
         self.advanced_btn.setObjectName("actionBtn")
@@ -195,54 +221,12 @@ class MainWidget(QWidget):
         self.clear_used_btn.setObjectName("actionBtn")
         self.clear_used_btn.setCursor(Qt.PointingHandCursor)
         row.addWidget(self.clear_used_btn)
-        parent.addLayout(row)
-
-    def _build_info_bar(self, parent: QVBoxLayout) -> None:
-        bar = QHBoxLayout()
-        bar.setContentsMargins(0, 0, 0, 0)
-
-        # Left: dictionary word count
-        dict_frame = QHBoxLayout()
-        dict_frame.setContentsMargins(0, 0, 0, 0)
-        self._dict_dot = QLabel("\u25cf")
-        self._dict_dot.setObjectName("dictDot")
-        dict_frame.addWidget(self._dict_dot)
-        self.dict_count_label = QLabel("No dictionary")
-        self.dict_count_label.setObjectName("dictCountLabel")
-        self.dict_count_label.setCursor(Qt.WhatsThisCursor)
-        dict_frame.addWidget(self.dict_count_label)
-        bar.addLayout(dict_frame)
-
-        # Center: typing mode
-        prefix_frame = QHBoxLayout()
-        prefix_frame.setContentsMargins(0, 0, 0, 0)
-        prefix_frame.setAlignment(Qt.AlignCenter)
-        self._auto_prefix_dot = QLabel("\u25cf")
-        self._auto_prefix_dot.setObjectName("autoPrefixDot")
-        prefix_frame.addWidget(self._auto_prefix_dot)
-        self.auto_prefix_label = QLabel("")
-        self.auto_prefix_label.setObjectName("autoPrefixLabel")
-        self.auto_prefix_label.setCursor(Qt.WhatsThisCursor)
-        prefix_frame.addWidget(self.auto_prefix_label)
-        bar.addLayout(prefix_frame, 1)
-
-        # Right: Roblox status
-        roblox_frame = QHBoxLayout()
-        roblox_frame.setContentsMargins(0, 0, 0, 0)
-        roblox_frame.setAlignment(Qt.AlignRight)
-        self._roblox_dot = QLabel("\u25cf")
-        self._roblox_dot.setObjectName("robloxDot")
-        roblox_frame.addWidget(self._roblox_dot)
-        self.roblox_status_label = QLabel()
-        self.roblox_status_label.setObjectName("robloxStatusLabel")
-        self.roblox_status_label.setCursor(Qt.WhatsThisCursor)
-        roblox_frame.addWidget(self.roblox_status_label)
-        bar.addLayout(roblox_frame)
-
-        parent.addLayout(bar)
+        parent.addWidget(self._actions_section)
 
     def _build_bottom_row(self, parent: QVBoxLayout) -> None:
-        row = QHBoxLayout()
+        self._bottom_section = QWidget()
+        self._bottom_section.setObjectName("bottomSection")
+        row = QHBoxLayout(self._bottom_section)
         row.setContentsMargins(0, 0, 0, 0)
 
         self.used_words_label = _ClickableLabel("Used words")
@@ -257,7 +241,7 @@ class MainWidget(QWidget):
         self._credit_label.setCursor(Qt.PointingHandCursor)
         row.addWidget(self._credit_label)
 
-        parent.addLayout(row)
+        parent.addWidget(self._bottom_section)
 
     # ------------------------------------------------------------------
     # Defaults & wiring
@@ -293,18 +277,77 @@ class MainWidget(QWidget):
         self._credit_label.clicked.connect(self.about_requested.emit)
 
     # ------------------------------------------------------------------
+    # Drop shadows
+    # ------------------------------------------------------------------
+
+    def _add_drop_shadows(self) -> None:
+        entry_shadow = QGraphicsDropShadowEffect()
+        entry_shadow.setBlurRadius(8)
+        entry_shadow.setOffset(0, 1)
+        entry_shadow.setColor(QColor(0, 0, 0, 32))
+        self.entry.setGraphicsEffect(entry_shadow)
+
+        btn_shadow = QGraphicsDropShadowEffect()
+        btn_shadow.setBlurRadius(8)
+        btn_shadow.setOffset(0, 2)
+        btn_shadow.setColor(QColor(0, 0, 0, 40))
+        self.play_btn.setGraphicsEffect(btn_shadow)
+
+    # ------------------------------------------------------------------
+    # Drag-and-drop support
+    # ------------------------------------------------------------------
+
+    def dragEnterEvent(self, event) -> None:
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                if url.toLocalFile().endswith((".json", ".txt")):
+                    event.acceptProposedAction()
+                    self._show_drag_indicator(True)
+                    return
+        event.ignore()
+
+    def dragLeaveEvent(self, event) -> None:
+        self._show_drag_indicator(False)
+
+    def dropEvent(self, event) -> None:
+        self._show_drag_indicator(False)
+        for url in event.mimeData().urls():
+            path = url.toLocalFile()
+            if path.endswith((".json", ".txt")):
+                self.dict_dropped.emit(path)
+                break
+
+    def _show_drag_indicator(self, visible: bool) -> None:
+        if visible:
+            self.setStyleSheet(
+                "QWidget#mainWidget { border: 2px dashed #16a34a; }"
+            )
+        else:
+            self.setStyleSheet("")
+
+    # ------------------------------------------------------------------
+    # Theme switching
+    # ------------------------------------------------------------------
+
+    def set_theme(self, is_dark: bool) -> None:
+        from .theme import apply_theme
+        apply_theme(is_dark)
+
+    # ------------------------------------------------------------------
+    # Compact mode
+    # ------------------------------------------------------------------
+
+    def set_compact_mode(self, enabled: bool) -> None:
+        self._settings_section.setVisible(not enabled)
+        self._separator.setVisible(not enabled)
+        self._actions_section.setVisible(not enabled)
+        self._bottom_section.setVisible(not enabled)
+
+    # ------------------------------------------------------------------
     # Tooltips
     # ------------------------------------------------------------------
 
     def _wire_tooltips(self) -> None:
-        self.dict_count_label.setToolTip("Dictionary word count")
-        self.auto_prefix_label.setToolTip(
-            "Suffix \u2014 types only the ending / "
-            "Full \u2014 types the complete word"
-        )
-        self.roblox_status_label.setToolTip(
-            f"{self.roblox_status_label.text()} connection status"
-        )
         self.speed_slider.setToolTip(
             "Typing speed in WPM (70\u2013200 is typical)"
         )
@@ -372,23 +415,15 @@ class MainWidget(QWidget):
 
     def set_auto_type_prefix(self, enabled: bool) -> None:
         self._auto_type_prefix_enabled = enabled
-        self._update_auto_prefix_indicator()
-
-    def _update_auto_prefix_indicator(self) -> None:
-        text = "Suffix" if self._auto_type_prefix_enabled else "Full"
-        color = "green" if self._auto_type_prefix_enabled else "blue"
-        self.auto_prefix_label.setText(text)
-        self._set_dot_color(self._auto_prefix_dot, color)
-        self._set_label_color(self.auto_prefix_label, color)
+        text = "Suffix" if enabled else "Full"
+        color = "green" if enabled else "blue"
+        self.status_prefix_changed.emit(text, color)
 
     def update_play_button(self, has_wordlist: bool) -> None:
         if not has_wordlist:
             self.play_btn.setText("Click to load a dictionary")
             self.play_btn.setObjectName("playBtnInactive")
             self._set_play_btn_state("inactive")
-            self.dict_count_label.setText("No dictionary")
-            self._set_dot_color(self._dict_dot, "muted")
-            self._set_label_color(self.dict_count_label, "muted")
             self.play_btn.setToolTip(
                 "No dictionary \u2014 click to load one"
             )
@@ -415,17 +450,6 @@ class MainWidget(QWidget):
     def set_ready_state(self) -> None:
         self.play_btn.setEnabled(True)
 
-    def update_dict_word_count(self, count: int | None) -> None:
-        if count is not None:
-            text = f"{count:,} words"
-            self.dict_count_label.setText(text)
-            self._set_dot_color(self._dict_dot, "green")
-            self._set_label_color(self.dict_count_label, "green")
-        else:
-            self.dict_count_label.setText("No dictionary")
-            self._set_dot_color(self._dict_dot, "muted")
-            self._set_label_color(self.dict_count_label, "muted")
-
     def clear_prefix(self) -> None:
         self.entry.clear()
 
@@ -441,6 +465,10 @@ class MainWidget(QWidget):
             self._feedback_timer.stop()
             self._feedback_timer = None
 
+        if self._feedback_anim is not None and self._feedback_anim.state() == QPropertyAnimation.Running:
+            self._feedback_anim.stop()
+            self._feedback_anim = None
+
         css_class = "warn" if level == "warn" else "error"
         self.feedback_label.setText(message)
         self.feedback_label.setProperty("feedbackLevel", css_class)
@@ -449,6 +477,12 @@ class MainWidget(QWidget):
 
         if beep:
             QApplication.beep()
+
+        self._feedback_anim = QPropertyAnimation(self.feedback_label, b"windowOpacity")
+        self._feedback_anim.setDuration(200)
+        self._feedback_anim.setStartValue(0.0)
+        self._feedback_anim.setEndValue(1.0)
+        self._feedback_anim.start()
 
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
@@ -459,18 +493,13 @@ class MainWidget(QWidget):
         if self._feedback_timer is not None:
             self._feedback_timer.stop()
             self._feedback_timer = None
+        if self._feedback_anim is not None and self._feedback_anim.state() == QPropertyAnimation.Running:
+            self._feedback_anim.stop()
+            self._feedback_anim = None
         self._clear_feedback()
 
     def _clear_feedback(self) -> None:
         self.feedback_label.setText("")
-
-    def set_roblox_indicator(self, running: bool) -> None:
-        color = "green" if running else "red"
-        self._set_dot_color(self._roblox_dot, color)
-        self._set_label_color(self.roblox_status_label, color)
-
-    def set_roblox_title(self, title: str) -> None:
-        self.roblox_status_label.setText(title)
 
     def update_dict_label(self, path: str | None) -> None:
         if path:
@@ -496,28 +525,5 @@ class MainWidget(QWidget):
     @property
     def exceptions_status(self) -> str:
         return getattr(self, "_exceptions_status", "")
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _set_dot_color(label: QLabel, color: str) -> None:
-        palette = {
-            "green": "#16a34a",
-            "red": "#dc2626",
-            "blue": "#2563eb",
-            "muted": "#71717a",
-        }
-        label.setStyleSheet(f"color: {palette.get(color, '#71717a')};")
-
-    def _set_label_color(self, label: QLabel, color: str) -> None:
-        palette = {
-            "green": "#16a34a",
-            "red": "#dc2626",
-            "blue": "#2563eb",
-            "muted": "#71717a",
-        }
-        label.setStyleSheet(f"color: {palette.get(color, '#71717a')};")
 
 

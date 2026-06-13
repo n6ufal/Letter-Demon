@@ -63,6 +63,11 @@ class SettingsManager:
         "pre_delay": (int, 500),
         "post_delay": (int, 500),
         "auto_type_prefix": (bool, True),
+        "dark_mode": (bool, False),
+        "compact_mode": (bool, False),
+        "always_on_top": (bool, True),
+        "global_hotkey": (str, "win+shift+d"),
+        "recent_dicts": (list, []),
         "win_x": ((int, type(None)), None),
         "win_y": ((int, type(None)), None),
     }
