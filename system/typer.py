@@ -28,7 +28,7 @@ class Typer:
                  jitter_on: bool = True, jitter_pct: float = 75.0):
         self.base_speed_ms = base_speed_ms
         self.jitter_on = jitter_on
-        self.jitter_pct = jitter_pct  # Expects 5.0 to 100.0
+        self.jitter_pct = min(jitter_pct, 100.0)
 
     def type_text(self, text: str, pre_delay_s: float = 0.5,
                   post_delay_s: float = 0.5) -> tuple[bool, str]:
@@ -55,22 +55,16 @@ class Typer:
             return False, f"Unexpected error during typing: {e}"
 
     def _next_delay(self) -> float:
-        # Convert ms to seconds for time.sleep()
         base_s = max(_MIN_KEYSTROKE_DELAY_S, self.base_speed_ms / 1000.0)
 
         if not self.jitter_on:
             return base_s
 
-        # Map the 5-100 UI slider to a log-normal sigma.
-        # 0.0 = perfectly robotic. 0.75 = highly erratic/drunk.
-        scale = (self.jitter_pct / 100.0) * 0.75
+        scale = (self.jitter_pct / 100.0) * 0.5
 
-        # Shift mu so the MEAN of the distribution equals base_s
-        # (exp(mu + sigma^2/2) = base_s), making the slider an honest average.
         mu = math.log(base_s) - 0.5 * scale ** 2
 
         delay = random.lognormvariate(mu, scale)
 
-        # Absolute physical limit: Even the fastest human twitch + OS input lag
-        # takes about 30ms. Never go below this to prevent robotic spam.
-        return max(_MIN_KEYSTROKE_DELAY_S, delay)
+        _floor = max(_MIN_KEYSTROKE_DELAY_S, base_s * 0.25)
+        return max(_floor, delay)

@@ -221,6 +221,7 @@ def make_slider(
     def _on_move(val):
         v = float(val)
         snapped = round(v / resolution) * resolution
+        variable.set(snapped)
         val_label.config(text=f"{int(snapped)}{suffix}")
         if command:
             command(snapped)
