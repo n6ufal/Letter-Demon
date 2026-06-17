@@ -3,6 +3,12 @@
 # These words will never be chosen by the macro
 # Case-insensitive. Edit this file and click Reload Exceptions in the app
 
+atherinidae
+annulosa
+dubh
+ibos
+ouse
+archd
 merthyr
 cooghneiorvlt
 #tralatician
