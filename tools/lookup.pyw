@@ -45,12 +45,12 @@ SETTINGS_FILE = Path(_PROJECT_ROOT) / "data" / "runtime" / "lookup_settings.json
 
 class DictionaryLookupApp:
 
-    RESULT_LIMIT = 500
+    RESULT_LIMIT = 1000
 
     def __init__(self, root):
         self.root = root
         self.root.title(f"Dictionary Lookup v{__version__}")
-        self.root.minsize(800, 500)
+        self.root.minsize(1100, 650)
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
@@ -70,13 +70,13 @@ class DictionaryLookupApp:
 
     def _center_window(self):
         self.root.update_idletasks()
-        w, h = 1000, 620
+        w, h = 1400, 800
         x = (self.root.winfo_screenwidth() - w) // 2
         y = (self.root.winfo_screenheight() - h) // 2
         self.root.geometry(f"{w}x{h}+{x}+{y}")
 
     def _build_ui(self):
-        main = ttk.Frame(self.root, padding=10)
+        main = ttk.Frame(self.root, padding=15)
         main.grid(row=0, column=0, sticky="nsew")
         main.columnconfigure(0, weight=1)
         main.rowconfigure(2, weight=1)
@@ -88,7 +88,7 @@ class DictionaryLookupApp:
 
     def _build_dict_bar(self, parent):
         frame = ttk.Frame(parent)
-        frame.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+        frame.grid(row=0, column=0, sticky="ew", pady=(0, 12))
         frame.columnconfigure(1, weight=1)
 
         self.dict_button = ttk.Button(
@@ -103,18 +103,18 @@ class DictionaryLookupApp:
 
     def _build_search_entries(self, parent):
         frame = ttk.Frame(parent)
-        frame.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        frame.grid(row=1, column=0, sticky="ew", pady=(0, 12))
         frame.columnconfigure((1, 3), weight=1)
 
         ttk.Label(frame, text="Starts With:").grid(row=0, column=0, padx=(0, 4))
         self.start_var = tk.StringVar()
-        start_entry = ttk.Entry(frame, textvariable=self.start_var, width=25)
+        start_entry = ttk.Entry(frame, textvariable=self.start_var, width=35)
         start_entry.grid(row=0, column=1, sticky="ew", padx=(0, 16))
         start_entry.bind("<KeyRelease>", self._on_key_release)
 
         ttk.Label(frame, text="Ends With:").grid(row=0, column=2, padx=(0, 4))
         self.end_var = tk.StringVar()
-        end_entry = ttk.Entry(frame, textvariable=self.end_var, width=25)
+        end_entry = ttk.Entry(frame, textvariable=self.end_var, width=35)
         end_entry.grid(row=0, column=3, sticky="ew")
         end_entry.bind("<KeyRelease>", self._on_key_release)
 
@@ -125,7 +125,7 @@ class DictionaryLookupApp:
         frame.rowconfigure(0, weight=1)
 
         self.results_listbox = tk.Listbox(
-            frame, font=("Consolas", 10), activestyle="none",
+            frame, font=("Consolas", 11), activestyle="none",
             exportselection=False, selectmode=tk.EXTENDED
         )
         self.results_listbox.grid(row=0, column=0, sticky="nsew")
@@ -141,7 +141,7 @@ class DictionaryLookupApp:
 
     def _build_bottom_bar(self, parent):
         frame = ttk.Frame(parent)
-        frame.grid(row=3, column=0, sticky="ew", pady=(8, 0))
+        frame.grid(row=3, column=0, sticky="ew", pady=(12, 0))
         frame.columnconfigure(0, weight=1)
 
         self.status_var = tk.StringVar(value="Load a dictionary to begin")
