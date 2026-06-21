@@ -1,5 +1,69 @@
 # Release Notes
 
+## v9.2.0 (2026-06-21)
+
+
+### Features
+- add standalone dictionary lookup tool with exceptions integration
+- burst typing and bigram fluency for more human-like rhythm
+- scroll wheel support for sliders
+- align speed and humanizer slider widths
+- move info bar to top as toolbar, fix slider init position
+- replace ms speed slider with real-world WPM values
+- add Nord Light palette with live theme switching
+- inline feedback in header, uniform slider bg
+- add --dry-run flag to release script
+- make play button load dictionary when none loaded
+- replace winsound.Beep with custom error.wav
+- make window title configurable via settings.json
+
+### Bug Fixes
+- reduce jitter burstiness and sync slider IntVar during drag
+- use VK codes for letter characters instead of KEYEVENTF_UNICODE, fixes Roblox Raw Input compatibility
+- compact slider value labels by reducing width and padx
+- snap slider position on release to avoid callback recursion
+- remove variable= from ttk.Scale to avoid command feedback loop
+- correct UsedWordsDialog method name from _update_list to update_list
+- widen slider value label from 5 to 8 chars
+- stop false positive breaking detection from body text
+- detect ! breaking notation and handle merge conflicts
+
+### Chores
+- add trap endings backup directory
+- update exceptions and trap endings lists
+- broaden data/runtime/ gitignore to whole directory
+- bump v9.0.0 -> v9.1.0
+- add release script, bump core/__init__.py to 9.0.0, update AGENTS.md
+
+### Documentation
+- update test count and add MVC architecture section
+- remove error sound line from README
+- overhaul TESTING.md, patch ARCHITECTURE.md and README.md
+- restore personal disclaimer tone
+- restructure README for better information flow
+- trim redundant section 4 from README, tighten features
+- add RELEASE_NOTES.md with v9.0.0 changelog
+
+### Refactors
+- tighten view/controller boundary, name magic constants, remove dead code
+- overhaul lookup tool UI with MVC split, side panel, filters, and inline feedback
+- replace keyboard library with SendInput via ctypes
+- restructure main GUI layout for professional UX
+- remove clickability from info bar, add theme constants
+- trim controller to ~300 lines
+- extract MainView from LetterDemonApp, class-based dialogs
+- extract AppSession from LetterDemonApp god object
+- migrate to pathlib, centralize project root, add SettingsManager
+- declutter project root
+- rename app class, clean stale comments
+
+### Other
+- enlarge lookup window to 1400x800
+- update test files
+- revert: restore keyboard library, SendInput incompatible with Roblox Raw Input
+- Revert "feat: add Nord Light palette with live theme switching"
+- Sync dev with main: release script, version bump
+- Bump version 8.0.0 â†’ 9.0.0 to match v9 tag
 ## v9.1.0 (2026-06-12)
 
 ### Features
