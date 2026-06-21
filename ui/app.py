@@ -1,120 +1,67 @@
-"""Main application window — wires UI modules to engines."""
+"""Application controller — mediates between session and view."""
 
 import logging
-import os
-import sys
 import threading
-
-logger = logging.getLogger(__name__)
-if sys.platform == "win32":
-    import winsound
-    SOUND_ERROR = os.path.join(os.path.dirname(__file__), "error.wav")
-else:
-    winsound = None
-    SOUND_ERROR = None
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 
-from core.dictionary import load_wordlist_from_dict
-from core.word_engine import WordEngine
-from config.settings import load_settings, save_settings
-from config.trap_endings import load_trap_endings, TRAP_ENDINGS_FILE
-from config.exceptions import load_exceptions, EXCEPTIONS_FILE
+from core.session import AppSession
+from config.trap_endings import TRAP_ENDINGS_FILE
+from config.exceptions import EXCEPTIONS_FILE
 from system.roblox import is_roblox_running, focus_roblox_window
-from system.typer import Typer
 
 from . import dialogs
 from . import file_editors
 from . import modes
-from .main_layout import build_main_layout
-from .theme import (
-    C_BG,
-    C_BG_PANEL,
-    C_DOT_GREEN,
-    C_DOT_RED,
-    C_FEEDBACK_ERR_BG,
-    C_FEEDBACK_ERR_FG,
-    C_FEEDBACK_WARN_BG,
-    C_FEEDBACK_WARN_FG,
-    C_MUTED,
-    C_PLAY_ACT,
-    C_PLAY_BG,
-    C_PLAY_FG,
-)
+from .view import MainView
+
+logger = logging.getLogger(__name__)
 
 
 class LetterDemonApp:
-    def __init__(self, root: tk.Tk) -> None:
+    """Controller — owns session and view, wires them together."""
+
+    def __init__(self, root: tk.Tk, session: AppSession | None = None) -> None:
+        self.session = session or AppSession()
         self.root = root
         self.root.title("😈")
         self.root.resizable(False, False)
         self.root.attributes("-topmost", True)
 
-        self.engine = WordEngine(
-            wordlist=[],
-            trap_endings=load_trap_endings(),
-            exceptions=load_exceptions(),
-        )
-        self.typer = Typer()
-
-        self._is_playing = False
-        self._playing_lock = threading.RLock()
-        self._used_words_window_open = False
-        self._dict_path: str | None = None
-        self._feedback_after_id = None
         self._poll_id = None
-        self._advanced_window = None
-        self.used_words_window = None
+        self._advanced_dialog: dialogs.AdvancedDialog | None = None
+        self._used_words_dialog: dialogs.UsedWordsDialog | None = None
 
-        settings = load_settings()
-        self._dict_path = settings.get("dict_path", None)
-        self._window_title = settings.get("window_title", "Roblox")
+        s = self.session.settings
+        self.view = MainView(root, self, self.session.window_title, dict(s.as_dict()))
 
-        self.prefix_var = tk.StringVar()
-        self._validate_prefix_cmd = root.register(lambda v: v == "" or v.isalpha())
-        saved_mode = settings.get("mode", "Trap Words")
-        saved_fallback = settings.get("fallback", "Short Words")
-        self.mode_var = tk.StringVar(value=modes.to_display_mode(saved_mode))
-        self.fallback_var = tk.StringVar(value=modes.to_display_fallback(saved_fallback))
-        self.jitter_intensity = tk.IntVar(value=settings.get("jitter_intensity", 75))
-        self.pre_delay_var = tk.IntVar(value=settings.get("pre_delay", 500))
-        self.post_delay_var = tk.IntVar(value=settings.get("post_delay", 500))
-        self.auto_type_prefix = tk.StringVar(value="On" if settings.get("auto_type_prefix", True) else "Off")
-
-        self.root.configure(bg=C_BG)
-        self.main_frame = tk.Frame(self.root, padx=12, pady=10, bg=C_BG)
-        self.main_frame.pack(fill="both", expand=True)
-
-        build_main_layout(self, settings)
-        self._update_auto_prefix_indicator()
-        self.auto_type_prefix.trace_add("write", lambda *_: self._update_auto_prefix_indicator())
-
-        if "win_x" in settings and "win_y" in settings:
-            x, y = settings["win_x"], settings["win_y"]
+        win_x = s.get("win_x")
+        win_y = s.get("win_y")
+        if win_x is not None and win_y is not None:
             sw = self.root.winfo_screenwidth()
             sh = self.root.winfo_screenheight()
-            if -50 <= x < sw - 100 and -50 <= y < sh - 50:
-                self.root.geometry(f"+{x}+{y}")
+            if -50 <= win_x < sw - 100 and -50 <= win_y < sh - 50:
+                self.root.geometry(f"+{win_x}+{win_y}")
 
         self.root.bind("<FocusIn>", self._on_root_focus_in)
         self.root.protocol("WM_DELETE_WINDOW", self.on_quit)
-        self.entry.bind("<Control-Return>", self.on_ctrl_enter)
+        self.view.entry.bind("<Control-Return>", self.on_ctrl_enter)
 
         self._poll_roblox()
 
-        if self._dict_path and os.path.exists(self._dict_path):
-            if hasattr(self, "play_btn") and self.play_btn.winfo_exists():
-                self.play_btn.config(text="Loading...", state=tk.DISABLED)
-            threading.Thread(
-                target=self._load_wordlist_thread,
-                args=(self._dict_path,),
-                daemon=True,
-            ).start()
+        dict_path = self.session.try_load_dict_at_startup()
+        if dict_path:
+            self.view.set_loading_state()
+            self._run_thread(self._load_wordlist_thread, (dict_path,))
         else:
-            self._dict_path = None
-            self.status_var.set("")
-            self._update_start_button()
+            self.view.update_play_button(False)
+
+    # -- Focus helpers --
+
+    @staticmethod
+    def _run_thread(target, args=()) -> None:
+        threading.Thread(target=target, args=args, daemon=True).start()
 
     def _on_root_focus_in(self, event: tk.Event) -> None:
         self.root.after_idle(self._maybe_focus_prefix_entry)
@@ -124,64 +71,21 @@ class LetterDemonApp:
             return
         try:
             w = self.root.focus_get()
-        except tk.TclError:
+        except (tk.TclError, KeyError):
             return
         if w is not None:
             try:
                 top = w.winfo_toplevel()
-            except tk.TclError:
+            except (tk.TclError, KeyError):
                 return
             if top is not self.root:
                 return
         try:
-            self.entry.focus_set()
+            self.view.entry.focus_set()
         except tk.TclError:
             pass
 
-    def _update_start_button(self) -> None:
-        if not hasattr(self, "play_btn") or not self.play_btn.winfo_exists():
-            return
-        self.play_btn.unbind("<Enter>")
-        self.play_btn.unbind("<Leave>")
-        self.status_label.unbind("<Button-1>")
-        self.status_label.unbind("<Enter>")
-        self.status_label.unbind("<Leave>")
-        if not self.engine.has_wordlist():
-            self.play_btn.config(
-                text="Click to load a dictionary",
-                command=self.on_load_dict,
-                state=tk.NORMAL,
-                fg=C_DOT_RED,
-                bg=C_BG_PANEL,
-                activeforeground="#c0392b",
-                activebackground="#ddd",
-            )
-            self.status_var.set("")
-            self.status_label.config(fg=C_MUTED, cursor="")
-            if hasattr(self, "play_btn_tip"):
-                self.play_btn_tip.text = "No dictionary — click to load one"
-        else:
-            self.play_btn.bind("<Enter>", lambda e: self.play_btn.config(bg=C_PLAY_ACT))
-            self.play_btn.bind("<Leave>", lambda e: self.play_btn.config(bg=C_PLAY_BG))
-            self.play_btn.config(
-                text="Start (Ctrl+Enter)",
-                command=self.on_play_round,
-                state=tk.NORMAL,
-                fg=C_PLAY_FG,
-                bg=C_PLAY_BG,
-                activebackground=C_PLAY_ACT,
-                activeforeground=C_PLAY_FG,
-            )
-            if hasattr(self, "play_btn_tip"):
-                self.play_btn_tip.text = "Type the word into Roblox (Ctrl+Enter)"
-
-    def show_advanced(self) -> None:
-        dialogs.show_advanced(self)
-
-    def _dict_display_name(self) -> str:
-        if self._dict_path:
-            return f"Dict: {os.path.basename(self._dict_path)}"
-        return "Dict: none"
+    # -- Dictionary --
 
     def on_load_dict(self) -> None:
         path = askopenfilename(
@@ -195,270 +99,200 @@ class LetterDemonApp:
         )
         if not path:
             return
-        self._dict_path = path
-        if hasattr(self, "play_btn") and self.play_btn.winfo_exists():
-            self.play_btn.config(text="Loading...", state=tk.DISABLED)
-        if hasattr(self, "dict_label_var"):
-            self.dict_label_var.set(self._dict_display_name())
-        threading.Thread(
-            target=self._load_wordlist_thread, args=(path,), daemon=True,
-        ).start()
+        self.session.dict_path = path
+        self.view.set_loading_state()
+        self.view.update_dict_label(self.session.dict_path)
+        self._run_thread(self._load_wordlist_thread, (path,))
 
     def _load_wordlist_thread(self, dict_path: str) -> None:
         try:
-            wordlist, from_cache = load_wordlist_from_dict(dict_path)
-            self.engine.set_wordlist(wordlist)
+            wordlist, from_cache = self.session.load_dictionary(dict_path)
             word_count = len(wordlist)
-            self.root.after(0, lambda: self.status_var.set(f"{word_count:,} words"))
-            self.root.after(0, self._update_start_button)
+            self.root.after(
+                0, lambda: self.view.update_dict_word_count(word_count)
+            )
+            self.root.after(0, lambda: self.view.update_play_button(True))
         except Exception:
-            def _on_load_fail() -> None:
-                self.notify("error", "Could not load dictionary.", duration_ms=6000)
-                self.status_var.set("")
-                self._update_start_button()
+            def _on_fail() -> None:
+                self.view.show_feedback("error", "Could not load dictionary.",
+                                        duration_ms=6000)
+                self.view.update_dict_word_count(None)
+                self.view.update_play_button(False)
 
-            self.root.after(0, _on_load_fail)
+            self.root.after(0, _on_fail)
+
+    # -- Trap endings / exceptions --
 
     def reload_trap_endings(self) -> None:
-        endings = load_trap_endings()
-        self.engine.set_trap_endings(endings)
-        if hasattr(self, "trap_status_var"):
-            self.trap_status_var.set(f"{len(endings)} loaded")
+        self.session.reload_trap_endings()
+        self.view.set_trap_status(
+            f"{len(self.session.engine.trap_endings)} loaded"
+        )
 
     def reload_exceptions(self) -> None:
-        exceptions = load_exceptions()
-        self.engine.set_exceptions(exceptions)
-        if hasattr(self, "exceptions_status_var"):
-            self.exceptions_status_var.set(f"{len(exceptions)} loaded")
+        self.session.reload_exceptions()
+        self.view.set_exceptions_status(
+            f"{len(self.session.engine.word_exceptions)} loaded"
+        )
 
-    def edit_trap_endings(self):
-        file_editors.open_file_editor(
+    def edit_trap_endings(self) -> None:
+        file_editors.EditorDialog(
             self,
             title="Edit Trap Endings",
             file_path=TRAP_ENDINGS_FILE,
             reload_callback=self.reload_trap_endings,
-            status_var=self.trap_status_var,
+            status_var=self.view.trap_status_var,
             default_content="# Trap endings - one per line, hardest first\n",
         )
 
-    def edit_exceptions(self):
-        file_editors.open_file_editor(
+    def edit_exceptions(self) -> None:
+        file_editors.EditorDialog(
             self,
             title="Edit Exceptions",
             file_path=EXCEPTIONS_FILE,
             reload_callback=self.reload_exceptions,
-            status_var=self.exceptions_status_var,
+            status_var=self.view.exceptions_status_var,
             default_content="# Word exceptions - one per line\n",
         )
 
+    # -- Roblox polling --
+
     def _poll_roblox(self) -> None:
-        running = is_roblox_running(self._window_title)
-        self._update_roblox_indicator(running)
+        running = is_roblox_running(self.session.window_title)
+        self.view.set_roblox_indicator(running)
         self._poll_id = self.root.after(15000, self._poll_roblox)
 
-    def _update_auto_prefix_indicator(self) -> None:
-        if not hasattr(self, "auto_prefix_label"):
-            return
-        self.auto_prefix_var.set("Suffix" if self.auto_type_prefix.get() == "On" else "Full")
-        self.auto_prefix_label.config(fg=C_DOT_GREEN)
+    # -- Play round --
 
-    def _update_roblox_indicator(self, running: bool) -> None:
-        self.roblox_status_label.config(fg=C_DOT_GREEN if running else C_DOT_RED)
-        self.roblox_status_var.set(self._window_title)
-
-    def on_play_round(self) -> None:
-        with self._playing_lock:
-            if self._is_playing:
-                return
-
-            prefix = self.prefix_var.get().strip()
-            if not prefix:
-                self.notify(
-                    "warn",
-                    "Enter starting letters first.",
-                    beep=True,
-                )
-                return
-
-            if not self.engine.has_wordlist():
-                self.notify(
-                    "error",
-                    "Load a dictionary first (Advanced → Load Dictionary).",
-                    beep=True,
-                )
-                return
-
-            if self.auto_type_prefix.get() == "On":
-                word_to_type = self.engine.find_completion(
-                    prefix,
-                    modes.to_internal_mode(self.mode_var.get()),
-                    modes.to_internal_fallback(self.fallback_var.get()),
-                )
-            else:
-                word_to_type = self.engine.find_full_word(
-                    prefix,
-                    modes.to_internal_mode(self.mode_var.get()),
-                    modes.to_internal_fallback(self.fallback_var.get()),
-                )
-            if word_to_type is None:
-                self.notify(
-                    "error",
-                    "No matching word found.",
-                    beep=True,
-                )
-                return
-
-            self._is_playing = True
-
+    def _prepare_for_typing(self) -> bool:
+        """Hide window, focus Roblox, configure typer. Returns False on error."""
         try:
             self.root.withdraw()
-            self.prefix_var.set("")
-
-            if is_roblox_running(self._window_title):
-                focus_roblox_window(self._window_title)
-                self._update_roblox_indicator(True)
+            self.view.clear_prefix()
+            if is_roblox_running(self.session.window_title):
+                focus_roblox_window(self.session.window_title)
+                self.view.set_roblox_indicator(True)
             else:
-                self._update_roblox_indicator(False)
-
-            self.typer.base_speed_ms = self.speed_var.get()
-            self.typer.jitter_on = self.jitter_intensity.get() > 0
-            self.typer.jitter_pct = self.jitter_intensity.get()
-
-            pre = max(0.1, self.pre_delay_var.get() / 1000.0)
-            post = max(0.1, self.post_delay_var.get() / 1000.0)
+                self.view.set_roblox_indicator(False)
+            self.session.configure_typer(
+                speed_ms=self.view.speed_ms,
+                jitter_intensity=self.view.jitter_intensity,
+                pre_delay_s=self.view.pre_delay_ms / 1000.0,
+                post_delay_s=self.view.post_delay_ms / 1000.0,
+            )
+            return True
         except Exception:
-            with self._playing_lock:
-                self._is_playing = False
-            self.notify("error", "Failed to prepare for typing.", duration_ms=6000)
+            self.session.finish_play_round()
+            self.view.show_feedback("error", "Failed to prepare for typing.",
+                                    duration_ms=6000)
             logger.exception("Failed to prepare for typing")
+            return False
+
+    def on_play_round(self) -> None:
+        prefix = self.view.prefix
+        if not prefix:
+            self.view.show_feedback("warn", "Enter starting letters first.", beep=True)
             return
 
-        try:
-            threading.Thread(
-                target=self._type_and_return,
-                args=(word_to_type, pre, post),
-                daemon=True,
-            ).start()
-        except Exception:
-            with self._playing_lock:
-                self._is_playing = False
-            self.root.deiconify()
-            self.notify("error", "Failed to start typing thread.", duration_ms=6000)
-            logger.exception("Thread creation failed")
+        if not self.session.has_wordlist():
+            self.view.show_feedback(
+                "error",
+                "Load a dictionary first (Advanced \u2192 Load Dictionary).",
+                beep=True,
+            )
+            return
 
-    def on_ctrl_enter(self, event):
-        if not self.engine.has_wordlist():
+        word_to_type = self.session.prepare_play_round(
+            prefix,
+            modes.to_internal_mode(self.view.mode),
+            modes.to_internal_fallback(self.view.fallback),
+            self.view.auto_type_prefix_enabled,
+        )
+        if word_to_type is None:
+            self.view.show_feedback("error", "No matching word found.", beep=True)
+            return
+
+        if not self._prepare_for_typing():
+            return
+
+        self._run_thread(self._type_and_return, (word_to_type,))
+
+    def on_ctrl_enter(self, event: tk.Event) -> str:
+        if not self.session.has_wordlist():
             self.on_load_dict()
         else:
             self.on_play_round()
         return "break"
 
-    def _type_and_return(self, completion: str, pre: float, post: float) -> None:
+    def _type_and_return(self, completion: str) -> None:
         try:
-            success, message = self.typer.type_text(
-                completion, pre_delay_s=pre, post_delay_s=post
+            success, message = self.session.typer.type_text(
+                completion,
+                pre_delay_s=self.session.pre_delay,
+                post_delay_s=self.session.post_delay,
             )
             if not success:
                 logger.warning("Typing failed: %s", message)
                 self.root.after(
                     0,
-                    lambda m=message: self._try_tcl(
-                        self.notify, "error",
-                        f"Typing failed: {m}",
-                        duration_ms=8000,
+                    lambda m=message: self.view.show_feedback(
+                        "error", f"Typing failed: {m}", duration_ms=8000
                     ),
                 )
         finally:
-            with self._playing_lock:
-                self._is_playing = False
+            self.session.finish_play_round()
             self.root.after(0, lambda: self._try_tcl(self.root.deiconify))
-            if self._used_words_window_open:
-                self.root.after(
-                    0, lambda: self._try_tcl(dialogs.update_used_words_list, self)
-                )
+            self.root.after(
+                0, lambda: self._used_words_dialog
+                and self._used_words_dialog.update_list()
+            )
+
+    def show_advanced(self) -> None:
+        if self._advanced_dialog is None:
+            self._advanced_dialog = dialogs.AdvancedDialog(
+                self.root, self, self.view
+            )
+        self._advanced_dialog.show()
 
     def show_used_words(self) -> None:
-        dialogs.show_used_words(self)
+        if self._used_words_dialog is None:
+            self._used_words_dialog = dialogs.UsedWordsDialog(
+                self.root, self
+            )
+        self._used_words_dialog.show()
+
+    def show_about(self) -> None:
+        dialogs.AboutDialog.show(self.root)
 
     def on_clear_used_words(self) -> None:
-        self.engine.clear_used_words()
-        if dialogs.used_words_window_alive(self):
-            dialogs.update_used_words_list(self)
+        self.session.clear_used_words()
+        if self._used_words_dialog is not None:
+            self._used_words_dialog.update_list()
 
-    def _try_tcl(self, fn, *args, **kwargs):
+    # -- Utilities --
+
+    @staticmethod
+    def _try_tcl(fn, *args, **kwargs):
         try:
             return fn(*args, **kwargs)
         except tk.TclError:
             pass
 
-    def notify(
-        self,
-        level: str,
-        message: str,
-        *,
-        duration_ms: int = 5000,
-        beep: bool = False,
-    ) -> None:
-        """Non-modal message under the prefix field (no pop-up dialogs)."""
-        if self._feedback_after_id is not None:
-            self.root.after_cancel(self._feedback_after_id)
-            self._feedback_after_id = None
-
-        if level == "warn":
-            bg, fg = C_FEEDBACK_WARN_BG, C_FEEDBACK_WARN_FG
-        else:
-            bg, fg = C_FEEDBACK_ERR_BG, C_FEEDBACK_ERR_FG
-
-        self.feedback_frame.config(bg=bg)
-        self.feedback_label.config(text=message, bg=bg, fg=fg)
-        self.feedback_frame.grid(row=2, column=0, columnspan=4, sticky="we", pady=(0, 4))
-        self.feedback_frame.update_idletasks()
-        self.feedback_label.config(
-            wraplength=max(200, self.feedback_frame.winfo_width() - 16)
-        )
-
-        if beep and winsound:
-            try:
-                winsound.PlaySound(
-                    SOUND_ERROR,
-                    winsound.SND_ASYNC | winsound.SND_NOSTOP | winsound.SND_FILENAME,
-                )
-            except Exception:
-                winsound.Beep(800, 100)
-
-        self._feedback_after_id = self.root.after(
-            duration_ms, self._clear_feedback_strip
-        )
-
-    def _clear_feedback_strip(self) -> None:
-        self._feedback_after_id = None
-        try:
-            self.feedback_label.config(text="", bg=C_BG, fg=C_BG)
-            self.feedback_frame.config(bg=C_BG)
-            self.feedback_frame.grid_remove()
-        except tk.TclError:
-            pass
-
-    def show_about(self) -> None:
-        dialogs.show_about(self)
+    # -- Cleanup --
 
     def on_quit(self) -> None:
-        if self._feedback_after_id is not None:
-            self.root.after_cancel(self._feedback_after_id)
-            self._feedback_after_id = None
+        self.view.dismiss_feedback()
         if self._poll_id is not None:
             self.root.after_cancel(self._poll_id)
-            self._poll_id = None
-        save_settings({
-            "dict_path": self._dict_path,
-            "speed": self.speed_var.get(),
-            "mode": modes.to_internal_mode(self.mode_var.get()),
-            "fallback": modes.to_internal_fallback(self.fallback_var.get()),
-            "pre_delay": self.pre_delay_var.get(),
-            "post_delay": self.post_delay_var.get(),
-            "jitter_intensity": self.jitter_intensity.get(),
-            "auto_type_prefix": self.auto_type_prefix.get() == "On",
-            "window_title": self._window_title,
+        self._poll_id = None
+        self.session.persist_settings({
+            "wpm": self.view.speed_wpm,
+            "mode": modes.to_internal_mode(self.view.mode),
+            "fallback": modes.to_internal_fallback(self.view.fallback),
+            "pre_delay": self.view.pre_delay_ms,
+            "post_delay": self.view.post_delay_ms,
+            "jitter_intensity": self.view.jitter_intensity,
+            "auto_type_prefix": self.view.auto_type_prefix_enabled,
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
         })

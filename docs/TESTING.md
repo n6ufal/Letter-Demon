@@ -3,7 +3,7 @@
 ## Quick Start
 
 ```bash
-python -m unittest discover -v      # all 97 tests
+python -m unittest discover -v      # all 104 tests
 python -m unittest tests.test_word_engine -v   # single file
 python -m unittest tests.test_integration.DictionaryLoadingIntegrationTest -v  # single class
 python -m unittest tests.test_integration.TypingIntegrationTest.test_find_word_then_type_it -v  # single test
@@ -27,7 +27,7 @@ tests/
   test_integration.py    24 tests   end-to-end workflows
   test_roblox.py         11 tests   WinAPI detection + focus
                          --
-                         97 total
+                        104 total
 ```
 
 All tests use `unittest.TestCase`. A `conftest.py` exists but is unused — the runner is `unittest`, not pytest.
@@ -124,4 +124,4 @@ def test_trap_mode_prefers_scored_words(self):
 
 - No CI configured — run tests manually before every commit
 - All tests run in ~2.5 seconds on a modern machine
-- Keep the test count at 97 when adding features — write tests for new code
+- Keep the test count at 104 when adding features — write tests for new code

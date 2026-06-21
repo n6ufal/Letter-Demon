@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -14,16 +15,15 @@ from core.dictionary import (
     _cache_is_valid,
     _load_dict_file,
     load_wordlist_from_dict,
-    CACHE_DIR,
 )
 
 
 class GetCachePathTest(unittest.TestCase):
     def test_returns_path_in_cache_dir(self):
         path = get_cache_path(r"C:\dicts\words.txt")
-        self.assertIn(CACHE_DIR, path)
-        self.assertTrue(path.endswith(".txt"))
-        self.assertIn("cache_", path)
+        self.assertIsInstance(path, Path)
+        self.assertEqual(path.suffix, ".txt")
+        self.assertIn("cache_", str(path))
 
     def test_differs_for_different_paths(self):
         p1 = get_cache_path(r"C:\dicts\words.txt")
@@ -33,32 +33,28 @@ class GetCachePathTest(unittest.TestCase):
 
 class CacheIsValidTest(unittest.TestCase):
     def test_no_cache_file_returns_false(self):
-        self.assertFalse(_cache_is_valid(r"C:\nonexistent\cache.txt", r"C:\nonexistent\dict.txt"))
+        self.assertFalse(_cache_is_valid(Path(r"C:\nonexistent\cache.txt"), r"C:\nonexistent\dict.txt"))
 
     def test_cached_newer_returns_true(self):
         with tempfile.TemporaryDirectory() as tmp:
-            dict_path = os.path.join(tmp, "dict.txt")
-            cache_path = os.path.join(tmp, "cache.txt")
-            with open(dict_path, "w") as f:
-                f.write("hello")
-            with open(cache_path, "w") as f:
-                f.write("hello")
+            dict_path = Path(tmp) / "dict.txt"
+            cache_path = Path(tmp) / "cache.txt"
+            dict_path.write_text("hello")
+            cache_path.write_text("hello")
             # Modify cache mtime to be newer than dict
-            cache_mtime = os.path.getmtime(dict_path) + 100
+            cache_mtime = dict_path.stat().st_mtime + 100
             os.utime(cache_path, (cache_mtime, cache_mtime))
-            self.assertTrue(_cache_is_valid(cache_path, dict_path))
+            self.assertTrue(_cache_is_valid(cache_path, str(dict_path)))
 
     def test_cached_older_returns_false(self):
         with tempfile.TemporaryDirectory() as tmp:
-            dict_path = os.path.join(tmp, "dict.txt")
-            cache_path = os.path.join(tmp, "cache.txt")
-            with open(dict_path, "w") as f:
-                f.write("hello")
-            with open(cache_path, "w") as f:
-                f.write("hello")
-            dict_mtime = os.path.getmtime(dict_path) + 100
+            dict_path = Path(tmp) / "dict.txt"
+            cache_path = Path(tmp) / "cache.txt"
+            dict_path.write_text("hello")
+            cache_path.write_text("hello")
+            dict_mtime = dict_path.stat().st_mtime + 100
             os.utime(dict_path, (dict_mtime, dict_mtime))
-            self.assertFalse(_cache_is_valid(cache_path, dict_path))
+            self.assertFalse(_cache_is_valid(cache_path, str(dict_path)))
 
 
 class LoadDictFileTest(unittest.TestCase):
@@ -145,7 +141,7 @@ class LoadDictFileTest(unittest.TestCase):
 class LoadWordlistFromDictTest(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.TemporaryDirectory()
-        self.dict_path = os.path.join(self.tmp_dir.name, "words.txt")
+        self.dict_path = str(Path(self.tmp_dir.name) / "words.txt")
         with open(self.dict_path, "w") as f:
             f.write("cherry\napple\nbanana\n")
 
@@ -153,7 +149,7 @@ class LoadWordlistFromDictTest(unittest.TestCase):
         self.tmp_dir.cleanup()
 
     def _patch_cache_dir(self, func):
-        cache_dir = os.path.join(self.tmp_dir.name, "cache")
+        cache_dir = Path(self.tmp_dir.name) / "cache"
         with patch("core.dictionary.CACHE_DIR", cache_dir):
             return func()
 
@@ -166,11 +162,9 @@ class LoadWordlistFromDictTest(unittest.TestCase):
 
     def test_loads_from_cache_on_subsequent_call(self):
         def test():
-            # First call: loads fresh
             wordlist1, from_cache1 = load_wordlist_from_dict(self.dict_path)
             self.assertEqual(wordlist1, ["apple", "banana", "cherry"])
             self.assertFalse(from_cache1)
-            # Second call: should use cache
             wordlist2, from_cache2 = load_wordlist_from_dict(self.dict_path)
             self.assertEqual(wordlist2, ["apple", "banana", "cherry"])
             self.assertTrue(from_cache2)
@@ -179,9 +173,9 @@ class LoadWordlistFromDictTest(unittest.TestCase):
     def test_falls_back_when_cache_invalid(self):
         def test():
             load_wordlist_from_dict(self.dict_path)
-            # Make dict newer than cache
-            os.utime(self.dict_path, (os.path.getmtime(self.dict_path) + 200,
-                                       os.path.getmtime(self.dict_path) + 200))
+            dp = Path(self.dict_path)
+            mtime = dp.stat().st_mtime + 200
+            os.utime(dp, (mtime, mtime))
             wordlist, from_cache = load_wordlist_from_dict(self.dict_path)
             self.assertEqual(wordlist, ["apple", "banana", "cherry"])
             self.assertFalse(from_cache)

@@ -1,13 +1,12 @@
 """Trap endings — load/save trap_endings.txt."""
 
 import logging
-import os
 
 from .settings import get_project_root
 
 logger = logging.getLogger(__name__)
 
-TRAP_ENDINGS_FILE = os.path.join(get_project_root(), "data", "trap_endings.txt")
+TRAP_ENDINGS_FILE = get_project_root() / "data" / "trap_endings.txt"
 
 DEFAULT_TRAP_ENDINGS = [
     # 1-letter — hardest single letters to respond to

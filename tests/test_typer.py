@@ -35,7 +35,6 @@ class TyperDelayTest(unittest.TestCase):
     def test_with_jitter_returns_varying_values(self):
         typer = Typer(base_speed_ms=200.0, jitter_on=True, jitter_pct=75.0)
         delays = [typer._next_delay() for _ in range(100)]
-        # At least some values should differ from the median
         self.assertGreater(len(set(round(d, 4) for d in delays)), 1)
 
     def test_jitter_scales_with_percentage(self):
@@ -43,7 +42,6 @@ class TyperDelayTest(unittest.TestCase):
         high_jitter = Typer(base_speed_ms=200.0, jitter_on=True, jitter_pct=100.0)
         low_delays = [low_jitter._next_delay() for _ in range(200)]
         high_delays = [high_jitter._next_delay() for _ in range(200)]
-        # High jitter should have a larger variance
         low_var = __import__("statistics").variance(low_delays)
         high_var = __import__("statistics").variance(high_delays)
         self.assertGreater(high_var, low_var)
@@ -53,6 +51,72 @@ class TyperDelayTest(unittest.TestCase):
         self.assertEqual(typer.base_speed_ms, 170.0)
         self.assertTrue(typer.jitter_on)
         self.assertEqual(typer.jitter_pct, 75.0)
+
+    def test_rare_char_slower_than_common_no_jitter(self):
+        typer = Typer(base_speed_ms=200.0, jitter_on=False)
+        e_delay = typer._next_delay("e", pos=1, total_len=5)
+        z_delay = typer._next_delay("z", pos=1, total_len=5)
+        self.assertGreater(z_delay, e_delay)
+
+    def test_bigram_th_faster_than_zv_no_jitter(self):
+        typer = Typer(base_speed_ms=200.0, jitter_on=False)
+        th_delay = typer._next_delay("h", prev="t", pos=1, total_len=5)
+        zv_delay = typer._next_delay("v", prev="z", pos=1, total_len=5)
+        self.assertGreater(zv_delay, th_delay)
+
+    def test_micro_pause_fires_occasionally(self):
+        typer = Typer(base_speed_ms=200.0, jitter_on=True, jitter_pct=0.0)
+        max_delay = max(typer._next_delay("e", pos=1, total_len=5) for _ in range(500))
+        self.assertGreater(max_delay, 0.15)
+
+    def test_burst_splits_covers_full_word(self):
+        typer = Typer()
+        for _ in range(50):
+            bursts = typer._split_bursts("hello")
+            covered = set()
+            for start, end in bursts:
+                for j in range(start, end):
+                    covered.add(j)
+            self.assertEqual(covered, {0, 1, 2, 3, 4})
+
+    def test_burst_gap_longer_than_internal_delay(self):
+        typer = Typer(base_speed_ms=200.0, jitter_on=True, jitter_pct=0.0)
+        internal = typer._next_delay("e", pos=1, total_len=5, inside_burst=True)
+        gap = typer._burst_gap_delay()
+        self.assertGreater(gap, internal)
+
+    def test_inside_burst_reduces_variance(self):
+        low = Typer(base_speed_ms=200.0, jitter_on=True, jitter_pct=100.0)
+        high = Typer(base_speed_ms=200.0, jitter_on=True, jitter_pct=100.0)
+        lo_delays = [low._next_delay("e", pos=1, total_len=5, inside_burst=True)
+                     for _ in range(200)]
+        hi_delays = [high._next_delay("e", pos=1, total_len=5)
+                     for _ in range(200)]
+        lo_var = __import__("statistics").variance(lo_delays)
+        hi_var = __import__("statistics").variance(hi_delays)
+        self.assertGreater(hi_var, lo_var)
+
+    @patch("system.typer.keyboard")
+    def test_type_text_passes_burst_context(self, mock_kb):
+        typer = Typer(base_speed_ms=200.0, jitter_on=True)
+        original = typer._next_delay
+
+        calls = []
+        def tracking(char, prev, pos, total_len, inside_burst):
+            calls.append((char, prev, pos, total_len, inside_burst))
+            return original(char, prev, pos, total_len, inside_burst)
+
+        typer._next_delay = tracking
+        typer.type_text("cat", pre_delay_s=0.01, post_delay_s=0.01)
+        self.assertEqual(len(calls), 3)
+        for char, prev, pos, total_len, inside_burst in calls:
+            self.assertEqual(total_len, 3)
+            self.assertTrue(inside_burst)
+            self.assertIn(char, "cat")
+        # prev is the char before within the same burst, or "" at burst start
+        for i in range(1, len(calls)):
+            if calls[i][1]:
+                self.assertEqual(calls[i][1], calls[i - 1][0])
 
 
 class TyperTypeTextTest(unittest.TestCase):
