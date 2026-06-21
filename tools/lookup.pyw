@@ -72,6 +72,12 @@ COL_WORD_W = 32
 COL_LEN_W = 4
 COL_EXC_W = 1
 
+DEBOUNCE_MS = 300
+EXC_DEBOUNCE_MS = 200
+FEEDBACK_MS_DEFAULT = 5000
+FEEDBACK_MS_ERROR = 6000
+FEEDBACK_MS_DICT_ERROR = 8000
+
 
 def _format_row(index: int, word: str, in_exc: bool) -> str:
     exc_mark = "\u2713" if in_exc else " "
@@ -445,15 +451,15 @@ class LookupView:
     def _on_delete_results_selection(self, event=None):
         selection = self.results_listbox.curselection()
         if selection:
-            words = [self._controller._current_results[i][1] for i in selection]
+            words = [self._controller.get_result_word(i) for i in selection]
             self._controller.on_remove_from_exceptions(words)
 
     def _on_space_toggle_exception(self, event=None):
         selection = self.results_listbox.curselection()
         if selection:
             for i in selection:
-                _, word = self._controller._current_results[i]
-                if word in self._controller.exceptions:
+                word = self._controller.get_result_word(i)
+                if self._controller.is_exception(word):
                     self._controller.on_remove_from_exceptions([word])
                 else:
                     self._controller.on_add_to_exceptions([word])
@@ -469,7 +475,7 @@ class LookupView:
     def _on_exc_filter_change(self, event=None):
         if self._exc_filter_after_id:
             self.root.after_cancel(self._exc_filter_after_id)
-        self._exc_filter_after_id = self.root.after(200, self._controller.refresh_exception_list)
+        self._exc_filter_after_id = self.root.after(EXC_DEBOUNCE_MS, self._controller.refresh_exception_list)
 
     def _on_exc_selection_changed(self, event=None):
         selection = self.exc_listbox.curselection()
@@ -505,8 +511,8 @@ class LookupView:
         index = self.results_listbox.nearest(event.y)
         if index < 0 or index >= self.results_listbox.size():
             return
-        _, word = self._controller._current_results[index]
-        if word in self._controller.exceptions:
+        word = self._controller.get_result_word(index)
+        if self._controller.is_exception(word):
             self._controller.on_remove_from_exceptions([word])
         else:
             self._controller.on_add_to_exceptions([word])
@@ -515,9 +521,9 @@ class LookupView:
         index = self.results_listbox.nearest(event.y)
         if index < 0 or index >= self.results_listbox.size():
             return
-        _, word = self._controller._current_results[index]
+        word = self._controller.get_result_word(index)
         menu = tk.Menu(self.root, tearoff=0)
-        if word in self._controller.exceptions:
+        if self._controller.is_exception(word):
             menu.add_command(
                 label="Remove from Exceptions",
                 command=lambda w=word: self._controller.on_remove_from_exceptions([w])
@@ -538,7 +544,7 @@ class LookupView:
     # ------------------------------------------------------------------
 
     def _restore_sash(self, event=None):
-        pos = self._controller._settings.get("sash_pos")
+        pos = self._controller.get_setting("sash_pos")
         if pos is not None:
             try:
                 self.paned.sashpos(0, pos)
@@ -586,7 +592,7 @@ class LookupView:
             self.feedback_label.config(text=text, bg=C_BG, fg=C_TEXT)
         self._feedback_var.set(text)
 
-    def show_feedback(self, level, message, duration_ms=5000):
+    def show_feedback(self, level, message, duration_ms=FEEDBACK_MS_DEFAULT):
         if self._feedback_after_id:
             self.root.after_cancel(self._feedback_after_id)
             self._feedback_after_id = None
@@ -645,25 +651,32 @@ class LookupView:
         self._exc_count_var.set(f"Exceptions: {n}")
         self._exc_count_label.config(text=str(n))
 
-    def set_exception_full_count(self, n):
-        self._exc_all_count = n
+    def set_exception_count_label(self, count):
+        self._exc_count_var.set(f"Exceptions: {count}")
 
     def get_exception_listbox_selection(self):
         return [(self.exc_listbox.get(i), i) for i in self.exc_listbox.curselection()]
 
     def scroll_to_word(self, word):
-        for i in range(self.results_listbox.size()):
-            display = self.results_listbox.get(i)
-            if display.endswith("  " + word) or word in display:
-                self.results_listbox.selection_clear(0, tk.END)
-                self.results_listbox.selection_set(i)
-                self.results_listbox.see(i)
-                self.results_listbox.activate(i)
-                return True
-        return False
+        i = self._controller.get_result_index(word)
+        if i < 0:
+            return False
+        self.results_listbox.selection_clear(0, tk.END)
+        self.results_listbox.selection_set(i)
+        self.results_listbox.see(i)
+        self.results_listbox.activate(i)
+        return True
 
-    def enable_add_button(self, enabled):
-        self.add_exc_btn.config(state="normal" if enabled else "disabled")
+    def reset_filters(self):
+        self._start_var.set("")
+        self._end_var.set("")
+        self._contains_var.set("")
+        self._min_len_var.set(0)
+        self._max_len_var.set(0)
+
+    @property
+    def exc_filter_text(self):
+        return self._exc_filter_var.get()
 
     def enable_dict_button(self, enabled):
         self.dict_button.config(state="normal" if enabled else "disabled")
@@ -687,6 +700,7 @@ class LookupApp:
         self.exceptions = set()
         self._search_after_id = None
         self._current_results = []
+        self._result_word_list = []
         self._settings = {}
 
         self.view = LookupView(root, self)
@@ -747,10 +761,9 @@ class LookupApp:
         cache_hint = " (from cache)" if from_cache else ""
         self.view.set_status(f"{len(wordlist):,} words loaded{cache_hint}")
         self.view.enable_dict_button(True)
-        self._save_settings()
 
     def _on_dict_error(self, error):
-        self.view.show_feedback("error", f"Failed to load dictionary: {error}", duration_ms=8000)
+        self.view.show_feedback("error", f"Failed to load dictionary: {error}", duration_ms=FEEDBACK_MS_DICT_ERROR)
         self.view.set_dict_empty()
         self.view.enable_dict_button(True)
 
@@ -761,7 +774,7 @@ class LookupApp:
     def on_search_debounced(self, event=None):
         if self._search_after_id:
             self.root.after_cancel(self._search_after_id)
-        self._search_after_id = self.root.after(300, self._run_search)
+        self._search_after_id = self.root.after(DEBOUNCE_MS, self._run_search)
 
     def on_search_immediate(self):
         if self._search_after_id:
@@ -821,6 +834,7 @@ class LookupApp:
 
     def _update_results(self, results, total):
         self._current_results = list(enumerate(results))
+        self._result_word_list = list(results)
         self.view.update_results(results, total, self.exceptions)
         n = len(results)
         if n == 0:
@@ -829,24 +843,40 @@ class LookupApp:
             self.view.set_status("Ready")
 
     def _on_search_error(self, error):
-        self.view.show_feedback("error", f"Search failed: {error}", duration_ms=6000)
+        self.view.show_feedback("error", f"Search failed: {error}", duration_ms=FEEDBACK_MS_ERROR)
 
     # ------------------------------------------------------------------
     # Clear
     # ------------------------------------------------------------------
 
     def on_clear(self):
-        self.view._start_var.set("")
-        self.view._end_var.set("")
-        self.view._contains_var.set("")
-        self.view._min_len_var.set(0)
-        self.view._max_len_var.set(0)
+        self.view.reset_filters()
         self._current_results = []
+        self._result_word_list = []
         self.view.update_results([], 0, self.exceptions)
         if self.lookup.has_wordlist():
             self.view.set_status(f"{self.lookup.get_word_count():,} words available")
         else:
             self.view.set_status("Load a dictionary to begin")
+
+    # ------------------------------------------------------------------
+    # Query helpers (public interface for view, no direct attr access)
+    # ------------------------------------------------------------------
+
+    def get_result_word(self, index):
+        return self._current_results[index][1]
+
+    def is_exception(self, word):
+        return word in self.exceptions
+
+    def get_result_index(self, word):
+        try:
+            return self._result_word_list.index(word)
+        except ValueError:
+            return -1
+
+    def get_setting(self, key, default=None):
+        return self._settings.get(key, default)
 
     # ------------------------------------------------------------------
     # Exception management
@@ -861,12 +891,12 @@ class LookupApp:
         self.view.set_status("Exceptions reloaded")
 
     def refresh_exception_ui(self):
-        self.view.update_exception_panel(self.exceptions, self.view._exc_filter_var.get())
-        self.view._exc_count_var.set(f"Exceptions: {len(self.exceptions)}")
+        self.view.update_exception_panel(self.exceptions, self.view.exc_filter_text)
+        self.view.set_exception_count_label(len(self.exceptions))
         self._refresh_result_colors()
 
     def refresh_exception_list(self):
-        self.view.update_exception_panel(self.exceptions, self.view._exc_filter_var.get())
+        self.view.update_exception_panel(self.exceptions, self.view.exc_filter_text)
 
     def on_add_to_exceptions(self, words):
         before = len(self.exceptions)
@@ -897,7 +927,7 @@ class LookupApp:
         selection = self.view.results_listbox.curselection()
         if not selection:
             return
-        words = [self._current_results[i][1] for i in selection]
+        words = [self.get_result_word(i) for i in selection]
         self.on_add_to_exceptions(words)
 
     def on_exception_click(self, word):
@@ -906,8 +936,7 @@ class LookupApp:
             self.view.set_status(f"'{word}' not in current results \u2014 try searching")
 
     def _refresh_result_colors(self):
-        words = [w for _, w in self._current_results]
-        self.view.update_results(words, len(words), self.exceptions)
+        self.view.update_results(self._result_word_list, len(self._result_word_list), self.exceptions)
 
     # ------------------------------------------------------------------
     # Settings persistence
