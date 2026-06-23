@@ -200,7 +200,7 @@ def make_slider(
         font=FONT_MONO,
         bg=bg,
         fg=C_TEXT,
-        width=4,
+        width=7,
         anchor="e",
     )
 
