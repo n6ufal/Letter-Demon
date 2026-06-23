@@ -311,10 +311,39 @@ def _next_delay(self):
 | Jitter/Humanizer | 75% | Controls distribution spread (0 = robotic, 100 = erratic) |
 | Pre-delay | 500ms | Pause before first keystroke |
 | Post-delay | 500ms | Pause after Enter |
+| Typo rate | 0–20% | Per-character probability of deliberate typo (0 = off) |
 
 The `mu = log(base_s) - 0.5 * sigma^2` shift anchors the distribution's **mean** (not median) to the configured speed, so the slider is an honest average even at high jitter levels. The `max(0.03, delay)` clamp prevents sub-30ms intervals that would look inhuman. There is no upper-bound clamp — the log-normal distribution naturally makes very long delays rare.
 
 Every character gets its own independently sampled delay with no pattern between keystrokes.
+
+### Deliberate Typos
+
+When typo mode is enabled, the typer can insert a wrong character, backspace it, and retype the correct one — simulating a real player's fat-finger mistake.
+
+The typo engine uses a QWERTY adjacency map (`system/typer.py`):
+
+```python
+_TYPO_NEIGHBORS = {
+    "q": ["w", "a", "s"],
+    "w": ["q", "e", "a", "s", "d"],
+    # ... every letter maps to its physical keyboard neighbors
+}
+```
+
+Before typing each character, the typer rolls per-character probability (`typo_rate = N / 100`). If the roll hits:
+
+1. A random neighbor is picked from `_TYPO_NEIGHBORS[char]`
+2. The wrong character is typed immediately
+3. A short pause (`typo_pause_s`, ~30ms) simulates the user noticing the mistake
+4. Backspace is pressed
+5. The correct character is typed
+
+**Constraints:**
+- Only alphabetical QWERTY neighbors (no number homoglyphs like `e→3`, `i→1`)
+- Never typo the first character of a word
+- Never typo on words ≤ 2 letters
+- Typo only triggers when `typo_rate > 0`
 
 ## Threading Model
 
@@ -389,6 +418,8 @@ Saved on quit, loaded on start. Includes dict path, speed, mode, fallback, jitte
   "pre_delay": 500,
   "post_delay": 500,
   "auto_type_prefix": true,
+  "typo_enabled": false,
+  "typo_intensity": 4,
   "window_title": "Roblox",
   "win_x": 100,
   "win_y": 200

@@ -31,6 +31,8 @@ Turn up the humanizer and the typing stops feeling like a machine gun and starts
 
 At around **170 ms** with **75%+ humanization** in **Trap** mode, it starts looking suspiciously like a real player who somehow knows every obscure word in the dictionary.
 
+**Now with deliberate typos.** The bot will occasionally press a wrong QWERTY-adjacent key, backspace, and type the correct letter — just like a real player fat-fingering their keyboard. Configure typo intensity (0–20% per-character probability).
+
 ### 3. Full Control
 
 The app suggests. You decide.
@@ -70,7 +72,7 @@ python main.pyw
 ## Quick Start
 
 1. **Load a Dictionary** - Click the big button or Advanced > Load Dictionary, pick a .json or .txt file. Indexing takes ~1s.
-2. **Configure Typing** - Set speed (default 170ms), jitter/humanizer intensity (default 75%), pre/post delays (default 500ms each).
+2. **Configure Typing** - Set speed (default 170ms), jitter/humanizer intensity (default 75%), typo intensity (default 4%), pre/post delays (default 500ms each).
 3. **Pick Strategy** - Trap Words (hardest), Long Words, Short Words, or Random. Choose a fallback.
 4. **Play** - Type starting letters, press Play or Ctrl+Enter.
 
@@ -138,7 +140,7 @@ Stop the engine from suggesting certain words:
 
 ## Testing
 
-Run all 104 tests:
+Run all 111 tests:
 
 ```bash
 python -m unittest discover -v

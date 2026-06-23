@@ -1,5 +1,24 @@
 # Release Notes
 
+## v9.3.0 (2026-06-23)
+
+### Features
+- deliberate typo + auto-correct with QWERTY neighbor map
+- typo toggle in Advanced dialog (master switch)
+- typo intensity slider on main panel Row 3 (0–20%, per-character probability)
+- info bar shows `● Typo: On` / `○ Typo: Off` indicator
+
+### Bug Fixes
+- widen slider value label from 4 to 7 chars to prevent clipping in Advanced timing sliders
+
+### Documentation
+- document typo engine in ARCHITECTURE.md typing simulation section
+- update test counts 104→111 across all docs
+- add typo_enabled/typo_intensity to settings.json example
+
+### Chores
+- bump v9.2.0 -> v9.3.0
+
 ## v9.2.0 (2026-06-21)
 
 
