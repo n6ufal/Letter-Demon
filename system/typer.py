@@ -40,15 +40,56 @@ _BURST_WEIGHTS = [3, 5, 2]
 _BURST_GAP_RANGE = (1.5, 3.0)
 _BURST_SCALE_RATIO = 0.6
 
+_TYPO_NEIGHBORS = {
+    "q": ["w", "a", "s"],
+    "w": ["q", "e", "a", "s", "d"],
+    "e": ["w", "r", "s", "d", "f"],
+    "r": ["e", "t", "d", "f", "g"],
+    "t": ["r", "y", "f", "g", "h"],
+    "y": ["t", "u", "g", "h", "j"],
+    "u": ["y", "i", "h", "j", "k"],
+    "i": ["u", "o", "j", "k", "l"],
+    "o": ["i", "p", "k", "l"],
+    "p": ["o", "l"],
+    "a": ["q", "w", "s", "z", "x"],
+    "s": ["a", "w", "e", "d", "x", "z"],
+    "d": ["s", "e", "r", "f", "x", "c"],
+    "f": ["d", "r", "t", "g", "c", "v"],
+    "g": ["f", "t", "y", "h", "v", "b"],
+    "h": ["g", "y", "u", "j", "b", "n"],
+    "j": ["h", "u", "i", "k", "n", "m"],
+    "k": ["j", "i", "o", "l", "m"],
+    "l": ["k", "o", "p"],
+    "z": ["a", "s", "x"],
+    "x": ["z", "s", "d", "c"],
+    "c": ["x", "d", "f", "v"],
+    "v": ["c", "f", "g", "b"],
+    "b": ["v", "g", "h", "n"],
+    "n": ["b", "h", "j", "m"],
+    "m": ["n", "j", "k"],
+}
+
+_TYPO_KEY_POSITION = {
+    "q": (0, 0), "w": (0, 1), "e": (0, 2), "r": (0, 3), "t": (0, 4),
+    "y": (0, 5), "u": (0, 6), "i": (0, 7), "o": (0, 8), "p": (0, 9),
+    "a": (1, 0), "s": (1, 1), "d": (1, 2), "f": (1, 3), "g": (1, 4),
+    "h": (1, 5), "j": (1, 6), "k": (1, 7), "l": (1, 8),
+    "z": (2, 0), "x": (2, 1), "c": (2, 2), "v": (2, 3), "b": (2, 4),
+    "n": (2, 5), "m": (2, 6),
+}
+
 
 class Typer:
     """Types text with humanized burst + bigram timing."""
 
     def __init__(self, base_speed_ms: float = 170.0,
-                 jitter_on: bool = True, jitter_pct: float = 75.0):
+                 jitter_on: bool = True, jitter_pct: float = 75.0,
+                 typo_rate: float = 0.0, typo_pause_s: float = 0.3):
         self.base_speed_ms = base_speed_ms
         self.jitter_on = jitter_on
         self.jitter_pct = min(jitter_pct, 100.0)
+        self.typo_rate = max(0.0, typo_rate)
+        self.typo_pause_s = max(0.05, typo_pause_s)
 
     def type_text(self, text: str, pre_delay_s: float = 0.5,
                   post_delay_s: float = 0.5) -> tuple[bool, str]:
@@ -60,6 +101,9 @@ class Typer:
                     for i in range(start, end):
                         ch = text[i]
                         prev = text[i - 1] if i > start else ""
+                        typo_err = self._maybe_typo(ch, i, len(text))
+                        if typo_err:
+                            return typo_err
                         try:
                             keyboard.press_and_release(ch)
                         except Exception as e:
@@ -70,6 +114,9 @@ class Typer:
                         time.sleep(self._burst_gap_delay())
             else:
                 for i, ch in enumerate(text):
+                    typo_err = self._maybe_typo(ch, i, len(text))
+                    if typo_err:
+                        return typo_err
                     try:
                         keyboard.press_and_release(ch)
                     except Exception as e:
@@ -84,6 +131,33 @@ class Typer:
             return True, "Typing successful"
         except Exception as e:
             return False, f"Unexpected error during typing: {e}"
+
+    def _maybe_typo(self, ch: str, i: int, total_len: int
+                    ) -> tuple[bool, str] | None:
+        """If conditions are met, type a wrong char + backspace + pause.
+        Returns an error tuple on failure, or None on success/no-typo."""
+        if not (self.typo_rate > 0 and i > 0 and total_len > 2
+                and random.random() < self.typo_rate):
+            return None
+        wrong = self._pick_typo_char(ch)
+        try:
+            keyboard.press_and_release(wrong)
+        except Exception as e:
+            return (False, f"Typo failed at char {i+1}/{total_len}: '{wrong}' — {e}")
+        time.sleep(self.typo_pause_s)
+        try:
+            keyboard.press_and_release("backspace")
+        except Exception as e:
+            return (False, f"Backspace after typo failed — {e}")
+        time.sleep(self.typo_pause_s * 0.3)
+        return None
+
+    @staticmethod
+    def _pick_typo_char(correct: str) -> str:
+        neighbors = _TYPO_NEIGHBORS.get(correct.lower(), [])
+        if neighbors:
+            return random.choice(neighbors)
+        return correct
 
     @staticmethod
     def _split_bursts(text: str) -> list[tuple[int, int]]:

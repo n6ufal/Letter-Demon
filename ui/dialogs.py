@@ -212,6 +212,24 @@ class AdvancedDialog:
         row += 1
 
         tk.Label(
+            f, text="Typos", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
+        ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 4))
+        row += 1
+
+        typo_cb = tk.ttk.Checkbutton(
+            f,
+            text="Enable Typos",
+            variable=self._view.typo_enabled_var,
+            command=self._view._update_typo_indicator,
+        )
+        typo_cb.grid(row=row, column=0, columnspan=2, sticky="w")
+        add_tooltip(typo_cb, "When on, random typos are injected during typing")
+        row += 1
+
+        make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
+        row += 1
+
+        tk.Label(
             f, text="Trap endings", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
         ).grid(row=row, column=0, sticky="nw", pady=(0, 2), padx=(0, 12))
         tk.Label(

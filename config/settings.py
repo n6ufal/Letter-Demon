@@ -63,6 +63,8 @@ class SettingsManager:
         "pre_delay": (int, 500),
         "post_delay": (int, 500),
         "auto_type_prefix": (bool, True),
+        "typo_enabled": (bool, False),
+        "typo_intensity": (int, 4),
         "win_x": ((int, type(None)), None),
         "win_y": ((int, type(None)), None),
     }
@@ -72,6 +74,7 @@ class SettingsManager:
         "jitter_intensity": (0, 100),
         "pre_delay": (100, 5000),
         "post_delay": (100, 5000),
+        "typo_intensity": (0, 20),
     }
 
     def __init__(self, path: str | Path | None = None) -> None:

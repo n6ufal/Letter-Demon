@@ -156,7 +156,7 @@ class MainView:
         tk.Frame(self.main_frame, height=1, bg=C_ENTRY_BD).grid(
             row=1, column=0, columnspan=4, sticky="we",
         )
-        for col in range(3):
+        for col in range(4):
             bar.grid_columnconfigure(col, weight=1)
 
         # Left: dictionary word count  ● N,NNN words  /  ● No dictionary
@@ -200,6 +200,20 @@ class MainView:
             fg=C_DOT_RED, font=FONT_MAIN, bg=C_BG, anchor="e",
         )
         self.roblox_status_label.pack(side="left", padx=(2, 0))
+
+        # Far-right: Typo  ○ Typo: Off  /  ● Typo: On
+        typo_frame = tk.Frame(bar, bg=C_BG)
+        typo_frame.grid(row=0, column=3, sticky="e", padx=(12, 0))
+        self._typo_dot = tk.Label(
+            typo_frame, text="\u25cf", fg=C_MUTED, font=FONT_MAIN, bg=C_BG,
+        )
+        self._typo_dot.pack(side="left")
+        self._typo_status_var = tk.StringVar(value="Typo: Off")
+        self.typo_status_label = tk.Label(
+            typo_frame, textvariable=self._typo_status_var,
+            fg=C_MUTED, font=FONT_MAIN, bg=C_BG, anchor="e",
+        )
+        self.typo_status_label.pack(side="left", padx=(2, 0))
 
     def _build_play_button(self) -> None:
         self.play_btn = tk.Button(
@@ -287,6 +301,29 @@ class MainView:
         )
         self.fallback_combobox.pack(side="left")
 
+        # Row 2: Typo slider (left) — spans both columns
+        self._typo_enabled_var = tk.BooleanVar(
+            value=settings.get("typo_enabled", False)
+        )
+        self._typo_intensity_var = tk.IntVar(
+            value=settings.get("typo_intensity", 4)
+        )
+        typo_frame = tk.Frame(panel, bg=C_BG)
+        typo_frame.grid(row=2, column=0, columnspan=2, sticky="we", pady=(2, 0))
+        typo_frame.columnconfigure(0, weight=0)
+        typo_frame.columnconfigure(1, weight=1)
+        typo_frame.columnconfigure(2, weight=0)
+        tk.Label(
+            typo_frame, text="Typo", anchor="e", font=FONT_MAIN,
+            bg=C_BG, fg=C_TEXT, width=6,
+        ).grid(row=0, column=0, sticky="e")
+        self.typo_slider, self.typo_val_label = make_slider(
+            typo_frame, "Typo", self._typo_intensity_var,
+            from_=0, to=20, resolution=1, length=140, suffix="%", bg=C_BG,
+        )
+        self.typo_slider.grid(row=0, column=1, sticky="ew", padx=(4, 0))
+        self.typo_val_label.grid(row=0, column=2, sticky="e")
+
     def _build_separator(self) -> None:
         make_separator(
             self.main_frame, 8, column=0, columnspan=4, sticky="we", pady=(4, 6)
@@ -361,6 +398,7 @@ class MainView:
             "write", lambda *_: self._update_auto_prefix_indicator()
         )
         self._update_auto_prefix_indicator()
+        self._update_typo_indicator()
 
     def _wire_tooltips(self) -> None:
         add_tooltip(
@@ -385,6 +423,10 @@ class MainView:
         )
         add_tooltip(
             self.humanizer_slider, "Human-like timing variation (0 = robotic)"
+        )
+        add_tooltip(
+            self.typo_slider,
+            "Chance of a typo per character (only when enabled in Advanced)",
         )
         add_tooltip(self.mode_combobox, "Primary strategy for picking the word")
         add_tooltip(
@@ -436,6 +478,14 @@ class MainView:
     def auto_type_prefix_enabled(self) -> bool:
         return self._auto_type_prefix_var.get() == "On"
 
+    @property
+    def typo_enabled(self) -> bool:
+        return self._typo_enabled_var.get()
+
+    @property
+    def typo_intensity(self) -> int:
+        return self._typo_intensity_var.get()
+
     # Shared tkinter vars for dialogs (IntVar / StringVar objects)
     @property
     def pre_delay_var(self) -> tk.IntVar:
@@ -448,6 +498,14 @@ class MainView:
     @property
     def auto_type_prefix_var(self) -> tk.StringVar:
         return self._auto_type_prefix_var
+
+    @property
+    def typo_enabled_var(self) -> tk.BooleanVar:
+        return self._typo_enabled_var
+
+    @property
+    def typo_intensity_var(self) -> tk.IntVar:
+        return self._typo_intensity_var
 
     @property
     def trap_status_var(self) -> tk.StringVar:
@@ -574,6 +632,17 @@ class MainView:
         self._auto_prefix_var.set(text)
         self.auto_prefix_label.config(fg=color)
         self._auto_prefix_dot.config(fg=color)
+
+    def _update_typo_indicator(self) -> None:
+        enabled = self._typo_enabled_var.get()
+        self._typo_status_var.set("Typo: On" if enabled else "Typo: Off")
+        color = C_DOT_GREEN if enabled else C_MUTED
+        self._typo_dot.config(fg=color)
+        self.typo_status_label.config(fg=color)
+
+    def set_typo_enabled(self, enabled: bool) -> None:
+        self._typo_enabled_var.set(enabled)
+        self._update_typo_indicator()
 
     def update_dict_label(self, path: str | None) -> None:
         if path:

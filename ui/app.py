@@ -180,6 +180,10 @@ class LetterDemonApp:
                 pre_delay_s=self.view.pre_delay_ms / 1000.0,
                 post_delay_s=self.view.post_delay_ms / 1000.0,
             )
+            self.session.typer.typo_rate = (
+                self.view.typo_intensity / 100.0
+                if self.view.typo_enabled else 0.0
+            )
             return True
         except Exception:
             self.session.finish_play_round()
@@ -293,6 +297,8 @@ class LetterDemonApp:
             "post_delay": self.view.post_delay_ms,
             "jitter_intensity": self.view.jitter_intensity,
             "auto_type_prefix": self.view.auto_type_prefix_enabled,
+            "typo_enabled": self.view.typo_enabled,
+            "typo_intensity": self.view.typo_intensity,
             "win_x": self.root.winfo_x(),
             "win_y": self.root.winfo_y(),
         })
