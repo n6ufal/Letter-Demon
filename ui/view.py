@@ -309,7 +309,7 @@ class MainView:
             value=settings.get("typo_intensity", 4)
         )
         typo_frame = tk.Frame(panel, bg=C_BG)
-        typo_frame.grid(row=2, column=0, columnspan=2, sticky="we", pady=(2, 0))
+        typo_frame.grid(row=2, column=0, sticky="we", pady=(2, 0))
         typo_frame.columnconfigure(0, weight=0)
         typo_frame.columnconfigure(1, weight=1)
         typo_frame.columnconfigure(2, weight=0)
