@@ -1,10 +1,6 @@
 # Letter Demon 😈
 
-> **The Demon knows every word your opponent doesn't.**
-
-A pragmatic tool that searches 477k+ words in milliseconds, finds the hardest follow-up, and types it like a human.
-
-The game's suffix-matching system rewards dead-end patterns more than vocabulary. Letter Demon exploits that weakness.
+Search-and-autotype tool for a Shiritori-style Roblox word game.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)
 ![Windows](https://img.shields.io/badge/platform-Windows-lightblue?style=flat-square)
@@ -14,53 +10,20 @@ The game's suffix-matching system rewards dead-end patterns more than vocabulary
 
 ## Features
 
-### 1. Strategy + Backup
+**Strategy + Backup** — Pick a main strategy, then a fallback.
 
-Pick a main strategy, then a backup for when things go sideways.
+- **Trap** → Lead into a difficult to follow suffix.
+- **Long** → Obscure, ridiculously long words.
+- **Short** → Minimal effort.
+- **Random** → Let fate decide.
 
-- **Trap** → Lead your opponent into a dead end.
-- **Long** → To boost your ego by pretending you know obscure, ridiculously long words.
-- **Short** → Minimal effort, maximum efficiency.
-- **Random** → Let fate take the wheel.
+**Human-like Typing** — Keystroke delays, burst-typing rhythm, and optional deliberate typos (fat-finger a QWERTY neighbor, backspace, correct letter).
 
-### 2. Typing That Feels Human
-
-Typing speed ranges from 10-250 ms per keystroke.
-
-Turn up the humanizer and the typing stops feeling like a machine gun and starts feeling like an actual person. A little hesitation here, a weird pause there, enough imperfection to look natural.
-
-At around **170 ms** with **75%+ humanization** in **Trap** mode, it starts looking suspiciously like a real player who somehow knows every obscure word in the dictionary.
-
-**Now with deliberate typos.** The bot will occasionally press a wrong QWERTY-adjacent key, backspace, and type the correct letter — just like a real player fat-fingering their keyboard. Configure typo intensity (0–20% per-character probability).
-
-### 3. Full Control
-
-The app suggests. You decide.
-
-- Block words you never want to use.
-- Create custom trap endings.
-- Edit everything in an inline editor with search and undo.
-- Review used words in a dedicated window.
-- Type suffix-only or full words with Auto Type Prefix toggle.
-
-### Example Workflow
-
-You type "ca" at the start of a game. The engine:
-
-1. Searches all words starting with "ca" (cabinet, camera, capital, etc.)
-2. Scores each by matching trap endings (suffix priority list)
-3. Picks the highest-scoring word that's not in exceptions
-4. Types it like a human with realistic keystroke delays
-
-Result: "cabinet" gets typed with delays that look natural.
-
-> **Note**
->
-> No dictionary is included. Bring your own word list and `trap_endings.txt`, ideally from the game's 474k-477k-word dictionary.
+**Full Control** — Block words, create custom trap endings, inline editor with search/undo, review used words, toggle suffix-only vs full-word typing.
 
 ## Installation
 
-Windows • Python 3.10+. Run:
+Windows + Python 3.10+. Run:
 
 ```bash
 git clone https://github.com/n6ufal/Letter-Demon.git
@@ -69,12 +32,14 @@ pip install -r requirements.txt
 python main.pyw
 ```
 
+> **Note** — No in-game dictionary is included. Bring your own word list and `trap_endings.txt`.
+
 ## Quick Start
 
-1. **Load a Dictionary** - Click the big button or Advanced > Load Dictionary, pick a .json or .txt file. Indexing takes ~1s.
-2. **Configure Typing** - Set speed (default 170ms), jitter/humanizer intensity (default 75%), typo intensity (default 4%), pre/post delays (default 500ms each).
-3. **Pick Strategy** - Trap Words (hardest), Long Words, Short Words, or Random. Choose a fallback.
-4. **Play** - Type starting letters, press Play or Ctrl+Enter.
+1. **Load a Dictionary** — Advanced > Load Dictionary, pick `.json` or `.txt`. Indexing ~1s.
+2. **Configure Typing** — Speed (default 170ms), jitter (75%), typo intensity (4%), pre/post delays (500ms each).
+3. **Pick Strategy** — Trap/Long/Short/Random + fallback.
+4. **Play** — Type starting letters, press Play or Ctrl+Enter.
 
 ## Configuration
 
@@ -84,12 +49,10 @@ python main.pyw
 **JSON:**
 
 ```json
-{
-  "words": ["apple", "banana", "cherry"]
-}
+{ "words": ["apple", "banana", "cherry"] }
 ```
 
-**Text (one word per line):**
+**Text (one per line):**
 
 ```
 apple
@@ -104,62 +67,38 @@ cherry
 
 <img src="docs/screenshots/advanced-window-GUI.png" width="600" alt="Advanced configuration window">
 
-#### Custom Trap Endings
-
-Trap endings are suffixes that are statistically hard to continue from. The engine scores each word by its longest matching suffix, prioritizing earlier entries in `trap_endings.txt`.
-
-To load trap endings:
-
-1. Click Advanced > Load (Trap Endings section)
-2. Select `data/trap_endings.txt`
-3. Changes take effect immediately
-
-Format: one suffix per line, ordered by difficulty. Lines starting with # are ignored.
-
-> **Note:** The `data/trap_endings.txt` in this repository is a minimal dummy for testing. Provide your own full trap endings file for real use.
+**Custom Trap Endings** — Suffixes hard to continue from. Score prioritizes earlier entries. Load via Advanced > Load. Lines starting with `#` are ignored.
 
 ```
-# comment lines are ignored
+# comment
 ocy
 loh
 sz
 osa
 ```
 
+> **Note:** The bundled `data/trap_endings.txt` is a dummy. Provide your own for real use.
+
+**Word Exceptions** — Block specific words via Advanced > Edit (Exceptions section).
+
 <img src="docs/screenshots/editor-GUI.png" width="600" alt="Trap endings editor">
-
-#### Word Exceptions
-
-Stop the engine from suggesting certain words:
-
-1. Click Advanced > Edit (Exceptions section)
-2. Add one word per line
-3. Useful for slurs, proper nouns, or anything you want blocked
-
 </details>
-
-## Testing
-
-Run all 111 tests:
-
-```bash
-python -m unittest discover -v
-```
-
-See [TESTING.md](docs/TESTING.md) for full details.
-
-## Troubleshooting
-
-- **"Game: off" indicator** - Open the game window before hitting Play
-- **Dictionary won't load** - Check the file exists and is valid JSON or TXT
-- **Typing fails** - Run `python main.py` to see errors, or check `data/runtime/logs/letter_demon.log`
 
 ## Learn More
 
-- Full architecture and algorithms: [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Test suite guide: [TESTING.md](docs/TESTING.md)
-- Blog post: [What Happens When You Take a Word Game Too Seriously](https://alifnaufal.me/posts/what-happens-when-you-take-a-word-game-too-seriously/)
+- Architecture: [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Test suite: [TESTING.md](docs/TESTING.md)
+- Blog: [What Happens When You Take a Word Game Too Seriously](https://alifnaufal.me/posts/what-happens-when-you-take-a-word-game-too-seriously/)
+
+## Constraints
+
+This tool depends on external data to work well:
+
+- **Dictionary** — TXT or JSON word list. [Dwyl](https://github.com/dwyl/english-words) 474k+ gets you decent coverage. The game uses an updated 477k+ list (combined from multiple sources) for the best results.
+- **Trap endings** (`trap_endings.txt`) — Suffixes ranked by dead-end difficulty. Required for Trap mode to be effective.
+- **Exceptions** (`exceptions.txt`) — Filters out slurs, proper nouns, and other words you don't want suggested.
+- Only usable in the game's Casual mode.
 
 ## Disclaimer
 
-I built this as my personal Python learning project, for personal use only.
+Built as a personal Python learning project, for personal use only.
