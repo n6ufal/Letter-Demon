@@ -88,6 +88,27 @@ class DictLookup:
             total = len(results)
             return results[:limit], total
 
+    def contains(self, word: str) -> bool:
+        with self._lock:
+            i = bisect.bisect_left(self._wordlist, word)
+            return i < len(self._wordlist) and self._wordlist[i] == word
+
+    def add_word(self, word: str) -> bool:
+        with self._lock:
+            i = bisect.bisect_left(self._wordlist, word)
+            if i < len(self._wordlist) and self._wordlist[i] == word:
+                return False
+            self._wordlist.insert(i, word)
+            self._reversed_pairs = None
+            return True
+
+    def add_words(self, words: list[str]) -> int:
+        added = 0
+        for word in words:
+            if self.add_word(word):
+                added += 1
+        return added
+
     def _ensure_reversed(self):
         if self._reversed_pairs is None:
             self._reversed_pairs = sorted((w[::-1], w) for w in self._wordlist)

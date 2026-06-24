@@ -3,20 +3,12 @@
 # These words will never be chosen by the macro
 # Case-insensitive. Edit this file and click Reload Exceptions in the app
 
-azan
-azar
-ines
-kaffir
-akaba
-nkoya
-nkundo
-tmh
-gaidhealtachd
 a
 aaaaba
 abugle
 acipenseridv
 ahas
+akaba
 aldiborontiphoscophornia
 alice
 alicia
@@ -41,6 +33,8 @@ ashton
 atherinidae
 auxil
 awk
+azan
+azar
 azores
 b
 baez
@@ -89,6 +83,7 @@ faggot
 fd
 fs
 fsafeds
+gaidhealtachd
 gcmg
 gdansk
 gedda
@@ -123,6 +118,7 @@ ijarians
 ijarite
 ijarites
 ilswallahiimcooked
+ines
 inglewood
 ionicise
 ipswich
@@ -131,6 +127,7 @@ jackstone
 jawohl
 jjamppong
 jjimjilbang
+kaffir
 kaman
 keskul
 kiribati
@@ -193,6 +190,8 @@ niggers
 niggertoe
 niggerweed
 niggery
+nkoya
+nkundo
 noghl
 nyx
 obbiphylyougotthem
@@ -297,6 +296,7 @@ tinewald
 tissington
 tkt
 tla
+tmh
 topsyturvification
 tralee
 tteok
@@ -314,7 +314,6 @@ velasquez
 velazquez
 voronezh
 vy
-vyase
 vyshyvanka
 wehrmacht
 wiesbaden

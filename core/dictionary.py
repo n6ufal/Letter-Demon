@@ -10,6 +10,7 @@ from config.settings import get_project_root
 logger = logging.getLogger(__name__)
 
 CACHE_DIR = get_project_root() / "data" / "runtime" / "cache"
+CUSTOM_WORDS_PATH = get_project_root() / "data" / "custom_words.txt"
 
 
 def get_cache_path(dict_path: str) -> Path:
@@ -72,3 +73,22 @@ def load_wordlist_from_dict(dict_path: str) -> tuple[list[str], bool]:
             pass
 
     return wordlist, False
+
+
+def load_custom_words() -> set[str]:
+    if not CUSTOM_WORDS_PATH.exists():
+        return set()
+    try:
+        with open(CUSTOM_WORDS_PATH, "r", encoding="utf-8") as f:
+            return {line.strip().lower() for line in f if line.strip()}
+    except Exception:
+        logger.exception("Failed to load custom words")
+        return set()
+
+
+def save_custom_words(words: set[str]) -> None:
+    CUSTOM_WORDS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        CUSTOM_WORDS_PATH.write_text("\n".join(sorted(words)), "utf-8")
+    except Exception:
+        logger.exception("Failed to save custom words")
