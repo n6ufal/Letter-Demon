@@ -3,9 +3,15 @@
 # These words will never be chosen by the macro
 # Case-insensitive. Edit this file and click Reload Exceptions in the app
 
-amakosa
-amargosa
-massaman
+azan
+azar
+ines
+kaffir
+akaba
+nkoya
+nkundo
+tmh
+gaidhealtachd
 a
 aaaaba
 abugle
@@ -15,6 +21,8 @@ aldiborontiphoscophornia
 alice
 alicia
 allys
+amakosa
+amargosa
 amsath
 amsel
 amstar
@@ -123,6 +131,7 @@ jackstone
 jawohl
 jjamppong
 jjimjilbang
+kaman
 keskul
 kiribati
 kirkcudbrightshire
@@ -149,6 +158,7 @@ lwo
 lwsorrybroyouonyourown
 lwsorrybroyouronyourown
 mandibulosuspensorial
+massaman
 mbd
 md
 mdv
@@ -156,6 +166,7 @@ mers
 merthyr
 mfd
 mgd
+mh
 moomeveningpalace
 mv
 nantucket
@@ -307,6 +318,7 @@ vyase
 vyshyvanka
 wehrmacht
 wiesbaden
+wt
 x
 xa
 xavier
@@ -341,6 +353,7 @@ ygdrasil
 ylesque
 ylesques
 yorkshiremen
+ypres
 ysexogaycom
 yung
 yungs

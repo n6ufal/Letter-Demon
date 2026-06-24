@@ -5,6 +5,7 @@ lh
 sz
 sv
 md
+mh
 zh
 bh
 hd
@@ -20,7 +21,6 @@ acin
 aman
 sica
 tse
-tses
 oya
 pex
 oshi
@@ -33,7 +33,6 @@ ndo
 olo
 sao
 soke
-plex
 hyr
 ged
 neos
@@ -45,12 +44,10 @@ eis
 osh
 perb
 eda
-aba
 tla
 soko
 zar
 dah
-bah
 tah
 poa
 odon
@@ -65,7 +62,6 @@ tzo
 kra
 tsk
 tze
-tzes
 eum
 eux
 euk
