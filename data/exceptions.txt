@@ -3,10 +3,13 @@
 # These words will never be chosen by the macro
 # Case-insensitive. Edit this file and click Reload Exceptions in the app
 
+osteo
 a
 aaaaba
 abugle
 acipenseridv
+adha
+agrauleum
 ahas
 akaba
 aldiborontiphoscophornia
@@ -24,6 +27,7 @@ anouilh
 antarchy
 anutraminosa
 apeldoorn
+arank
 archd
 aredf
 aredv
@@ -120,6 +124,7 @@ ijarites
 ilswallahiimcooked
 ines
 inglewood
+iona
 ionicise
 ipswich
 iraimbilanj\a
@@ -133,12 +138,15 @@ keskul
 kiribati
 kirkcudbrightshire
 klux
+kootchy
 korngold
 krinwallahiimnottypingallat
 kt
 ktebrophylnewsolve
 kteohphylyougotme
 kuba\b
+kwai
+kwh
 kwon
 leamington
 lennox
@@ -164,6 +172,8 @@ merthyr
 mfd
 mgd
 mh
+mhg
+mhor
 moomeveningpalace
 mv
 nantucket
@@ -260,7 +270,6 @@ sd
 sds
 seychelles
 seyfert
-shilh
 shlemiehl
 shr
 spey
@@ -308,6 +317,7 @@ tyson
 uffizi
 unstraightforwardness
 urgullibleifyoutypethis
+uzi
 vanquishability
 vectorcardiographic
 velasquez

@@ -3,6 +3,8 @@
 # traps in testing: -adau/dau, gah
 lh
 sz
+kw
+cw
 sv
 md
 mh
@@ -10,19 +12,18 @@ zh
 bh
 hd
 yp
-yc
 ocy
 loh
-osa
 cae
 sae
 euch
 acin
 aman
+pex
 sica
 tse
+osa
 oya
-pex
 oshi
 chuk
 eka
