@@ -94,7 +94,7 @@ osa
 
 This tool depends on external data to work well:
 
-- **Dictionary** — TXT or JSON word list. [Dwyl](https://github.com/dwyl/english-words) 474k+ gets you decent coverage. The game uses an updated 477k+ list (combined from multiple sources) for the best results.
+- **Dictionary** — TXT or JSON word list. [Dwyl](https://github.com/dwyl/english-words) 479k+ gets you decent coverage, but has many flaws only partially fixed by `exceptions.txt`. The game uses an updated 477k+ list (combined from multiple sources) for the best results.
 - **Trap endings** (`trap_endings.txt`) — Suffixes ranked by dead-end difficulty. Required for Trap mode to be effective.
 - **Exceptions** (`exceptions.txt`) — Filters out slurs, proper nouns, and other words you don't want suggested.
 - Only usable in the game's Casual mode.
