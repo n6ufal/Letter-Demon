@@ -10,13 +10,13 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from config.settings import get_project_root, load_settings, save_settings, SettingsManager
+from config.exceptions import load_exceptions, save_exceptions
+from config.settings import SettingsManager, get_project_root, load_settings, save_settings
 from config.trap_endings import (
+    DEFAULT_TRAP_ENDINGS,
     load_trap_endings,
     save_trap_endings,
-    DEFAULT_TRAP_ENDINGS,
 )
-from config.exceptions import load_exceptions, save_exceptions
 
 
 class GetProjectRootTest(unittest.TestCase):

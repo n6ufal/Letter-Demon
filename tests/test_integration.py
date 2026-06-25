@@ -16,13 +16,12 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from core.dictionary import load_wordlist_from_dict
-from core.word_engine import WordEngine
+from config.exceptions import load_exceptions
 from config.settings import load_settings, save_settings
 from config.trap_endings import load_trap_endings
-from config.exceptions import load_exceptions
+from core.dictionary import load_wordlist_from_dict
+from core.word_engine import WordEngine
 from system.typer import Typer
-
 
 # ============================================================================
 # DICTIONARY LOADING INTEGRATION
@@ -97,7 +96,7 @@ class DictionaryLoadingIntegrationTest(unittest.TestCase):
 
         wordlist, _ = load_wordlist_from_dict(dict_path)
         engine = WordEngine(wordlist=wordlist, trap_endings=[], exceptions=set())
-        
+
         # Engine should handle empty wordlist gracefully
         result = engine.find_completion("a")
         self.assertIsNone(result)
@@ -149,10 +148,10 @@ class WordSearchingIntegrationTest(unittest.TestCase):
 
         # Load all
         wordlist, _ = load_wordlist_from_dict(dict_path)
-        
+
         with patch("config.trap_endings.TRAP_ENDINGS_FILE", trap_path):
             trap_list = load_trap_endings()
-        
+
         with patch("config.exceptions.EXCEPTIONS_FILE", exc_path):
             exc_set = load_exceptions()
 
@@ -170,7 +169,7 @@ class WordSearchingIntegrationTest(unittest.TestCase):
         exceptions = []
 
         engine = self._create_engine_from_files(words, trap_endings, exceptions)
-        
+
         # Trap Words mode should prefer 'apple'
         result = engine.find_full_word("a", mode="Trap Words", fallback="Short Words")
         self.assertEqual(result, "apple")
@@ -182,7 +181,7 @@ class WordSearchingIntegrationTest(unittest.TestCase):
         exceptions = ["apple", "appetizer"]  # Blacklist these
 
         engine = self._create_engine_from_files(words, trap_endings, exceptions)
-        
+
         # Only 'application' should be available
         result = engine.find_full_word("app", mode="Short Words")
         self.assertEqual(result, "application")
@@ -194,14 +193,14 @@ class WordSearchingIntegrationTest(unittest.TestCase):
         exceptions = []
 
         engine = self._create_engine_from_files(words, initial_trap_endings, exceptions)
-        
+
         # With "le" trap, apple should win
         result1 = engine.find_full_word("a", mode="Trap Words", fallback="Short Words")
         self.assertEqual(result1, "apple")
-        
+
         # Update trap endings to have no effect
         engine.set_trap_endings(["xyz"])
-        
+
         # Now "ax" (shorter) should win
         result2 = engine.find_full_word("a", mode="Trap Words", fallback="Short Words")
         self.assertEqual(result2, "ax")
@@ -213,14 +212,14 @@ class WordSearchingIntegrationTest(unittest.TestCase):
         exceptions = ["apple"]
 
         engine = self._create_engine_from_files(words, trap_endings, exceptions)
-        
+
         # Only 'application' available
         result1 = engine.find_full_word("app", mode="Short Words")
         self.assertEqual(result1, "application")
-        
+
         # Reload exceptions (empty)
         engine.set_exceptions(set())
-        
+
         # Now both available; should return shortest
         result2 = engine.find_full_word("app", mode="Short Words")
         self.assertEqual(result2, "apple")
@@ -256,7 +255,7 @@ class SettingsPersistenceIntegrationTest(unittest.TestCase):
         with patch("config.settings.SETTINGS_FILE", self.settings_file):
             save_settings(settings)
             loaded = load_settings()
-        
+
         self.assertEqual(loaded, settings)
 
     def test_partial_settings_merge(self):
@@ -269,7 +268,7 @@ class SettingsPersistenceIntegrationTest(unittest.TestCase):
             loaded1 = load_settings()
             self.assertEqual(loaded1["speed"], 100)
             self.assertEqual(loaded1["mode"], "Trap Words")
-            
+
             # Save just update - this replaces, doesn't merge
             save_settings(update)
             loaded2 = load_settings()
@@ -325,7 +324,7 @@ class TypingIntegrationTest(unittest.TestCase):
     def test_typing_failure_returns_error(self, mock_kb):
         """Typing failure is caught and reported."""
         mock_kb.press_and_release.side_effect = Exception("keyboard failure")
-        
+
         typer = Typer(base_speed_ms=10.0, jitter_on=False)
         success, msg = typer.type_text("hello", pre_delay_s=0.01, post_delay_s=0.01)
 
@@ -368,7 +367,7 @@ class UsedWordsTrackingIntegrationTest(unittest.TestCase):
         # Use some words
         engine.find_full_word("app")
         engine.find_full_word("app")
-        
+
         words, count = engine.used_words_for_display()
         self.assertEqual(count, 2)
         self.assertEqual(len(words), 2)
@@ -404,7 +403,7 @@ class ErrorRecoveryIntegrationTest(unittest.TestCase):
     def test_typing_continues_if_roblox_missing(self, mock_kb, mock_roblox):
         """If Roblox window missing, typing still works."""
         mock_roblox.return_value = False  # Roblox not found
-        
+
         typer = Typer(base_speed_ms=10.0, jitter_on=False)
         success, msg = typer.type_text("test", pre_delay_s=0.01, post_delay_s=0.01)
 

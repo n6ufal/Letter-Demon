@@ -2,19 +2,16 @@
 
 import logging
 import threading
-
 import tkinter as tk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 
-from core.session import AppSession
-from config.trap_endings import TRAP_ENDINGS_FILE
 from config.exceptions import EXCEPTIONS_FILE
-from system.roblox import is_roblox_running, focus_roblox_window
+from config.trap_endings import TRAP_ENDINGS_FILE
+from core.session import AppSession
+from system.roblox import focus_roblox_window, is_roblox_running
 
-from . import dialogs
-from . import file_editors
-from . import modes
+from . import dialogs, file_editors, modes
 from .view import MainView
 
 logger = logging.getLogger(__name__)

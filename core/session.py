@@ -3,11 +3,11 @@
 import threading
 from pathlib import Path
 
+from config.exceptions import add_exception, load_exceptions
+from config.settings import SETTINGS_FILE, SettingsManager
+from config.trap_endings import load_trap_endings
 from core.dictionary import load_wordlist_from_dict
 from core.word_engine import WordEngine
-from config.settings import SettingsManager, SETTINGS_FILE
-from config.trap_endings import load_trap_endings
-from config.exceptions import load_exceptions, add_exception
 from system.typer import Typer
 
 

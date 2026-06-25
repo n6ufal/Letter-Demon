@@ -12,6 +12,7 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 import logging
+
 log_dir = Path(_PROJECT_ROOT) / "data" / "runtime" / "logs"
 log_dir.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
@@ -24,6 +25,7 @@ logging.basicConfig(
 )
 
 import ctypes
+
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except Exception:

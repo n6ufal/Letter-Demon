@@ -6,7 +6,7 @@ Actual keyboard calls are mocked; only the timing math is verified.
 import os
 import sys
 import unittest
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 

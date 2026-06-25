@@ -3,11 +3,11 @@
 import os
 import sys
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from system.roblox import is_roblox_running, focus_roblox_window
+from system.roblox import focus_roblox_window, is_roblox_running
 
 
 class RobloxDetectionTest(unittest.TestCase):
@@ -157,7 +157,7 @@ class RobloxIntegrationTest(unittest.TestCase):
     def test_resilient_to_intermittent_failures(self, mock_user32_fn):
         """Roblox detection/focus resilient to occasional WinAPI failures."""
         mock_user32 = MagicMock()
-        
+
         # First call fails, second succeeds
         mock_user32.FindWindowW.side_effect = [
             Exception("Temporary failure"),

@@ -11,11 +11,11 @@ from unittest.mock import patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from core.dictionary import (
-    get_cache_path,
     _cache_is_valid,
     _load_dict_file,
-    load_wordlist_from_dict,
+    get_cache_path,
     load_custom_words,
+    load_wordlist_from_dict,
     save_custom_words,
 )
 

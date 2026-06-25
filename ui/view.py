@@ -32,11 +32,11 @@ from .theme import (
     FONT_TITLE,
 )
 from .widgets import (
+    add_tooltip,
     make_secondary_button,
     make_separator,
     make_slider,
     setup_ttk_styles,
-    add_tooltip,
 )
 
 if sys.platform == "win32":

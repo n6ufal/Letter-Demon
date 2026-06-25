@@ -3,6 +3,8 @@
 import tkinter as tk
 import webbrowser
 
+from core import version_string
+
 from .theme import (
     C_BG,
     C_BG_PANEL,
@@ -20,9 +22,8 @@ from .theme import (
     FONT_MAIN_BOLD,
     FONT_MONO_M,
 )
-from .widgets import make_secondary_button, make_separator, make_slider, add_tooltip
+from .widgets import add_tooltip, make_secondary_button, make_separator, make_slider
 from .window_utils import center_window
-from core import version_string
 
 
 class AboutDialog:
