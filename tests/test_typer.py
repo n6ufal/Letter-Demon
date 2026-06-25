@@ -171,5 +171,49 @@ class TyperTypeTextTest(unittest.TestCase):
         self.assertGreaterEqual(elapsed, 0.19)
 
 
+
+class TyperTypoTest(unittest.TestCase):
+    def setUp(self):
+        self.typer = Typer(base_speed_ms=50.0, jitter_on=False, typo_rate=1.0)
+        self.typer._next_delay = MagicMock(return_value=0.001)
+
+    @patch("system.typer.keyboard")
+    def test_typo_skips_first_character(self, mock_kb):
+        self.typer.type_text("ab", pre_delay_s=0.01, post_delay_s=0.01)
+        calls = [c for c in mock_kb.method_calls if c[0] == "press_and_release"]
+        self.assertEqual(calls[0], call.press_and_release("a"))
+        self.assertEqual(calls[1], call.press_and_release("b"))
+
+    @patch("system.typer.keyboard")
+    def test_typo_skips_words_two_letters_or_less(self, mock_kb):
+        self.typer.type_text("hi", pre_delay_s=0.01, post_delay_s=0.01)
+        calls = [c for c in mock_kb.method_calls if c[0] == "press_and_release"]
+        self.assertEqual(len(calls), 2)
+
+    @patch("system.typer.keyboard")
+    def test_typo_picks_qwerty_neighbor(self, mock_kb):
+        self.typer.type_text("cat", pre_delay_s=0.01, post_delay_s=0.01)
+        calls = [c for c in mock_kb.method_calls if c[0] == "press_and_release"]
+        typed = [c.args[0] for c in calls]
+        self.assertIn("c", typed)
+        self.assertIn("backspace", typed)
+
+    def test_pick_typo_char_returns_valid_neighbor(self):
+        wrong = self.typer._pick_typo_char("e")
+        self.assertIn(wrong, ["w", "r", "s", "d", "f"])
+
+    def test_pick_typo_char_fallback_to_same(self):
+        wrong = self.typer._pick_typo_char("1")
+        self.assertEqual(wrong, "1")
+
+    @patch("system.typer.keyboard")
+    def test_typo_zero_rate_disabled(self, mock_kb):
+        typer = Typer(base_speed_ms=50.0, jitter_on=False, typo_rate=0.0)
+        typer._next_delay = MagicMock(return_value=0.001)
+        typer.type_text("test", pre_delay_s=0.01, post_delay_s=0.01)
+        calls = [c for c in mock_kb.method_calls if c[0] == "press_and_release"]
+        self.assertNotIn("backspace", [c.args[0] for c in calls])
+
+
 if __name__ == "__main__":
     unittest.main()

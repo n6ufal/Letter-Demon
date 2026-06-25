@@ -5,15 +5,16 @@
 Letter Demon is a Windows desktop typing assistant for a Roblox word game. It searches a 470k+ word dictionary in milliseconds, picks the most difficult continuation for your opponent, and types it with human-like keystroke timing.
 
 ```
-core/      pure logic (session.py, word_engine.py, dictionary.py — no UI/OS deps)
+core/      pure logic (session.py, word_engine.py, dictionary.py, dict_lookup.py — no UI/OS deps)
 config/    file I/O for settings, trap endings, exceptions
 system/    WinAPI (roblox.py), keystroke injection (typer.py via `keyboard` library)
 ui/        tkinter: app.py (controller), view.py, dialogs.py, modes.py, theme.py, widgets.py, file_editors.py
-data/      config files: settings.json, trap_endings.txt, exceptions.txt
-data/runtime/   runtime data: cache, logs, dictionaries (gitignored)
+tools/     standalone tools: lookup.pyw (dictionary explorer)
+data/      config files: settings.json, trap_endings.txt, exceptions.txt, custom_words.txt
+data/runtime/   runtime data: cache, logs, dictionaries, lookup_settings.json (all gitignored)
 docs/      ARCHITECTURE.md, TESTING.md, screenshots/
 scripts/   release.py (automated dev -> main merge + versioning)
-tests/     104 unittest.TestCase tests
+tests/     151 unittest.TestCase tests
 ```
 
 ## Entry Points
@@ -93,34 +94,32 @@ Loading 500k words from scratch takes ~1 second. A disk cache drops this to ~50m
 
 The cache file path is deterministic — `data/runtime/cache/cache_{md5[:10]}.txt` where the hash is derived from the dictionary's absolute path.
 
+**Format support.** The parser handles two formats:
+- **.txt**: one word per line, optional extra columns (frequency, etc.) are split off. Lines starting with `#` are comments. Blank lines are skipped. Words are lowercased.
+- **.json**: a flat JSON object `{word: count, ...}` — dictionary keys are extracted as words.
+
+**Atomic cache writes.** Cache files are written atomically via a temp file + `replace()` to prevent corruption from partial writes:
+
 ```python
-def load_wordlist_from_dict(dict_path):
-    cache_path = get_cache_path(dict_path)
-
-    if _cache_is_valid(cache_path, dict_path):
-        with open(cache_path, "r", encoding="utf-8") as f:
-            wordlist = f.read().splitlines()
-        return wordlist, True  # from cache
-
-    words_set = _load_dict_file(dict_path)
-    wordlist = sorted(words_set)
-
-    with open(cache_path, "w", encoding="utf-8") as f:
+tmp_path = cache_path.with_suffix(".txt.tmp")
+try:
+    with open(tmp_path, "w", encoding="utf-8") as f:
         f.write("\n".join(wordlist))
-
-    return wordlist, False  # fresh parse
+    tmp_path.replace(cache_path)
+except Exception as ex:
+    logger.warning("Could not save cache: %s", ex)
 ```
 
 **Cache validation** is purely mtime-based:
 
 ```python
 def _cache_is_valid(cache_path, dict_path):
-    if not os.path.exists(cache_path):
+    if not cache_path.exists():
         return False
-    return os.path.getmtime(cache_path) >= os.path.getmtime(dict_path)
+    return cache_path.stat().st_mtime >= Path(dict_path).stat().st_mtime
 ```
 
-No content hashing, no hash files. If the cache file is newer than the dictionary, it's valid.
+No content hashing, no hash files. If the cache file is newer than the dictionary, it's valid. An empty cache file also triggers a full re-parse.
 
 ### 2. Trap Endings Index
 
@@ -345,6 +344,85 @@ Before typing each character, the typer rolls per-character probability (`typo_r
 - Never typo on words ≤ 2 letters
 - Typo only triggers when `typo_rate > 0`
 
+### Burst Typing & Bigram Fluency
+
+Human typing isn't uniform — people type in quick bursts with pauses between groups, common letter pairs are faster than rare ones, and occasional micro-pauses break the rhythm. The typer simulates all three.
+
+#### Burst Grouping
+
+Characters are typed in random-size bursts with a gap between each group:
+
+```python
+_BURST_SIZES = [2, 3, 4]
+_BURST_WEIGHTS = [3, 5, 2]
+_BURST_GAP_RANGE = (1.5, 3.0)        # multiplier of base delay
+_BURST_SCALE_RATIO = 0.6             # reduce jitter inside bursts
+```
+
+At typing time, the word is split into bursts via `_split_bursts()`:
+
+```python
+def _split_bursts(text: str) -> list[tuple[int, int]]:
+    bursts = []
+    i = 0
+    n = len(text)
+    while i < n:
+        size = min(random.choices(_BURST_SIZES, _BURST_WEIGHTS)[0], n - i)
+        bursts.append((i, i + size))
+        i += size
+    return bursts
+```
+
+Between bursts, a longer gap (`_burst_gap_delay`) produces:
+```python
+base_s * random.uniform(1.5, 3.0)
+```
+
+Inside a burst, the jitter scale is reduced by `_BURST_SCALE_RATIO` (0.6), making within-burst keystrokes tighter and more rhythmic.
+
+#### Bigram Speed Map
+
+Every adjacent letter pair adjusts the delay. Common digraphs like `th`, `he`, `in` are faster (multiplier < 1), rare pairs like `zv`, `xq`, `qz` are slower (multiplier > 1):
+
+```python
+_BIGRAM_SPEED = {
+    "th": 0.75, "he": 0.78, "in": 0.80, ...    # fast
+    "zv": 1.50, "xq": 1.50, "qz": 1.50, ...    # slow
+}
+```
+
+If no bigram applies (e.g. first character of a word or after a burst boundary), per-character rarity is used instead:
+
+```python
+_CHAR_RARITY = {
+    "e": 0.78, "t": 0.80, ...  # common → faster
+    "z": 1.50,                  # rare → slower
+}
+```
+
+Characters in the last two positions of the word get a 1.15× slowdown — simulating people slowing down as they finish a word.
+
+#### Micro-Pauses
+
+A 3% chance per keystroke adds an extra 100–400ms pause, simulating the user briefly hesitating mid-word:
+
+```python
+if char and random.random() < _MICRO_PAUSE_CHANCE:
+    delay += random.uniform(0.1, 0.4)
+```
+
+#### Updated `_next_delay` signature
+
+The method now accepts contextual parameters to enable all the above adjustments:
+
+```python
+def _next_delay(self, char="", prev="",
+                pos=0, total_len=0,
+                inside_burst=False) -> float:
+```
+
+When jitter is off, only the bigram/rarity multipliers apply (no burst effects). When jitter is on, the burst scale reduction and log-normal sampling combine with all the above.
+
 ## Threading Model
 
 Two separate locks serve different purposes:
@@ -402,7 +480,7 @@ Dictionary loading also happens on a background thread with `after(0)` callbacks
 
 ## Persistence
 
-Three files live in `data/`:
+Configuration files live in `data/`:
 
 ### settings.json
 
@@ -426,6 +504,38 @@ Saved on quit, loaded on start. Includes dict path, speed, mode, fallback, jitte
 }
 ```
 
+#### SettingsManager — `config/settings.py`
+
+The `SettingsManager` class provides schema-driven persistence with validation, migration, and merge-on-save:
+
+```python
+class SettingsManager:
+    SCHEMA: dict[str, tuple[type | tuple[type, ...], object]] = {
+        "dict_path": ((str, type(None)), None),
+        "mode": (str, "Trap Words"),
+        "wpm": (int, 70),
+        "jitter_intensity": (int, 75),
+        "typo_intensity": (int, 4),
+        ...
+    }
+
+    RANGES: dict[str, tuple[int | float, int | float]] = {
+        "wpm": (50, 200),
+        "jitter_intensity": (0, 100),
+        "typo_intensity": (0, 20),
+        ...
+    }
+```
+
+| Feature | Behavior |
+|---------|----------|
+| **Type validation** | Values not matching the expected type fall back to the default |
+| **Range clamping** | Numeric values are clamped to `RANGES` bounds on load |
+| **Self-healing** | Missing schema keys are filled with defaults |
+| **Merge-on-save** | Unknown keys from the file are preserved when writing |
+
+The raw `load_settings`/`save_settings` functions provide unvalidated direct access for simpler use cases.
+
 ### trap_endings.txt
 
 One per line, hardest first. Lines starting with `#` are comments. On missing file, defaults are written automatically.
@@ -435,6 +545,98 @@ Comments and blank lines are skipped. Lowercased on load. Duplicates removed whi
 ### exceptions.txt
 
 Words never chosen by the engine. On missing file, an empty set is used.
+
+### custom_words.txt
+
+Extra words merged into the dictionary at load time. Both the main app and the lookup tool union these with the loaded wordlist before use. Managed via the lookup tool's Add Words dialog or manually edited. Sorted alphabetically on save.
+
+## Dictionary Lookup Tool — `tools/lookup.pyw`
+
+A standalone tkinter application for dictionary exploration, independent of the main Letter Demon app. It shares the same `core/` modules and `data/` config files.
+
+### Architecture
+
+```
+tools/lookup.pyw
+  LookupView     — owns all widgets, tkinter vars, layout
+  LookupApp      — controller, owns DictLookup, threading, settings
+  AddWordsDialog — toplevel for bulk-adding words to dictionary
+
+core/dict_lookup.py
+  DictLookup     — pure logic, thread-safe binary search via bisect
+```
+
+Data flows follow the same pattern as the main app: view → controller → core logic.
+
+### DictLookup — `core/dict_lookup.py`
+
+A thread-safe, bi-sect-based dictionary index supporting prefix, suffix, and combined queries.
+
+**Prefix search** uses bisect to find the range of words starting with a given prefix:
+
+```python
+def find_starting_with(self, prefix, limit=200):
+    with self._lock:
+        left = bisect.bisect_left(self._wordlist, prefix)
+        right = bisect.bisect_left(self._wordlist, prefix + '\xff')
+        return self._wordlist[left:right][:limit]
+```
+
+**Suffix search** maintains a lazily-built reversed-word index (`_reversed_pairs`):
+
+```python
+def _ensure_reversed(self):
+    if self._reversed_pairs is None:
+        self._reversed_pairs = sorted((w[::-1], w) for w in self._wordlist)
+```
+
+Reversed pairs are invalidated (`set None`) on `set_wordlist` or `add_word`.
+
+**Combined prefix + suffix** queries intersect both sets for O(log n) performance.
+
+**Word management:** `add_word`/`add_words` insert into the sorted list and invalidate the reversed cache. `contains` uses bisect for O(log n) membership checks.
+
+### Lookup UI Features
+
+| Feature | Description |
+|---------|-------------|
+| **Prefix filter** | Find words starting with text |
+| **Suffix filter** | Find words ending with text |
+| **Contains filter** | Substring match within results |
+| **Min/Max length** | Spinbox range filters |
+| **Match Case** | Toggle case-sensitive search |
+| **Results list** | Displays #, word, length, exception status ; color-coded rows |
+| **Exceptions panel** | Live filterable list, add/remove words via double-click, right-click context menu, Space key, or Delete key |
+| **Trap Endings panel** | Collapsible, filterable, add/edit/remove trap endings inline, Edit File button opens system editor |
+| **Add Words dialog** | Bulk-insert words via text area with preview of new vs already-present |
+| **Keyboard shortcuts** | Ctrl+O (load dict), Ctrl+L (clear), Ctrl+F (focus prefix), Escape (cycle focus), Delete/Space on results |
+
+### Lookup Settings
+
+Lookup tool persists its own settings to `data/runtime/lookup_settings.json`:
+
+```json
+{
+  "dict_path": "C:/dicts/words.txt",
+  "win_w": 1400,
+  "win_h": 800,
+  "sash_pos": 300
+}
+```
+
+### Custom Words — `data/custom_words.txt`
+
+A user-editable file of extra words merged into the dictionary at load time. Both the main app and the lookup tool call `load_custom_words()` after `load_wordlist_from_dict()` and union the sets.
+
+```python
+def load_custom_words() -> set[str]:
+    if not CUSTOM_WORDS_PATH.exists():
+        return set()
+    with open(CUSTOM_WORDS_PATH, "r", encoding="utf-8") as f:
+        return {line.strip().lower() for line in f if line.strip()}
+```
+
+Persistence is handled by `save_custom_words()` which writes alphabetically sorted to the file. The lookup tool's Add Words dialog calls this after bulk-adding words.
 
 ## Style Notes
 

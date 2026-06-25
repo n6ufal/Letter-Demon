@@ -15,6 +15,8 @@ from core.dictionary import (
     _cache_is_valid,
     _load_dict_file,
     load_wordlist_from_dict,
+    load_custom_words,
+    save_custom_words,
 )
 
 
@@ -180,6 +182,47 @@ class LoadWordlistFromDictTest(unittest.TestCase):
             self.assertEqual(wordlist, ["apple", "banana", "cherry"])
             self.assertFalse(from_cache)
         self._patch_cache_dir(test)
+
+
+class CustomWordsTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.file_path = Path(self.tmp_dir.name) / "custom_words.txt"
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
+    def _patch(self, func):
+        with patch("core.dictionary.CUSTOM_WORDS_PATH", self.file_path):
+            return func()
+
+    def test_load_missing_returns_empty_set(self):
+        def test():
+            result = load_custom_words()
+            self.assertEqual(result, set())
+        self._patch(test)
+
+    def test_save_and_load_round_trip(self):
+        def test():
+            words = {"foo", "bar", "baz"}
+            save_custom_words(words)
+            loaded = load_custom_words()
+            self.assertEqual(loaded, words)
+        self._patch(test)
+
+    def test_load_populated_file(self):
+        def test():
+            self.file_path.write_text("hello\nworld\n  \n")
+            result = load_custom_words()
+            self.assertEqual(result, {"hello", "world"})
+        self._patch(test)
+
+    def test_save_preserves_sorted_order(self):
+        def test():
+            save_custom_words({"zoo", "alpha"})
+            content = self.file_path.read_text("utf-8").strip().splitlines()
+            self.assertEqual(content, ["alpha", "zoo"])
+        self._patch(test)
 
 
 if __name__ == "__main__":
