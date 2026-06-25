@@ -92,6 +92,7 @@ class AboutDialog:
         )
 
         center_window(win, root)
+        win.bind("<Escape>", lambda e: win.destroy())
 
 
 # ---------------------------------------------------------------------------
@@ -289,6 +290,7 @@ class AdvancedDialog:
         center_window(win, self._view.root)
 
         win.protocol("WM_DELETE_WINDOW", self._on_close)
+        win.bind("<Escape>", lambda e: self._on_close())
 
     def _on_close(self) -> None:
         if self._win is not None:
@@ -428,6 +430,7 @@ class UsedWordsDialog:
         close_btn.pack(side="right")
 
         self._listbox.bind("<<ListboxSelect>>", self._on_select)
+        self._listbox.bind("<Double-Button-1>", lambda e: self._add_selected())
         self._listbox.bind("<Button-3>", self._show_context_menu)
 
         self._context_menu = tk.Menu(self._win, tearoff=False, font=FONT_MAIN,
@@ -441,6 +444,7 @@ class UsedWordsDialog:
 
         center_window(self._win, self._root)
         self._win.protocol("WM_DELETE_WINDOW", self.close)
+        self._win.bind("<Escape>", lambda e: self.close())
 
         self.update_list()
 

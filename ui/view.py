@@ -148,7 +148,6 @@ class MainView:
                 highlightbackground=C_ENTRY_BD, highlightthickness=1
             ),
         )
-
     def _build_info_bar(self) -> None:
         bar = tk.Frame(self.main_frame, bg=C_BG)
         bar.grid(row=0, column=0, columnspan=4, sticky="we", pady=(0, 0))

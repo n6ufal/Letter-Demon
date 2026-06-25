@@ -3,7 +3,6 @@
 import logging
 import threading
 import tkinter as tk
-from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 
 from config.exceptions import EXCEPTIONS_FILE
@@ -30,9 +29,12 @@ class LetterDemonApp:
         self._poll_id = None
         self._advanced_dialog: dialogs.AdvancedDialog | None = None
         self._used_words_dialog: dialogs.UsedWordsDialog | None = None
+        self._settings_dirty = False
+        self._auto_save_id = None
 
         s = self.session.settings
         self.view = MainView(root, self, self.session.window_title, dict(s.as_dict()))
+        self._wire_auto_save()
 
         win_x = s.get("win_x")
         win_y = s.get("win_y")
@@ -300,7 +302,42 @@ class LetterDemonApp:
         else:
             msg = f"Added {len(added)} word(s) to exceptions."
 
-        self.root.after(0, lambda: messagebox.showinfo("Exceptions", msg))
+        self.view.show_feedback("warn", msg)
+
+    # -- Auto-save --
+
+    def _wire_auto_save(self) -> None:
+        for var in (
+            self.view._wpm_var,
+            self.view._mode_var,
+            self.view._jitter_var,
+            self.view._fallback_var,
+            self.view._typo_intensity_var,
+            self.view._typo_enabled_var,
+            self.view._auto_type_prefix_var,
+            self.view._pre_delay_var,
+            self.view._post_delay_var,
+        ):
+            var.trace_add("write", lambda *_: self._mark_settings_dirty())
+
+    def _mark_settings_dirty(self) -> None:
+        if self._auto_save_id is not None:
+            self.root.after_cancel(self._auto_save_id)
+        self._auto_save_id = self.root.after(500, self._do_auto_save)
+
+    def _do_auto_save(self) -> None:
+        self._auto_save_id = None
+        self.session.persist_settings({
+            "wpm": self.view.speed_wpm,
+            "mode": modes.to_internal_mode(self.view.mode),
+            "fallback": modes.to_internal_fallback(self.view.fallback),
+            "pre_delay": self.view.pre_delay_ms,
+            "post_delay": self.view.post_delay_ms,
+            "jitter_intensity": self.view.jitter_intensity,
+            "auto_type_prefix": self.view.auto_type_prefix_enabled,
+            "typo_enabled": self.view.typo_enabled,
+            "typo_intensity": self.view.typo_intensity,
+        })
 
     # -- Utilities --
 
@@ -318,6 +355,9 @@ class LetterDemonApp:
         if self._poll_id is not None:
             self.root.after_cancel(self._poll_id)
         self._poll_id = None
+        if self._auto_save_id is not None:
+            self.root.after_cancel(self._auto_save_id)
+        self._auto_save_id = None
         self.session.persist_settings({
             "wpm": self.view.speed_wpm,
             "mode": modes.to_internal_mode(self.view.mode),
