@@ -270,6 +270,7 @@ class LetterDemonApp:
         self.session.clear_used_words()
         if self._used_words_dialog is not None:
             self._used_words_dialog.update_list()
+        self.view.show_feedback("warn", "Used words cleared.")
 
     def add_used_words_to_exceptions(self, words: list[str]) -> None:
         if not words:
