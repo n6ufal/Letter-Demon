@@ -4,6 +4,7 @@ import logging
 import threading
 
 import tkinter as tk
+from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 
 from core.session import AppSession
@@ -272,6 +273,36 @@ class LetterDemonApp:
         self.session.clear_used_words()
         if self._used_words_dialog is not None:
             self._used_words_dialog.update_list()
+
+    def add_used_words_to_exceptions(self, words: list[str]) -> None:
+        if not words:
+            return
+        added = []
+        already = []
+        for word in words:
+            if self.session.add_word_to_exceptions(word):
+                added.append(word)
+            else:
+                already.append(word)
+
+        if added:
+            self.session.remove_from_used_words(added)
+
+        self.view.set_exceptions_status(
+            f"{len(self.session.engine.word_exceptions)} loaded"
+        )
+
+        if self._used_words_dialog is not None:
+            self._used_words_dialog.update_list()
+
+        if already:
+            msg = (f"Added {len(added)} word(s) to exceptions. "
+                   f"{len(already)} word(s) were already in the exceptions list."
+                   ) if added else "All selected words are already in the exceptions list."
+        else:
+            msg = f"Added {len(added)} word(s) to exceptions."
+
+        self.root.after(0, lambda: messagebox.showinfo("Exceptions", msg))
 
     # -- Utilities --
 

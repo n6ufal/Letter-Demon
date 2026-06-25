@@ -22,6 +22,17 @@ def load_exceptions() -> set[str]:
     return set()
 
 
+def add_exception(word: str) -> bool:
+    """Add a single word to exceptions.txt. Returns True if added, False if already present."""
+    word = word.strip().lower()
+    current = load_exceptions()
+    if word in current:
+        return False
+    current.add(word)
+    save_exceptions(sorted(current))
+    return True
+
+
 def save_exceptions(words: list[str]) -> None:
     try:
         with open(EXCEPTIONS_FILE, "w", encoding="utf-8") as f:

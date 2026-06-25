@@ -6,6 +6,9 @@ import webbrowser
 from .theme import (
     C_BG,
     C_BG_PANEL,
+    C_BTN_BG,
+    C_BTN_FG,
+    C_ENTRY_BD,
     C_ENTRY_BG,
     C_MUTED,
     C_PLAY_BG,
@@ -306,6 +309,8 @@ class UsedWordsDialog:
         self._win: tk.Toplevel | None = None
         self._listbox: tk.Listbox | None = None
         self._count_label: tk.Label | None = None
+        self._add_btn: tk.Button | None = None
+        self._context_menu: tk.Menu | None = None
 
     def show(self) -> None:
         if self._win is not None and self._win.winfo_exists():
@@ -342,6 +347,7 @@ class UsedWordsDialog:
             borderwidth=0,
             highlightthickness=0,
             relief="flat",
+            selectmode=tk.EXTENDED,
         )
         self._listbox.pack(side="left", fill="both", expand=True)
         scrollbar.config(command=self._listbox.yview)
@@ -357,12 +363,105 @@ class UsedWordsDialog:
         )
         self._count_label.pack(fill="x", pady=(6, 4))
 
-        make_secondary_button(outer, "Close", self.close).pack()
+        btn_frame = tk.Frame(outer, bg=C_BG)
+        btn_frame.pack(fill="x", pady=(0, 2))
+
+        self._add_btn = tk.Button(
+            btn_frame,
+            text="Add to Exceptions",
+            command=self._add_selected,
+            font=FONT_MAIN,
+            relief="flat",
+            bd=0,
+            padx=6,
+            pady=3,
+            cursor="hand2",
+            bg=C_BTN_BG,
+            fg=C_BTN_FG,
+            activebackground=C_ENTRY_BD,
+            activeforeground=C_TEXT,
+            state=tk.DISABLED,
+        )
+        self._add_btn.pack(side="left")
+        add_tooltip(
+            self._add_btn,
+            "Add selected word(s) to the exceptions list so they are never chosen",
+        )
+
+        edit_exc_btn = tk.Button(
+            btn_frame,
+            text="Edit Exceptions",
+            command=self._controller.edit_exceptions,
+            font=FONT_MAIN,
+            relief="flat",
+            bd=0,
+            padx=6,
+            pady=3,
+            cursor="hand2",
+            bg=C_BTN_BG,
+            fg=C_BTN_FG,
+            activebackground=C_ENTRY_BD,
+            activeforeground=C_TEXT,
+        )
+        edit_exc_btn.pack(side="left", padx=(4, 0))
+        add_tooltip(
+            edit_exc_btn,
+            "Open exceptions.txt in the built-in editor",
+        )
+
+        close_btn = tk.Button(
+            btn_frame,
+            text="Close",
+            command=self.close,
+            font=FONT_MAIN,
+            relief="flat",
+            bd=0,
+            padx=6,
+            pady=3,
+            cursor="hand2",
+            bg=C_BTN_BG,
+            fg=C_BTN_FG,
+            activebackground=C_ENTRY_BD,
+            activeforeground=C_TEXT,
+        )
+        close_btn.pack(side="right")
+
+        self._listbox.bind("<<ListboxSelect>>", self._on_select)
+        self._listbox.bind("<Button-3>", self._show_context_menu)
+
+        self._context_menu = tk.Menu(self._win, tearoff=False, font=FONT_MAIN,
+                                     bg=C_BG, fg=C_TEXT,
+                                     activebackground=C_PLAY_BG,
+                                     activeforeground=C_PLAY_FG)
+        self._context_menu.add_command(
+            label="Add to Exceptions",
+            command=self._add_selected,
+        )
 
         center_window(self._win, self._root)
         self._win.protocol("WM_DELETE_WINDOW", self.close)
 
         self.update_list()
+
+    def _on_select(self, event=None) -> None:
+        selection = self._listbox.curselection() if self._listbox else ()
+        self._add_btn.config(state=tk.NORMAL if selection else tk.DISABLED)
+
+    def _show_context_menu(self, event) -> None:
+        if not self._listbox:
+            return
+        selection = self._listbox.curselection()
+        if selection:
+            self._context_menu.tk_popup(event.x_root, event.y_root)
+
+    def _add_selected(self) -> None:
+        if not self._listbox:
+            return
+        selection = self._listbox.curselection()
+        if not selection:
+            return
+        words = [self._listbox.get(i) for i in selection]
+        self._controller.add_used_words_to_exceptions(words)
 
     def close(self) -> None:
         if self._win is not None:
@@ -370,6 +469,8 @@ class UsedWordsDialog:
             self._win = None
             self._listbox = None
             self._count_label = None
+            self._add_btn = None
+            self._context_menu = None
 
     def is_alive(self) -> bool:
         try:
@@ -387,3 +488,4 @@ class UsedWordsDialog:
             self._listbox.insert(tk.END, word)
         if self._count_label is not None:
             self._count_label.config(text=f"{n} words used")
+        self._on_select()

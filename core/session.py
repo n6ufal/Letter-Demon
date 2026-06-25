@@ -7,7 +7,7 @@ from core.dictionary import load_wordlist_from_dict
 from core.word_engine import WordEngine
 from config.settings import SettingsManager, SETTINGS_FILE
 from config.trap_endings import load_trap_endings
-from config.exceptions import load_exceptions
+from config.exceptions import load_exceptions, add_exception
 from system.typer import Typer
 
 
@@ -109,12 +109,22 @@ class AppSession:
         exceptions = load_exceptions()
         self.engine.set_exceptions(exceptions)
 
+    def add_word_to_exceptions(self, word: str) -> bool:
+        """Add a single word to exceptions file and reload engine. Returns True if added."""
+        added = add_exception(word)
+        if added:
+            self.reload_exceptions()
+        return added
+
     # ------------------------------------------------------------------
     # Used words
     # ------------------------------------------------------------------
 
     def clear_used_words(self) -> None:
         self.engine.clear_used_words()
+
+    def remove_from_used_words(self, words: list[str]) -> None:
+        self.engine.remove_used_words(words)
 
     def used_words_for_display(self) -> tuple[list[str], int]:
         return self.engine.used_words_for_display()

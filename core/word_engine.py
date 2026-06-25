@@ -117,6 +117,10 @@ class WordEngine:
         with self._lock:
             self.used_words.clear()
 
+    def remove_used_words(self, words: list[str]) -> None:
+        with self._lock:
+            self.used_words.difference_update(words)
+
     def used_words_for_display(self) -> tuple[list[str], int]:
         """Sorted words and count for UI; consistent under concurrent updates."""
         with self._lock:
