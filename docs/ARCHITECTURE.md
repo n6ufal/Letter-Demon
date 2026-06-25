@@ -644,4 +644,4 @@ Persistence is handled by `save_custom_words()` which writes alphabetically sort
 - EditorConfig: CRLF, 4-space indent, UTF-8
 - No docstrings on private methods
 - Minimal type annotations (no mypy/pyright configured — bare Python project)
-- Ruff linter with F + E4 rules (no E402) — run `ruff check .` before committing
+- Ruff linter with F + E4 + I + W rules (no E402) — run `ruff check .` before committing

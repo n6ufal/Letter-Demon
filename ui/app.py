@@ -23,7 +23,7 @@ class LetterDemonApp:
     def __init__(self, root: tk.Tk, session: AppSession | None = None) -> None:
         self.session = session or AppSession()
         self.root = root
-        self.root.title("😈")
+        self.root.title("Letter Demon")
         self.root.resizable(False, False)
         self.root.attributes("-topmost", True)
 

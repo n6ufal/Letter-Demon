@@ -332,7 +332,7 @@ class MainView:
     def _build_action_buttons(self) -> None:
         btn_row = tk.Frame(self.main_frame, bg=C_BG)
         btn_row.grid(row=9, column=0, columnspan=4, sticky="we", pady=(0, 4))
-        for col in range(2):
+        for col in range(3):
             btn_row.grid_columnconfigure(col, weight=1)
 
         self.advanced_btn = make_secondary_button(
@@ -353,24 +353,19 @@ class MainView:
             sticky="we",
             padx=2,
         )
+        self.used_words_btn = make_secondary_button(
+            btn_row,
+            "Used Words",
+            self._controller.show_used_words,
+            row=0,
+            column=2,
+            sticky="we",
+            padx=2,
+        )
 
     def _build_bottom_row(self) -> None:
         row = tk.Frame(self.main_frame, bg=C_BG)
         row.grid(row=11, column=0, columnspan=4, sticky="we", pady=(2, 0))
-
-        self.used_words_label = tk.Label(
-            row, text="Used words", fg=C_MUTED, font=FONT_MAIN, bg=C_BG, cursor="hand2",
-        )
-        self.used_words_label.pack(side="left")
-        self.used_words_label.bind(
-            "<Button-1>", lambda e: self._controller.show_used_words()
-        )
-        self.used_words_label.bind(
-            "<Enter>", lambda e: self.used_words_label.config(fg=C_TEXT)
-        )
-        self.used_words_label.bind(
-            "<Leave>", lambda e: self.used_words_label.config(fg=C_MUTED)
-        )
 
         self._credit_label = tk.Label(
             row, text="Made by n6ufal", fg=C_MUTED, font=FONT_SMALL, bg=C_BG,
@@ -434,7 +429,7 @@ class MainView:
         )
         add_tooltip(self.advanced_btn, "Dictionary, timing, trap endings, exceptions")
         add_tooltip(self.clear_used_btn, "Reset used words for a new game")
-        add_tooltip(self.used_words_label, "Show words played this session")
+        add_tooltip(self.used_words_btn, "Show words played this session")
         add_tooltip(self._credit_label, "About Letter Demon")
 
     # ------------------------------------------------------------------
