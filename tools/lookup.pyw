@@ -6,6 +6,7 @@ a sorted word list. Runs independently of the main Letter Demon app.
 
 import json
 import logging
+import queue
 import sys
 import threading
 from pathlib import Path
@@ -600,7 +601,6 @@ class LookupView:
             score = total - orig_idx
             display = f"{ending:<20} ({score})"
             self.trap_listbox.insert(tk.END, display)
-        n = len(filtered)
         self._trap_count_label.config(text=str(total))
         self._trap_count_header.config(text=str(total))
 
@@ -647,7 +647,7 @@ class LookupView:
         trap_bottom_label.grid(row=0, column=3, padx=(0, 4))
         trap_bottom_label.bind("<Button-1>", lambda e: self._controller.reload_trap_endings())
 
-        clear_btn = make_secondary_button(
+        make_secondary_button(
             frame, text="\u2302 Clear",
             command=self._controller.on_clear,
             row=0, column=4,
@@ -927,10 +927,68 @@ class LookupView:
 
 
 
-class LookupApp:
-    """Controller — owns DictLookup, exceptions, settings, threading."""
+class SearchWorker:
+    """Background worker — one thread, queue-based, discards stale searches."""
 
     RESULT_LIMIT = 1000
+
+    def __init__(self, lookup):
+        self._lookup = lookup
+        self._queue = queue.Queue()
+        self._generation = 0
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def submit(self, prefix, suffix, contains, min_len, max_len,
+               match_case, on_result, on_error):
+        self._generation += 1
+        gen = self._generation
+        self._queue.put((gen, prefix, suffix, contains, min_len,
+                         max_len, match_case, on_result, on_error))
+
+    def _run(self):
+        while True:
+            item = self._queue.get()
+            gen, prefix, suffix, contains, min_len, max_len, \
+                match_case, on_result, on_error = item
+            if gen != self._generation:
+                continue
+            try:
+                has_secondary = bool(contains) or bool(min_len) or bool(max_len)
+                limit = sys.maxsize if has_secondary else self.RESULT_LIMIT
+                results, total = self._lookup.find_starting_and_ending_with(
+                    prefix, suffix, limit=limit,
+                )
+                filtered = self._apply_filters(
+                    results, contains, min_len, max_len, match_case,
+                )
+                if has_secondary and len(filtered) > self.RESULT_LIMIT:
+                    filtered = filtered[:self.RESULT_LIMIT]
+                on_result(filtered, total)
+            except Exception as e:
+                on_error(str(e))
+
+    @staticmethod
+    def _apply_filters(results, contains, min_len, max_len, match_case):
+        if not contains and not min_len and not max_len:
+            return results
+        filtered = []
+        for word in results:
+            w = word if match_case else word.lower()
+            if contains:
+                needle = contains if match_case else contains.lower()
+                if needle not in w:
+                    continue
+            if min_len and len(word) < min_len:
+                continue
+            if max_len and len(word) > max_len:
+                continue
+            filtered.append(word)
+        return filtered
+
+
+class LookupApp:
+    """Controller — owns DictLookup, exceptions, settings, threading."""
 
     def __init__(self, root):
         self.root = root
@@ -947,14 +1005,7 @@ class LookupApp:
         self._base_wordlist = None
         self.trap_endings = load_trap_endings()
 
-        class _Engine:
-            pass
-        class _Session:
-            pass
-        self._editor_engine = _Engine()
-        self._editor_engine.trap_endings = self.trap_endings
-        self.session = _Session()
-        self.session.engine = self._editor_engine
+        self._worker = SearchWorker(self.lookup)
 
         self.view = LookupView(root, self)
 
@@ -996,7 +1047,6 @@ class LookupApp:
         self.view.set_status("Loading dictionary...")
         self.view.enable_dict_button(False)
         self.view.set_dict_empty()
-        self._current_results = []
         t = threading.Thread(target=self._load_thread, args=(path,), daemon=True)
         t.start()
 
@@ -1053,7 +1103,6 @@ class LookupApp:
 
     def reload_trap_endings(self):
         self.trap_endings = load_trap_endings()
-        self._editor_engine.trap_endings = self.trap_endings
         self.refresh_trap_ui()
         self.view.set_status(f"Trap endings reloaded ({len(self.trap_endings)})")
 
@@ -1125,45 +1174,13 @@ class LookupApp:
             )
             return
         self.view.set_status("Searching...")
-        t = threading.Thread(
-            target=self._search_thread,
-            args=(prefix, suffix, self.view.contains, self.view.min_len,
-                  self.view.max_len, self.view.match_case),
-            daemon=True,
+        self._worker.submit(
+            prefix, suffix, self.view.contains, self.view.min_len,
+            self.view.max_len, self.view.match_case,
+            on_result=lambda results, total: self.root.after(
+                0, self._update_results, results, total),
+            on_error=lambda error: self.root.after(0, self._on_search_error, error),
         )
-        t.start()
-
-    def _search_thread(self, prefix, suffix, contains, min_len, max_len, match_case):
-        try:
-            has_secondary = bool(contains) or bool(min_len) or bool(max_len)
-            limit = sys.maxsize if has_secondary else self.RESULT_LIMIT
-            results, total = self.lookup.find_starting_and_ending_with(
-                prefix, suffix, limit=limit
-            )
-            filtered = self._apply_filters(results, contains, min_len, max_len, match_case)
-            if has_secondary and len(filtered) > self.RESULT_LIMIT:
-                filtered = filtered[:self.RESULT_LIMIT]
-            self.root.after(0, self._update_results, filtered, total)
-        except Exception as e:
-            logger.exception("Search failed")
-            self.root.after(0, self._on_search_error, str(e))
-
-    def _apply_filters(self, results, contains, min_len, max_len, match_case):
-        if not contains and not min_len and not max_len:
-            return results
-        filtered = []
-        for word in results:
-            w = word if match_case else word.lower()
-            if contains:
-                needle = contains if match_case else contains.lower()
-                if needle not in w:
-                    continue
-            if min_len and len(word) < min_len:
-                continue
-            if max_len and len(word) > max_len:
-                continue
-            filtered.append(word)
-        return filtered
 
     def _update_results(self, results, total):
         self._result_word_list = list(results)
