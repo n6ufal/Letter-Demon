@@ -207,14 +207,11 @@ class EditorDialog:
                     f_out.write("\n")
             self._reload_callback()
             basename = fp.name.lower()
-            try:
-                if basename == "trap_endings.txt":
-                    count = len(self._controller.session.engine.trap_endings)
-                elif basename == "exceptions.txt":
-                    count = len(self._controller.session.engine.word_exceptions)
-                else:
-                    count = 0
-            except AttributeError:
+            if basename == "trap_endings.txt":
+                count = len(self._controller.session.engine.trap_endings)
+            elif basename == "exceptions.txt":
+                count = len(self._controller.session.engine.word_exceptions)
+            else:
                 count = 0
             self._status_var.set(f"{count} loaded")
             win.destroy()
