@@ -18,8 +18,12 @@ akaba
 alda
 aldiborontiphoscophornia
 alezan
+alicante
 alice
+alichel
 alicia
+alicula
+allyic
 allys
 alya
 amakosa
@@ -34,6 +38,9 @@ annulosa
 anosia
 anouilh
 antarchy
+antienthusiasm
+antiparagraphe
+anton
 anutraminosa
 anyu
 apeldoorn
@@ -168,12 +175,14 @@ kt
 ktebrophylnewsolve
 kteohphylyougotme
 kuba\b
+kv
 kw
 kwai
 kwh
 kwon
 leamington
 lennox
+lessa
 lhasa
 lhb
 lls
@@ -362,6 +371,7 @@ txt
 typ
 tyson
 uffizi
+uig
 unstraightforwardness
 urgullibleifyoutypethis
 uzi
