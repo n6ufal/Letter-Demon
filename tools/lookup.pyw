@@ -969,39 +969,104 @@ class LookupView:
         self.start_entry.focus_set()
 
 
-class AddWordsDialog:
-    """Toplevel dialog for bulk-adding words to the dictionary."""
+class CustomWordsDialog:
+    """Unified dialog to view, filter, remove, and add custom words."""
+
+    FILTER_DEBOUNCE_MS = 200
 
     def __init__(self, parent, controller):
         self._controller = controller
         self._new_words = []
+        self._filter_after_id = None
 
         self.dialog = tk.Toplevel(parent)
-        self.dialog.title("Add Words")
+        self.dialog.title("Custom Words")
         self.dialog.transient(parent)
         self.dialog.grab_set()
-        self.dialog.minsize(480, 460)
+        self.dialog.minsize(480, 580)
 
         self._build_ui()
+        self._refresh_custom_words_list()
         self._input_text.focus_set()
 
     def _build_ui(self):
         main = tk.Frame(self.dialog, bg=C_BG, padx=14, pady=12)
         main.pack(fill="both", expand=True)
         main.columnconfigure(0, weight=1)
-        main.rowconfigure(2, weight=1)
+        main.rowconfigure(8, weight=1)
 
-        tk.Label(main, text="Enter words (one per line):", font=FONT_MAIN,
+        # ── Header ──
+        header_frame = tk.Frame(main, bg=C_BG)
+        header_frame.grid(row=0, column=0, sticky="ew", pady=(0, 4))
+        tk.Label(header_frame, text="Custom Words", font=FONT_MAIN_BOLD,
+                 bg=C_BG, fg=C_TEXT).pack(side="left")
+        self._count_var = tk.StringVar(value="(0)")
+        tk.Label(header_frame, textvariable=self._count_var,
+                 font=FONT_MAIN, bg=C_BG, fg=C_MUTED
+                 ).pack(side="left", padx=(4, 0))
+
+        # ── Filter ──
+        self._filter_var = tk.StringVar()
+        filter_entry = tk.Entry(
+            main, textvariable=self._filter_var, font=FONT_SMALL,
+            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
+            relief="solid", bd=1,
+        )
+        filter_entry.grid(row=1, column=0, sticky="ew", pady=(0, 4), ipady=1)
+        filter_entry.bind("<KeyRelease>", self._on_filter_change)
+
+        # ── Custom words listbox ──
+        list_frame = tk.Frame(main, bg=C_BG)
+        list_frame.grid(row=2, column=0, sticky="nsew", pady=(0, 6))
+        list_frame.columnconfigure(0, weight=1)
+        list_frame.rowconfigure(0, weight=1)
+
+        self._listbox = tk.Listbox(
+            list_frame, font=FONT_MONO, activestyle="none",
+            exportselection=False, selectmode=tk.EXTENDED,
+            bg=C_ENTRY_BG, fg=C_TEXT, selectbackground=C_PLAY_BG,
+            selectforeground=C_PLAY_FG, borderwidth=0,
+            highlightthickness=0, relief="flat",
+        )
+        self._listbox.grid(row=0, column=0, sticky="nsew")
+        self._listbox.bind("<<ListboxSelect>>", self._on_selection_changed)
+        self._listbox.bind("<Delete>", self._on_delete)
+
+        scroll = ttk.Scrollbar(list_frame, orient="vertical",
+                                command=self._listbox.yview)
+        scroll.grid(row=0, column=1, sticky="ns")
+        self._listbox.configure(yscrollcommand=scroll.set)
+
+        # ── Remove button ──
+        self._remove_btn = tk.Button(
+            main, text="Remove Selected",
+            command=self._on_remove, font=FONT_SMALL,
+            relief="flat", bd=0, padx=6, pady=2, cursor="hand2",
+            bg=C_BTN_BG, fg=C_TEXT, state="disabled",
+            activebackground=C_ENTRY_BD, activeforeground=C_TEXT,
+        )
+        self._remove_btn.grid(row=3, column=0, sticky="w", pady=(0, 8))
+        self._remove_btn.bind("<Enter>",
+                              lambda e: self._remove_btn.config(bg=C_ENTRY_BD))
+        self._remove_btn.bind("<Leave>",
+                              lambda e: self._remove_btn.config(bg=C_BTN_BG))
+
+        # ── Separator ──
+        ttk.Separator(main, orient="horizontal").grid(
+            row=4, column=0, sticky="ew", pady=(0, 8))
+
+        # ── Input area ──
+        tk.Label(main, text="Add words (one per line):", font=FONT_MAIN,
                  bg=C_BG, fg=C_TEXT, anchor="w"
-                 ).grid(row=0, column=0, sticky="ew")
+                 ).grid(row=5, column=0, sticky="ew", pady=(0, 2))
 
         in_frame = tk.Frame(main, bg=C_BG)
-        in_frame.grid(row=1, column=0, sticky="nsew", pady=(4, 10))
+        in_frame.grid(row=6, column=0, sticky="nsew", pady=(0, 8))
         in_frame.columnconfigure(0, weight=1)
         in_frame.rowconfigure(0, weight=1)
 
         self._input_text = tk.Text(
-            in_frame, font=FONT_MONO, height=10,
+            in_frame, font=FONT_MONO, height=6,
             bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
             relief="solid", bd=1, padx=4, pady=4, wrap="none",
         )
@@ -1013,27 +1078,24 @@ class AddWordsDialog:
         self._input_text.bind("<KeyRelease>", self._on_input_changed)
         self._input_text.bind("<Control-Return>", lambda e: self._on_add())
 
-        sep = ttk.Separator(main, orient="horizontal")
-        sep.grid(row=2, column=0, sticky="ew", pady=(0, 8))
-
+        # ── Preview ──
         preview_header = tk.Frame(main, bg=C_BG)
-        preview_header.grid(row=3, column=0, sticky="ew", pady=(0, 2))
-        tk.Label(preview_header, text="Preview — will be added:",
+        preview_header.grid(row=7, column=0, sticky="ew", pady=(0, 2))
+        tk.Label(preview_header, text="Preview:",
                  font=FONT_MAIN_BOLD, bg=C_BG, fg=C_TEXT
                  ).pack(side="left")
         self._status_var = tk.StringVar()
-        self._status_label = tk.Label(preview_header,
-                                       textvariable=self._status_var,
-                                       font=FONT_SMALL, bg=C_BG, fg=C_MUTED)
-        self._status_label.pack(side="left", padx=(8, 0))
+        tk.Label(preview_header, textvariable=self._status_var,
+                 font=FONT_SMALL, bg=C_BG, fg=C_MUTED
+                 ).pack(side="left", padx=(8, 0))
 
         prev_frame = tk.Frame(main, bg=C_BG)
-        prev_frame.grid(row=4, column=0, sticky="nsew", pady=(4, 10))
+        prev_frame.grid(row=8, column=0, sticky="nsew", pady=(0, 10))
         prev_frame.columnconfigure(0, weight=1)
         prev_frame.rowconfigure(0, weight=1)
 
         self._preview_text = tk.Text(
-            prev_frame, font=FONT_MONO, height=8,
+            prev_frame, font=FONT_MONO, height=5,
             bg="#f0f0f0", fg=C_TEXT, relief="solid", bd=1,
             padx=4, pady=4, wrap="none", state=tk.DISABLED,
         )
@@ -1043,8 +1105,9 @@ class AddWordsDialog:
         prev_scroll.grid(row=0, column=1, sticky="ns")
         self._preview_text.configure(yscrollcommand=prev_scroll.set)
 
+        # ── Bottom buttons ──
         btn_frame = tk.Frame(main, bg=C_BG)
-        btn_frame.grid(row=5, column=0, sticky="ew")
+        btn_frame.grid(row=9, column=0, sticky="ew")
 
         self._add_btn = tk.Button(
             btn_frame, text="Add", command=self._on_add,
@@ -1054,12 +1117,55 @@ class AddWordsDialog:
         )
         self._add_btn.pack(side="right", padx=(6, 0))
 
-        cancel_btn = tk.Button(
-            btn_frame, text="Cancel", command=self.dialog.destroy,
+        close_btn = tk.Button(
+            btn_frame, text="Close", command=self.dialog.destroy,
             font=FONT_MAIN, relief="flat", bd=0, padx=12, pady=4,
             bg=C_BTN_BG, fg=C_TEXT, cursor="hand2",
         )
-        cancel_btn.pack(side="right")
+        close_btn.pack(side="right")
+
+    # ── Filter ──
+
+    def _on_filter_change(self, event=None):
+        if self._filter_after_id:
+            self.dialog.after_cancel(self._filter_after_id)
+        self._filter_after_id = self.dialog.after(
+            self.FILTER_DEBOUNCE_MS, self._refresh_custom_words_list)
+
+    def _refresh_custom_words_list(self):
+        self._listbox.delete(0, tk.END)
+        custom = sorted(self._controller.custom_words)
+        filter_text = self._filter_var.get().strip().lower()
+        if filter_text:
+            custom = [w for w in custom if filter_text in w]
+        for word in custom:
+            self._listbox.insert(tk.END, word)
+        self._count_var.set(f"({len(self._controller.custom_words)})")
+        if not custom:
+            self._listbox.insert(tk.END, "(no custom words)")
+
+    # ── Remove ──
+
+    def _on_selection_changed(self, event=None):
+        sel = self._listbox.curselection()
+        self._remove_btn.config(state="normal" if sel else "disabled")
+
+    def _on_delete(self, event=None):
+        self._on_remove()
+
+    def _on_remove(self):
+        sel = self._listbox.curselection()
+        if not sel:
+            return
+        words = [self._listbox.get(i) for i in sel]
+        words = [w for w in words if w != "(no custom words)"]
+        if not words:
+            return
+        self._controller.on_remove_custom_words(words)
+        self._refresh_custom_words_list()
+        self._remove_btn.config(state="disabled")
+
+    # ── Add (from AddWordsDialog) ──
 
     def _on_input_changed(self, event=None):
         self._update_preview()
@@ -1104,7 +1210,7 @@ class AddWordsDialog:
         if new_words:
             n = len(new_words)
             self._add_btn.config(state=tk.NORMAL,
-                                 text=f"Add {n} Word{'s' if n != 1 else ''}")
+                                  text=f"Add {n} Word{'s' if n != 1 else ''}")
         else:
             self._add_btn.config(state=tk.DISABLED, text="Add")
 
@@ -1128,7 +1234,10 @@ class AddWordsDialog:
             ctrl.view.set_status(
                 f"Added {n} word{'s' if n != 1 else ''} to dictionary"
             )
-            self.dialog.destroy()
+            self._new_words = []
+            self._input_text.delete("1.0", tk.END)
+            self._update_preview()
+            self._refresh_custom_words_list()
         except Exception as e:
             logger.exception("Failed to add words")
             self._status_var.set(f"Error: {e}")
@@ -1152,6 +1261,7 @@ class LookupApp:
         self._result_word_list = []
         self._settings = {}
         self.custom_words = load_custom_words()
+        self._base_wordlist = None
         self.trap_endings = load_trap_endings()
 
         class _Engine:
@@ -1217,6 +1327,7 @@ class LookupApp:
 
     def _on_dict_loaded(self, path, wordlist, from_cache):
         self.dict_path = path
+        self._base_wordlist = wordlist
         if self.custom_words:
             wordlist = sorted(set(wordlist) | self.custom_words)  # type: ignore[arg-type]
         self.lookup.set_wordlist(wordlist)
@@ -1236,7 +1347,22 @@ class LookupApp:
         if not self.lookup.has_wordlist():
             self.view.show_feedback("warn", "Load a dictionary first")
             return
-        AddWordsDialog(self.root, self)
+        CustomWordsDialog(self.root, self)
+
+    def on_remove_custom_words(self, words):
+        before = len(self.custom_words)
+        self.custom_words -= set(words)
+        removed = before - len(self.custom_words)
+        if not removed:
+            self.view.set_status("Words not in custom words")
+            return
+        save_custom_words(self.custom_words)
+        if self._base_wordlist is not None:
+            merged = sorted(set(self._base_wordlist) | self.custom_words)
+            self.lookup.set_wordlist(merged)
+        self._run_search()
+        s = "s" if removed != 1 else ""
+        self.view.set_status(f"Removed {removed} custom word{s}")
 
     # ------------------------------------------------------------------
     # Trap Endings
