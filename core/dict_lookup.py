@@ -1,6 +1,6 @@
 """Binary-search dictionary lookup — finds words by prefix and/or suffix.
 
-Standalone pure-logic module with zero UI imports. Used by tools/lookup.pyw.
+Standalone pure-logic module with zero UI imports. Used by tools/lookup/.
 """
 
 import bisect

@@ -9,7 +9,7 @@ core/      pure logic (session.py, word_engine.py, dictionary.py, dict_lookup.py
 config/    file I/O for settings, trap endings, exceptions
 system/    WinAPI (roblox.py), keystroke injection (typer.py via `keyboard` library)
 ui/        tkinter: app.py (controller), view.py, dialogs.py, modes.py, theme.py, widgets.py, file_editors.py
-tools/     standalone tools: lookup.pyw (dictionary explorer)
+tools/     standalone tools: lookup/ package (dictionary explorer)
 data/      config files: settings.json, trap_endings.txt, exceptions.txt, custom_words.txt
 data/runtime/   runtime data: cache, logs, dictionaries, lookup_settings.json (all gitignored)
 docs/      ARCHITECTURE.md, TESTING.md, screenshots/
@@ -550,14 +550,14 @@ Words never chosen by the engine. On missing file, an empty set is used.
 
 Extra words merged into the dictionary at load time. Both the main app and the lookup tool union these with the loaded wordlist before use. Managed via the lookup tool's Add Words dialog or manually edited. Sorted alphabetically on save.
 
-## Dictionary Lookup Tool — `tools/lookup.pyw`
+## Dictionary Lookup Tool — `tools/lookup/`
 
 A standalone tkinter application for dictionary exploration, independent of the main Letter Demon app. It shares the same `core/` modules and `data/` config files.
 
 ### Architecture
 
 ```
-tools/lookup.pyw
+tools/lookup/ (package, run with `python -m tools.lookup`)
   LookupView     — owns all widgets, tkinter vars, layout
   LookupApp      — controller, owns DictLookup, threading, settings
   AddWordsDialog — toplevel for bulk-adding words to dictionary
