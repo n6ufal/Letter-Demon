@@ -38,7 +38,7 @@ from core import __version__
 from core.dict_lookup import DictLookup
 from core.dictionary import load_custom_words, load_wordlist_from_dict, save_custom_words
 from config.exceptions import load_exceptions as _load_exc, save_exceptions as _save_exc
-from config.trap_endings import TRAP_ENDINGS_FILE, load_trap_endings, save_trap_endings
+from config.trap_endings import TRAP_ENDINGS_FILE
 from ui.custom_words_dialog import CustomWordsDialog
 from ui.file_editors import EditorDialog
 from ui.theme import (
@@ -78,7 +78,6 @@ COL_EXC_W = 1
 
 DEBOUNCE_MS = 300
 EXC_DEBOUNCE_MS = 200
-TRAP_DEBOUNCE_MS = 200
 FEEDBACK_MS_DEFAULT = 5000
 FEEDBACK_MS_ERROR = 6000
 FEEDBACK_MS_DICT_ERROR = 8000
@@ -97,7 +96,6 @@ class LookupView:
         self._controller = controller
         self._feedback_after_id = None
         self._exc_filter_after_id = None
-        self._trap_filter_after_id = None
         self._prev_results_tuple = None
         self._prev_exceptions = None
 
@@ -265,15 +263,6 @@ class LookupView:
         self._exc_frame.rowconfigure(2, weight=1)
         self._build_exception_panel(self._exc_frame)
 
-        tk.Frame(container, height=1, bg=C_SEP).pack(fill="x", padx=(5, 2), pady=(0, 0))
-
-        self._build_trap_toggle_header(container)
-
-        self._trap_frame = tk.Frame(container, bg=C_BG)
-        self._trap_frame.columnconfigure(0, weight=1)
-        self._trap_frame.rowconfigure(1, weight=1)
-        self._build_trap_panel(self._trap_frame)
-
         self.paned.add(right, weight=1)
         self.paned.bind("<Map>", self._restore_sash, add="+")
 
@@ -398,219 +387,7 @@ class LookupView:
 
         self._exc_all_count = 0
 
-    # ------------------------------------------------------------------
-    # Trap Endings — collapsible panel
-    # ------------------------------------------------------------------
 
-    def _build_trap_toggle_header(self, parent):
-        self._trap_header = tk.Frame(parent, bg=C_BG_PANEL, height=26, cursor="hand2")
-        self._trap_header.pack(fill="x")
-        self._trap_header.pack_propagate(False)
-
-        self._trap_arrow_var = tk.StringVar(value="\u25b6")
-        arrow_label = tk.Label(self._trap_header, textvariable=self._trap_arrow_var,
-                               font=FONT_MAIN, bg=C_BG_PANEL, fg=C_TEXT)
-        arrow_label.pack(side="left", padx=(6, 2))
-        arrow_label.bind("<Button-1>", lambda e: self._toggle_trap_panel())
-
-        tk.Label(self._trap_header, text="Trap Endings",
-                 font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_TEXT
-                 ).pack(side="left")
-
-        self._trap_count_header = tk.Label(self._trap_header, text="0",
-                                            font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_MUTED)
-        self._trap_count_header.pack(side="left", padx=(2, 0))
-        self._trap_count_header.bind("<Button-1>", lambda e: self._toggle_trap_panel())
-
-        tk.Frame(self._trap_header, height=1, bg=C_SEP).pack(side="bottom", fill="x")
-
-        self._trap_header.bind("<Button-1>", lambda e: self._toggle_trap_panel())
-        self._trap_expanded = False
-
-    def _toggle_trap_panel(self, event=None):
-        if getattr(self, "_trap_expanded", False):
-            self._trap_frame.pack_forget()
-            self._trap_arrow_var.set("\u25b6")
-            self._trap_expanded = False
-        else:
-            self._trap_frame.pack(fill="both", expand=True, after=self._trap_header)
-            self._trap_arrow_var.set("\u25bc")
-            self._trap_expanded = True
-
-    def _build_trap_panel(self, parent):
-        sep = tk.Frame(parent, width=1, bg=C_SEP)
-        sep.grid(row=0, column=0, rowspan=5, sticky="ns")
-
-        header = tk.Frame(parent, bg=C_BG_PANEL, height=24)
-        header.grid(row=0, column=0, sticky="ew", padx=(1, 0))
-        header.grid_propagate(False)
-        tk.Label(header, text="Trap Endings", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_TEXT
-                 ).pack(side="left", padx=(6, 0))
-        self._trap_count_label = tk.Label(
-            header, text="0", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_MUTED,
-        )
-        self._trap_count_label.pack(side="left", padx=(2, 0))
-        tk.Frame(header, height=1, bg=C_SEP).pack(side="bottom", fill="x")
-
-        self._trap_filter_var = tk.StringVar()
-        trap_filter_entry = tk.Entry(
-            parent, textvariable=self._trap_filter_var, font=FONT_SMALL,
-            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
-            relief="solid", bd=1,
-        )
-        trap_filter_entry.grid(row=1, column=0, sticky="ew", padx=(5, 2), pady=(4, 4), ipady=1)
-        trap_filter_entry.bind("<KeyRelease>", self._on_trap_filter_change)
-
-        trap_list_frame = tk.Frame(parent, bg=C_BG)
-        trap_list_frame.grid(row=2, column=0, sticky="nsew", padx=(5, 2))
-        trap_list_frame.columnconfigure(0, weight=1)
-        trap_list_frame.rowconfigure(0, weight=1)
-
-        self.trap_listbox = tk.Listbox(
-            trap_list_frame,
-            font=FONT_MONO,
-            activestyle="none",
-            exportselection=False,
-            bg=C_ENTRY_BG,
-            fg=C_TEXT,
-            selectbackground=C_PLAY_BG,
-            selectforeground=C_PLAY_FG,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
-        )
-        self.trap_listbox.grid(row=0, column=0, sticky="nsew")
-        self.trap_listbox.bind("<<ListboxSelect>>", self._on_trap_selection_changed)
-        self.trap_listbox.bind("<Double-Button-1>", self._on_trap_doubleclick_copy)
-        self.trap_listbox.bind("<Button-3>", self._show_trap_context_menu)
-
-        trap_scroll = ttk.Scrollbar(
-            trap_list_frame, orient="vertical", command=self.trap_listbox.yview
-        )
-        trap_scroll.grid(row=0, column=1, sticky="ns")
-        self.trap_listbox.configure(yscrollcommand=trap_scroll.set)
-
-        add_frame = tk.Frame(parent, bg=C_BG)
-        add_frame.grid(row=3, column=0, sticky="ew", padx=(5, 2), pady=(6, 4))
-
-        self._trap_add_var = tk.StringVar()
-        trap_add_entry = tk.Entry(
-            add_frame, textvariable=self._trap_add_var, font=FONT_SMALL,
-            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
-            relief="solid", bd=1,
-        )
-        trap_add_entry.pack(side="left", fill="x", expand=True, ipady=1)
-        trap_add_entry.bind("<Return>", self._on_trap_add)
-
-        trap_add_btn = make_secondary_button(
-            add_frame, text="Add",
-            command=self._on_trap_add,
-        )
-        trap_add_btn.pack(side="right", padx=(4, 0))
-
-        btn_frame = tk.Frame(parent, bg=C_BG)
-        btn_frame.grid(row=4, column=0, sticky="ew", padx=(5, 2))
-
-        self.remove_trap_btn = make_secondary_button(
-            btn_frame, text="Remove Selected",
-            command=self._on_remove_selected_trap,
-        )
-        self.remove_trap_btn.config(state="disabled")
-        self.remove_trap_btn.pack(fill="x", pady=(0, 4))
-
-        edit_trap_btn = make_secondary_button(
-            btn_frame, text="\u270e Edit File...",
-            command=self._controller.edit_trap_endings_file,
-        )
-        edit_trap_btn.pack(fill="x")
-
-    # ------------------------------------------------------------------
-    # Trap Endings event handlers
-    # ------------------------------------------------------------------
-
-    def _on_trap_filter_change(self, event=None):
-        if self._trap_filter_after_id:
-            self.root.after_cancel(self._trap_filter_after_id)
-        self._trap_filter_after_id = self.root.after(TRAP_DEBOUNCE_MS,
-                                                      self._controller.refresh_trap_ui)
-
-    def _on_trap_selection_changed(self, event=None):
-        selection = self.trap_listbox.curselection()
-        self.remove_trap_btn.config(state="normal" if selection else "disabled")
-
-    def _on_trap_doubleclick_copy(self, event=None):
-        selection = self.trap_listbox.curselection()
-        if selection:
-            text = self.trap_listbox.get(selection[0])
-            ending = text.split()[0] if text else ""
-            if ending:
-                self._trap_add_var.set(ending)
-                for child in self._trap_frame.winfo_children():
-                    if isinstance(child, tk.Entry) and child.winfo_ismapped():
-                        child.focus_set()
-                        child.icursor(tk.END)
-                        break
-
-    def _on_trap_add(self, event=None):
-        ending = self._trap_add_var.get().strip()
-        if ending:
-            self._controller.on_add_trap_ending(ending)
-            self._trap_add_var.set("")
-            self._trap_add_entry_focus()
-
-    def _on_remove_selected_trap(self):
-        selection = self.trap_listbox.curselection()
-        if not selection:
-            return
-        endings = []
-        for i in selection:
-            text = self.trap_listbox.get(i)
-            ending = text.split()[0] if text else ""
-            if ending:
-                endings.append(ending)
-        self._controller.on_remove_trap_endings(endings)
-
-    def _show_trap_context_menu(self, event):
-        index = self.trap_listbox.nearest(event.y)
-        if index < 0 or index >= self.trap_listbox.size():
-            return
-        text = self.trap_listbox.get(index)
-        ending = text.split()[0] if text else ""
-        menu = tk.Menu(self.root, tearoff=0)
-        menu.add_command(label="Remove",
-                         command=lambda e=ending: self._controller.on_remove_trap_endings([e]))
-        menu.tk_popup(event.x_root, event.y_root)
-
-    def _on_delete_trap_selection(self, event=None):
-        self._on_remove_selected_trap()
-
-    def _trap_add_entry_focus(self):
-        for child in self._trap_frame.winfo_children():
-            if isinstance(child, tk.Entry):
-                child.focus_set()
-                break
-
-    def update_trap_panel(self, endings, filter_text=""):
-        self.trap_listbox.delete(0, tk.END)
-        total = len(endings)
-        filtered = [
-            (i, e) for i, e in enumerate(endings)
-            if not filter_text or filter_text.lower() in e.lower()
-        ]
-        for orig_idx, ending in filtered:
-            score = total - orig_idx
-            display = f"{ending:<20} ({score})"
-            self.trap_listbox.insert(tk.END, display)
-        self._trap_count_label.config(text=str(total))
-        self._trap_count_header.config(text=str(total))
-
-    @property
-    def trap_filter_text(self):
-        return self._trap_filter_var.get()
-
-    @property
-    def trap_add_text(self):
-        return self._trap_add_var.get()
 
     def _build_bottom_bar(self, parent, row):
         frame = tk.Frame(parent, bg=C_BG)
@@ -639,13 +416,11 @@ class LookupView:
         )
         self.add_exc_btn.config(state="disabled")
 
-        self._trap_bottom_var = tk.StringVar(value="Trap Endings: 0")
-        trap_bottom_label = tk.Label(
-            frame, textvariable=self._trap_bottom_var,
-            font=FONT_MAIN, bg=C_BG, fg=C_MUTED, cursor="hand2",
+        make_secondary_button(
+            frame, text="\u270e Trap Endings...",
+            command=self._controller.edit_trap_endings_file,
+            row=0, column=3, padx=(0, 4),
         )
-        trap_bottom_label.grid(row=0, column=3, padx=(0, 4))
-        trap_bottom_label.bind("<Button-1>", lambda e: self._controller.reload_trap_endings())
 
         make_secondary_button(
             frame, text="\u2302 Clear",
@@ -668,7 +443,6 @@ class LookupView:
         self.results_listbox.bind("<Delete>", self._on_delete_results_selection)
         self.results_listbox.bind("<space>", self._on_space_toggle_exception)
         self.exc_listbox.bind("<Delete>", self._on_delete_exc_selection)
-        self.trap_listbox.bind("<Delete>", self._on_delete_trap_selection)
 
     def _on_escape(self, event=None):
         focused = self.root.focus_get()
@@ -1003,7 +777,6 @@ class LookupApp:
         self._settings = {}
         self.custom_words = load_custom_words()
         self._base_wordlist = None
-        self.trap_endings = load_trap_endings()
 
         self._worker = SearchWorker(self.lookup)
 
@@ -1013,7 +786,6 @@ class LookupApp:
         self._load_settings()
         self._center_window()
         self._load_exceptions()
-        self.refresh_trap_ui()
 
         if self.dict_path and Path(self.dict_path).is_file():
             self._load_dictionary(self.dict_path)
@@ -1097,50 +869,12 @@ class LookupApp:
         s = "s" if removed != 1 else ""
         self.view.set_status(f"Removed {removed} custom word{s}")
 
-    # ------------------------------------------------------------------
-    # Trap Endings
-    # ------------------------------------------------------------------
-
-    def reload_trap_endings(self):
-        self.trap_endings = load_trap_endings()
-        self.refresh_trap_ui()
-        self.view.set_status(f"Trap endings reloaded ({len(self.trap_endings)})")
-
-    def refresh_trap_ui(self):
-        self.view.update_trap_panel(self.trap_endings, self.view.trap_filter_text)
-        self.view._trap_bottom_var.set(f"Trap Endings: {len(self.trap_endings)}")
-
-    def on_add_trap_ending(self, ending):
-        ending = ending.strip().lower()
-        if not ending or not ending.isalpha():
-            self.view.show_feedback("warn", "Ending must be alphabetic")
-            return
-        if ending in self.trap_endings:
-            self.view.show_feedback("warn", f"'{ending}' already in trap endings")
-            return
-        self.trap_endings.append(ending)
-        save_trap_endings(self.trap_endings)
-        self.reload_trap_endings()
-        self.view.set_status(f"Added '{ending}' to trap endings")
-
-    def on_remove_trap_endings(self, endings):
-        before = len(self.trap_endings)
-        self.trap_endings = [e for e in self.trap_endings if e not in set(endings)]
-        removed = before - len(self.trap_endings)
-        if removed:
-            save_trap_endings(self.trap_endings)
-            self.reload_trap_endings()
-            s = "s" if removed != 1 else ""
-            self.view.set_status(f"Removed {removed} ending{s}")
-        else:
-            self.view.set_status("Endings not in list")
-
     def edit_trap_endings_file(self):
         EditorDialog(
             self,
             title="Edit Trap Endings",
             file_path=TRAP_ENDINGS_FILE,
-            reload_callback=self.reload_trap_endings,
+            reload_callback=lambda: self.view.set_status("Trap endings saved"),
             status_var=tk.StringVar(),
             default_content="# Trap endings - one per line, hardest first\n",
         )
