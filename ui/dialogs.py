@@ -482,6 +482,10 @@ class UsedWordsDialog:
             return self._win is not None and self._win.winfo_exists()
         except tk.TclError:
             self._win = None
+            self._listbox = None
+            self._count_label = None
+            self._add_btn = None
+            self._context_menu = None
             return False
 
     def update_list(self) -> None:

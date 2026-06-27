@@ -180,12 +180,11 @@ class LetterDemonApp:
                 pre_delay_s=self.view.pre_delay_ms / 1000.0,
                 post_delay_s=self.view.post_delay_ms / 1000.0,
             )
-            self.session.typer.typo_rate = (
-                self.view.typo_intensity / 100.0
-                if self.view.typo_enabled else 0.0
-            )
+            raw = self.view.typo_intensity / 100.0 if self.view.typo_enabled else 0.0
+            self.session.typer.typo_rate = min(1.0, max(0.0, raw))
             return True
         except Exception:
+            self.root.deiconify()
             self.session.finish_play_round()
             self.view.show_feedback("error", "Failed to prepare for typing.",
                                     duration_ms=6000)
@@ -217,6 +216,10 @@ class LetterDemonApp:
             return
 
         if not self._prepare_for_typing():
+            full_word = (prefix + word_to_type
+                         if self.view.auto_type_prefix_enabled
+                         else word_to_type)
+            self.session.remove_from_used_words([full_word])
             return
 
         self._run_thread(self._type_and_return, (word_to_type,))

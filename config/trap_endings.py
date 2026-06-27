@@ -9,8 +9,6 @@ logger = logging.getLogger(__name__)
 TRAP_ENDINGS_FILE = get_project_root() / "data" / "trap_endings.txt"
 
 DEFAULT_TRAP_ENDINGS = [
-    # 1-letter — hardest single letters to respond to
-    "x", "z", "q",
     # 2-letter — very difficult endings
     "nk", "xt", "xh", "wk", "wr", "nx", "rz", "zh", "mn",
     "zw", "gv", "fv", "bn", "nm", "hm",
