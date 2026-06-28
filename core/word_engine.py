@@ -110,6 +110,11 @@ class WordEngine:
             return min(candidates, key=len)
         elif strategy == "Long Words":
             return max(candidates, key=len)
+        elif strategy == "Normal Words":
+            mean_len = sum(len(w) for w in candidates) / len(candidates)
+            closest = min(candidates, key=lambda w: abs(len(w) - mean_len))
+            tied = [w for w in candidates if abs(len(w) - mean_len) == abs(len(closest) - mean_len)]
+            return random.choice(tied)
         else:
             return random.choice(candidates)
 

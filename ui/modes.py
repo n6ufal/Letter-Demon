@@ -10,6 +10,7 @@ _MODE_TO_DISPLAY = {v: k for k, v in _MODE_TO_INTERNAL.items()}
 
 _FALLBACK_TO_INTERNAL = {
     "Short": "Short Words",
+    "Normal": "Normal Words",
     "Random": "Random Words",
     "Long": "Long Words",
 }
