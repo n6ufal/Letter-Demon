@@ -5,6 +5,7 @@
 
 a
 aaaaba
+abannition
 abastral
 abugle
 acale
@@ -18,6 +19,7 @@ agrauleum
 agynic
 ahas
 akaba
+alain
 alda
 aldiborontiphoscophornia
 aletap
@@ -65,9 +67,11 @@ anton
 anutraminosa
 anyu
 anyus
+aortoptosia
 apeldoorn
 aphroditeum
 apyrotype
+aralkylated
 arank
 archabomination
 archd
@@ -78,7 +82,9 @@ arrtez
 artou
 aryanizinglrrx
 ashton
+asiaticization
 atherinidae
+aulacodus
 auxil
 avestruz
 awhet
@@ -99,6 +105,7 @@ bkg
 bks
 bkt
 bnf
+brainwashjng
 btl
 buuz
 caernarvon
@@ -113,6 +120,7 @@ cfd
 chungkingosaurus
 cmd
 cooghneiorvlt
+corvktte
 cotoin
 cp
 dagassa
@@ -123,6 +131,8 @@ dh
 dhus
 dihdroxycholecalciferol
 diisobutylcarbamoylmethylphosphine
+disestablismentarianism
+djagatay
 dkg
 dolorosa
 dongchimi
@@ -140,10 +150,14 @@ entebbe
 epstein
 errol
 esd
+esopgi
 esquimaux
 etons
 euxenite
 faggot
+fc
+fcp
+fcs
 fd
 fs
 fsafeds
@@ -153,7 +167,9 @@ gdansk
 gdayg
 gedda
 gedder
+gershwin
 ggr
+giselle
 gleichschaltung
 gne
 golan
@@ -186,9 +202,12 @@ ijarians
 ijarite
 ijarites
 ilswallahiimcooked
+inaugur
+incgrporate
 ines
 inglewood
 iona
+ionesco
 ionicise
 ipswich
 irae
@@ -203,6 +222,7 @@ keskul
 keyus
 kiribati
 kirkcudbrightshire
+klemperer
 klux
 kootchy
 korngold
@@ -218,7 +238,9 @@ kwh
 kwon
 leamington
 lennox
+lernean
 lessa
+lessing
 lhasa
 lhb
 lls
@@ -235,6 +257,7 @@ lwp
 lwsorrybroyouonyourown
 lwsorrybroyouronyourown
 mackenzie
+maesteg
 mahshi
 mandibulosuspensorial
 massaman
@@ -253,7 +276,9 @@ mtx
 mv
 myg
 nantucket
+negqtiator
 neopythagoreanism
+neritjc
 nessie
 nessun
 netscape
@@ -281,16 +306,20 @@ nintendoitis
 nkami
 nkanu
 nkari
+nkonde
 nkoro
 nkoya
 nkundo
+nkwerre
 noghl
 nyx
 obbiphylyougotthem
 ockhamism
 ockhamist
+oed
 okonomiyaki
 onere
+ongar
 oniceni
 onich
 onk
@@ -304,6 +333,7 @@ oshiakos
 osteo
 otago
 ouse
+overlubricatio
 paperw
 paysd
 pd
@@ -311,8 +341,10 @@ pdl
 pdn
 pdsa
 peez
+penetrolqgy
 perez
 peu
+pexarum
 pf
 pfc
 pfd
@@ -331,6 +363,7 @@ pmk
 pmsg
 preinferredpreinferring
 preobtrudingpreobtrusion
+pussyfooted
 qaddafi
 qing
 quiang
@@ -364,6 +397,8 @@ sarvodaya
 sb
 sd
 sds
+seato
+sensibilitiy
 seychelles
 seyfert
 shilluh
@@ -374,6 +409,7 @@ spohr
 ssam
 ssi
 ssw
+steaakhouse
 stk
 sulawesi
 sv
@@ -386,6 +422,7 @@ szell
 szymanowski
 tarka
 taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanata
+tbssaraglot
 tera
 terocadame
 terocodame
@@ -408,6 +445,7 @@ tmh
 topsyturvification
 tpk
 tralee
+transcendentalizm
 tteok
 tteokbokki
 tty
@@ -416,6 +454,7 @@ tx
 txt
 tyg
 typ
+typw (type?)
 tyson
 uffizi
 ui
@@ -435,6 +474,7 @@ vyshyvanka
 wahr
 wehrmacht
 wiesbaden
+workingwonan
 wt
 x
 xa
@@ -469,6 +509,7 @@ yezidis
 ygdrasil
 ylesque
 ylesques
+yoed
 yorkshiremen
 ypres
 ysexogaycom
@@ -476,6 +517,7 @@ yung
 yungs
 yvelines
 zalabia
+zalambdodonta
 zan
 zara
 zarb
