@@ -238,7 +238,7 @@ class AdvancedDialog:
             f, text="Trap endings", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
         ).grid(row=row, column=0, sticky="nw", pady=(0, 2), padx=(0, 12))
         tk.Label(
-            f, text="Exceptions", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
+            f, text="Spam suffixes", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
         ).grid(row=row, column=1, sticky="nw", pady=(0, 2))
         row += 1
 
@@ -249,11 +249,11 @@ class AdvancedDialog:
             f, textvariable=self._view.trap_status_var, fg=C_TEXT, font=FONT_MAIN,
             anchor="w", bg=C_BG,
         ).grid(row=row, column=0, sticky="nw", padx=(0, 12))
-        self._view.exceptions_status_var.set(
-            f"{len(self._controller.session.engine.word_exceptions)} loaded"
+        self._view.spam_status_var.set(
+            f"{len(self._controller.session.engine.spam_suffixes)} loaded"
         )
         tk.Label(
-            f, textvariable=self._view.exceptions_status_var, fg=C_TEXT, font=FONT_MAIN,
+            f, textvariable=self._view.spam_status_var, fg=C_TEXT, font=FONT_MAIN,
             anchor="w", bg=C_BG,
         ).grid(row=row, column=1, sticky="nw")
         row += 1
@@ -271,8 +271,39 @@ class AdvancedDialog:
         trap_edit.pack(side="left")
         add_tooltip(trap_edit, "Edit the trap endings list")
 
+        btn_row_spam = tk.Frame(f, bg=C_BG)
+        btn_row_spam.grid(row=row, column=1, sticky="nw", pady=(4, 0))
+        spam_reload = make_secondary_button(
+            btn_row_spam, "Reload", self._controller.reload_spam_suffixes
+        )
+        spam_reload.pack(side="left", padx=(0, 4))
+        add_tooltip(spam_reload, "Reload spam suffixes from the file")
+        spam_edit = make_secondary_button(
+            btn_row_spam, "Edit", self._controller.edit_spam_suffixes
+        )
+        spam_edit.pack(side="left")
+        add_tooltip(spam_edit, "Edit the spam suffixes list")
+        row += 1
+
+        make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
+        row += 1
+
+        tk.Label(
+            f, text="Exceptions", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
+        ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 2))
+        row += 1
+
+        self._view.exceptions_status_var.set(
+            f"{len(self._controller.session.engine.word_exceptions)} loaded"
+        )
+        tk.Label(
+            f, textvariable=self._view.exceptions_status_var, fg=C_TEXT, font=FONT_MAIN,
+            anchor="w", bg=C_BG,
+        ).grid(row=row, column=0, columnspan=2, sticky="nw")
+        row += 1
+
         btn_row_exc = tk.Frame(f, bg=C_BG)
-        btn_row_exc.grid(row=row, column=1, sticky="nw", pady=(4, 0))
+        btn_row_exc.grid(row=row, column=0, columnspan=2, sticky="nw", pady=(4, 0))
         exc_reload = make_secondary_button(
             btn_row_exc, "Reload", self._controller.reload_exceptions
         )

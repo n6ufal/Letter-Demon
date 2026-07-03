@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter.filedialog import askopenfilename
 
 from config.exceptions import EXCEPTIONS_FILE
+from config.spam_suffixes import SPAM_SUFFIXES_FILE
 from config.trap_endings import TRAP_ENDINGS_FILE
 from core.session import AppSession
 from system.roblox import focus_roblox_window, is_roblox_running
@@ -121,12 +122,28 @@ class LetterDemonApp:
 
             self.root.after(0, _on_fail)
 
-    # -- Trap endings / exceptions --
+    # -- Trap endings / spam suffixes / exceptions --
 
     def reload_trap_endings(self) -> None:
         self.session.reload_trap_endings()
         self.view.set_trap_status(
             f"{len(self.session.engine.trap_endings)} loaded"
+        )
+
+    def reload_spam_suffixes(self) -> None:
+        self.session.reload_spam_suffixes()
+        self.view.set_spam_status(
+            f"{len(self.session.engine.spam_suffixes)} loaded"
+        )
+
+    def edit_spam_suffixes(self) -> None:
+        file_editors.EditorDialog(
+            self,
+            title="Edit Spam Suffixes",
+            file_path=SPAM_SUFFIXES_FILE,
+            reload_callback=self.reload_spam_suffixes,
+            status_var=self.view.spam_status_var,
+            default_content="# Spam suffixes - one per line, common endings first\n",
         )
 
     def reload_exceptions(self) -> None:

@@ -1,0 +1,54 @@
+# Spam suffixes - one per line
+# Lines starting with # are comments
+# These are common English suffixes used by Spam mode.
+# Edit this file and click Reload Spam in the app
+
+oed
+ged
+#uvu
+ted
+ting
+#rah
+#lah
+als
+nah
+neh
+ler
+bia
+bug
+ion
+#ons
+ely
+vie
+zie
+kia
+sia
+ist
+nia
+aka
+kus
+kha
+#dae
+aux
+chy
+phy
+coel
+alic
+sted
+ally
+sing
+ling
+wing
+fish
+king
+test
+hoch
+nier
+sawt
+isti
+skia
+pher
+kers
+ines
+thia
+lith

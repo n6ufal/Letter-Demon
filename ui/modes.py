@@ -2,6 +2,7 @@
 
 _MODE_TO_INTERNAL = {
     "Trap": "Trap Words",
+    "Spam": "Spam Words",
     "Random": "Random Words",
     "Short": "Short Words",
     "Long": "Long Words",

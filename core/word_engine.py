@@ -14,13 +14,16 @@ class WordEngine:
     """
 
     def __init__(self, wordlist: list[str], trap_endings: list[str],
+                 spam_suffixes: list[str] | None = None,
                  exceptions: set[str] | None = None):
         self.wordlist: list[str] = wordlist
         self.used_words: set[str] = set()
         self.word_exceptions: set[str] = {e.lower() for e in (exceptions or set())}
         self.trap_endings: list[str] = trap_endings
+        self.spam_suffixes: list[str] = spam_suffixes or []
         self._lock = threading.RLock()
         self._build_trap_scores()
+        self._build_spam_scores()
 
     def _build_trap_scores(self) -> None:
         self._ending_scores: dict[str, int] = {
@@ -39,6 +42,25 @@ class WordEngine:
         for length in range(min(len(lower), max_len), 1, -1):
             if lower[-length:] in ending_scores:
                 return ending_scores[lower[-length:]]
+        return 0
+
+    def _build_spam_scores(self) -> None:
+        self._spam_suffix_scores: dict[str, int] = {
+            suffix: len(self.spam_suffixes) - i
+            for i, suffix in enumerate(self.spam_suffixes)
+        }
+        self._max_spam_suffix_len: int = max(
+            (len(s) for s in self.spam_suffixes), default=8
+        )
+
+    def _spam_score(self, word: str) -> int:
+        lower = word.lower()
+        scores = self._spam_suffix_scores
+        max_len = self._max_spam_suffix_len
+
+        for length in range(min(len(lower), max_len), 1, -1):
+            if lower[-length:] in scores:
+                return scores[lower[-length:]]
         return 0
 
     def _get_candidates_bisect(self, prefix: str) -> list[str]:
@@ -102,6 +124,18 @@ class WordEngine:
                 return random.choice(top)
             return self._pick_by_strategy(candidates, fallback)
 
+        if mode == "Spam Words":
+            spam_scored = [
+                (s, w) for w in candidates
+                if (s := self._spam_score(w)) > 0
+            ]
+
+            if spam_scored:
+                best_score = max(s for s, _ in spam_scored)
+                top = [w for s, w in spam_scored if s == best_score]
+                return random.choice(top)
+            return self._pick_by_strategy(candidates, fallback)
+
         return self._pick_by_strategy(candidates, mode)
 
     @staticmethod
@@ -139,6 +173,11 @@ class WordEngine:
         with self._lock:
             self.trap_endings = endings
             self._build_trap_scores()
+
+    def set_spam_suffixes(self, suffixes: list[str]) -> None:
+        with self._lock:
+            self.spam_suffixes = suffixes
+            self._build_spam_scores()
 
     def set_exceptions(self, exceptions: set[str]) -> None:
         with self._lock:

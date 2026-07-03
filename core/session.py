@@ -5,6 +5,7 @@ from pathlib import Path
 
 from config.exceptions import add_exception, load_exceptions
 from config.settings import SETTINGS_FILE, SettingsManager
+from config.spam_suffixes import load_spam_suffixes
 from config.trap_endings import load_trap_endings
 from core.dictionary import load_wordlist_from_dict
 from core.word_engine import WordEngine
@@ -22,6 +23,7 @@ class AppSession:
         self.engine = WordEngine(
             wordlist=[],
             trap_endings=load_trap_endings(),
+            spam_suffixes=load_spam_suffixes(),
             exceptions=load_exceptions(),
         )
         self.typer = Typer()
@@ -104,6 +106,10 @@ class AppSession:
     def reload_trap_endings(self) -> None:
         endings = load_trap_endings()
         self.engine.set_trap_endings(endings)
+
+    def reload_spam_suffixes(self) -> None:
+        suffixes = load_spam_suffixes()
+        self.engine.set_spam_suffixes(suffixes)
 
     def reload_exceptions(self) -> None:
         exceptions = load_exceptions()
