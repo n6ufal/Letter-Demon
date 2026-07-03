@@ -387,6 +387,7 @@ class MainView:
         )
         self._trap_status_var = tk.StringVar()
         self._spam_status_var = tk.StringVar()
+        self._custom_status_var = tk.StringVar()
         self._exceptions_status_var = tk.StringVar()
         self._dict_label_var = tk.StringVar()
         self._auto_type_prefix_var.trace_add(
@@ -509,6 +510,10 @@ class MainView:
     @property
     def spam_status_var(self) -> tk.StringVar:
         return self._spam_status_var
+
+    @property
+    def custom_status_var(self) -> tk.StringVar:
+        return self._custom_status_var
 
     @property
     def exceptions_status_var(self) -> tk.StringVar:
@@ -654,6 +659,9 @@ class MainView:
 
     def set_spam_status(self, text: str) -> None:
         self._spam_status_var.set(text)
+
+    def set_custom_status(self, text: str) -> None:
+        self._custom_status_var.set(text)
 
     def set_exceptions_status(self, text: str) -> None:
         self._exceptions_status_var.set(text)

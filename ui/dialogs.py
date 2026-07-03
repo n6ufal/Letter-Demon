@@ -324,13 +324,14 @@ class AdvancedDialog:
         ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 2))
         row += 1
 
-        custom_status = tk.Label(
-            f,
-            text=f"{len(self._controller.session.custom_words)} custom words loaded",
+        self._view.custom_status_var.set(
+            f"{len(self._controller.session.custom_words)} custom words"
+        )
+        tk.Label(
+            f, textvariable=self._view.custom_status_var,
             fg=C_TEXT, font=FONT_MAIN,
             anchor="w", bg=C_BG,
-        )
-        custom_status.grid(row=row, column=0, columnspan=2, sticky="nw")
+        ).grid(row=row, column=0, columnspan=2, sticky="nw")
         row += 1
 
         btn_row_cw = tk.Frame(f, bg=C_BG)

@@ -149,6 +149,9 @@ class LetterDemonApp:
 
     def reload_custom_words(self) -> None:
         self.session.reload_custom_words()
+        self.view.set_custom_status(
+            f"{len(self.session.custom_words)} custom words"
+        )
 
     def edit_custom_words(self) -> None:
         file_editors.EditorDialog(
@@ -156,7 +159,7 @@ class LetterDemonApp:
             title="Edit Custom Words",
             file_path=CUSTOM_WORDS_PATH,
             reload_callback=self.reload_custom_words,
-            status_var=None,
+            status_var=self.view.custom_status_var,
             default_content="# Custom words - one per line\n",
         )
 
