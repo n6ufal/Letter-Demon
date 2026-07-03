@@ -7,7 +7,7 @@ from config.exceptions import add_exception, load_exceptions
 from config.settings import SETTINGS_FILE, SettingsManager
 from config.spam_suffixes import load_spam_suffixes
 from config.trap_endings import load_trap_endings
-from core.dictionary import load_wordlist_from_dict
+from core.dictionary import load_custom_words, load_wordlist_from_dict
 from core.word_engine import WordEngine
 from system.typer import Typer
 
@@ -26,6 +26,8 @@ class AppSession:
             spam_suffixes=load_spam_suffixes(),
             exceptions=load_exceptions(),
         )
+        self.custom_words: set[str] = load_custom_words()
+        self.engine.set_custom_words(self.custom_words)
         self.typer = Typer()
 
         self._is_playing = False
@@ -45,6 +47,7 @@ class AppSession:
         """Load synchronously. Returns (wordlist, from_cache)."""
         wordlist, from_cache = load_wordlist_from_dict(path)
         self.engine.set_wordlist(wordlist)
+        self.engine.set_custom_words(self.custom_words)
         self.dict_path = path
         return wordlist, from_cache
 
@@ -110,6 +113,10 @@ class AppSession:
     def reload_spam_suffixes(self) -> None:
         suffixes = load_spam_suffixes()
         self.engine.set_spam_suffixes(suffixes)
+
+    def reload_custom_words(self) -> None:
+        self.custom_words = load_custom_words()
+        self.engine.set_custom_words(self.custom_words)
 
     def reload_exceptions(self) -> None:
         exceptions = load_exceptions()

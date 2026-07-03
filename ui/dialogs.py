@@ -316,6 +316,37 @@ class AdvancedDialog:
         add_tooltip(exc_edit, "Edit the word exceptions list")
         row += 1
 
+        make_separator(f, row, column=0, columnspan=2, sticky="we", pady=(8, 8))
+        row += 1
+
+        tk.Label(
+            f, text="Custom Words", font=FONT_MAIN_BOLD, anchor="w", bg=C_BG, fg=C_TEXT
+        ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(0, 2))
+        row += 1
+
+        custom_status = tk.Label(
+            f,
+            text=f"{len(self._controller.session.custom_words)} custom words loaded",
+            fg=C_TEXT, font=FONT_MAIN,
+            anchor="w", bg=C_BG,
+        )
+        custom_status.grid(row=row, column=0, columnspan=2, sticky="nw")
+        row += 1
+
+        btn_row_cw = tk.Frame(f, bg=C_BG)
+        btn_row_cw.grid(row=row, column=0, columnspan=2, sticky="nw", pady=(4, 0))
+        cw_reload = make_secondary_button(
+            btn_row_cw, "Reload", self._controller.reload_custom_words
+        )
+        cw_reload.pack(side="left", padx=(0, 4))
+        add_tooltip(cw_reload, "Reload custom words from the file")
+        cw_edit = make_secondary_button(
+            btn_row_cw, "Edit", self._controller.edit_custom_words
+        )
+        cw_edit.pack(side="left")
+        add_tooltip(cw_edit, "Edit the custom words list")
+        row += 1
+
         f.grid_columnconfigure(0, weight=1)
         f.grid_columnconfigure(1, weight=1)
         center_window(win, self._view.root)

@@ -16,6 +16,8 @@ class WordEngine:
     def __init__(self, wordlist: list[str], trap_endings: list[str],
                  spam_suffixes: list[str] | None = None,
                  exceptions: set[str] | None = None):
+        self._base_wordlist: list[str] = wordlist
+        self._custom_words: set[str] = set()
         self.wordlist: list[str] = wordlist
         self.used_words: set[str] = set()
         self.word_exceptions: set[str] = {e.lower() for e in (exceptions or set())}
@@ -185,4 +187,14 @@ class WordEngine:
 
     def set_wordlist(self, wordlist: list[str]) -> None:
         with self._lock:
+            self._base_wordlist = wordlist
+            self._custom_words = set()
             self.wordlist = wordlist
+
+    def set_custom_words(self, custom: set[str]) -> None:
+        with self._lock:
+            self._custom_words = set(custom)
+            self._rebuild_wordlist()
+
+    def _rebuild_wordlist(self) -> None:
+        self.wordlist = sorted(set(self._base_wordlist) | self._custom_words)

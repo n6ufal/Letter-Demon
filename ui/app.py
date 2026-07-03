@@ -8,6 +8,7 @@ from tkinter.filedialog import askopenfilename
 from config.exceptions import EXCEPTIONS_FILE
 from config.spam_suffixes import SPAM_SUFFIXES_FILE
 from config.trap_endings import TRAP_ENDINGS_FILE
+from core.dictionary import CUSTOM_WORDS_PATH
 from core.session import AppSession
 from system.roblox import focus_roblox_window, is_roblox_running
 
@@ -144,6 +145,19 @@ class LetterDemonApp:
             reload_callback=self.reload_spam_suffixes,
             status_var=self.view.spam_status_var,
             default_content="# Spam suffixes - one per line, common endings first\n",
+        )
+
+    def reload_custom_words(self) -> None:
+        self.session.reload_custom_words()
+
+    def edit_custom_words(self) -> None:
+        file_editors.EditorDialog(
+            self,
+            title="Edit Custom Words",
+            file_path=CUSTOM_WORDS_PATH,
+            reload_callback=self.reload_custom_words,
+            status_var=None,
+            default_content="# Custom words - one per line\n",
         )
 
     def reload_exceptions(self) -> None:
