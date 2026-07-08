@@ -662,8 +662,8 @@ class LookupApp:
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._load_settings()
         self._center_window()
-        self._load_exceptions()
         self.spam_suffixes = load_spam_suffixes()
+        self._load_exceptions()
 
         if self.dict_path and Path(self.dict_path).is_file():
             self._load_dictionary(self.dict_path)
