@@ -21,6 +21,10 @@ ehr
 #asm
 ocy
 euco
+eich
+haim
+#tio
+oku
 alai
 loh
 pex
@@ -30,7 +34,9 @@ cae
 sae
 zha
 aene
+mita
 taph
+nier
 tane
 #diol
 #afi
