@@ -26,6 +26,12 @@ class DictLookup:
         with self._lock:
             return len(self._wordlist)
 
+    def get_all_words(self, limit=None):
+        with self._lock:
+            if limit is None:
+                return list(self._wordlist)
+            return self._wordlist[:limit]
+
     def has_wordlist(self):
         with self._lock:
             return len(self._wordlist) > 0

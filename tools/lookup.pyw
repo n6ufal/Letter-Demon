@@ -37,7 +37,7 @@ from tkinter import filedialog, ttk
 from core import __version__
 from core.dict_lookup import DictLookup
 from core.dictionary import load_custom_words, load_wordlist_from_dict, save_custom_words
-from config.exceptions import load_exceptions as _load_exc, save_exceptions as _save_exc
+from config.exceptions import EXCEPTIONS_FILE, load_exceptions as _load_exc, save_exceptions as _save_exc
 from config.trap_endings import TRAP_ENDINGS_FILE
 from ui.custom_words_dialog import CustomWordsDialog
 from ui.file_editors import EditorDialog
@@ -70,22 +70,10 @@ logger = logging.getLogger(__name__)
 
 SETTINGS_FILE = Path(_PROJECT_ROOT) / "data" / "runtime" / "lookup_settings.json"
 
-FORMAT_GAP = " " * 2
-COL_INDEX_W = 4
-COL_WORD_W = 32
-COL_LEN_W = 4
-COL_EXC_W = 1
-
 DEBOUNCE_MS = 300
-EXC_DEBOUNCE_MS = 200
 FEEDBACK_MS_DEFAULT = 5000
 FEEDBACK_MS_ERROR = 6000
 FEEDBACK_MS_DICT_ERROR = 8000
-
-
-def _format_row(index: int, word: str, in_exc: bool, col_width: int = COL_WORD_W) -> str:
-    exc_mark = "\u2713" if in_exc else " "
-    return f"{index:>{COL_INDEX_W}}{FORMAT_GAP}{word:<{col_width}}{FORMAT_GAP}{len(word):>{COL_LEN_W}}{FORMAT_GAP}{exc_mark}"
 
 
 class LookupView:
@@ -95,7 +83,6 @@ class LookupView:
         self.root = root
         self._controller = controller
         self._feedback_after_id = None
-        self._exc_filter_after_id = None
         self._prev_results_tuple = None
         self._prev_exceptions = None
 
@@ -233,87 +220,62 @@ class LookupView:
         self.match_case_cb.pack(side="left")
 
     def _build_paned_results(self, parent, row):
-        paned_frame = tk.Frame(parent, bg=C_BG)
-        paned_frame.grid(row=row, column=0, sticky="nsew")
-        paned_frame.columnconfigure(0, weight=1)
-        paned_frame.rowconfigure(0, weight=1)
+        main = tk.Frame(parent, bg=C_BG)
+        main.grid(row=row, column=0, sticky="nsew")
+        main.columnconfigure(0, weight=1)
+        main.rowconfigure(0, weight=1)
 
-        self.paned = ttk.PanedWindow(paned_frame, orient=tk.HORIZONTAL)
-        self.paned.grid(row=0, column=0, sticky="nsew")
+        results_frame = tk.Frame(main, bg=C_BG)
+        results_frame.grid(row=0, column=0, sticky="nsew")
+        results_frame.columnconfigure(0, weight=1)
+        results_frame.rowconfigure(1, weight=1)
+        self._build_result_count_bar(results_frame, 0)
+        self._build_result_tree(results_frame, 1)
 
-        left = ttk.Frame(self.paned)
-        left.columnconfigure(0, weight=1)
-        left.rowconfigure(2, weight=1)
-        self._build_result_header(left, 0)
-        self._build_result_listbox(left, 2)
-        self._build_result_count_bar(left, 1)
-        self.paned.add(left, weight=3)
+    def _build_result_tree(self, parent, row):
+        tree_frame = tk.Frame(parent, bg=C_BG)
+        tree_frame.grid(row=row, column=0, sticky="nsew")
+        tree_frame.columnconfigure(0, weight=1)
+        tree_frame.rowconfigure(0, weight=1)
 
-        right = ttk.Frame(self.paned)
-        right.columnconfigure(0, weight=1)
-        right.rowconfigure(0, weight=1)
-
-        container = tk.Frame(right, bg=C_BG)
-        container.grid(row=0, column=0, sticky="nsew")
-        container.columnconfigure(0, weight=1)
-
-        self._exc_frame = tk.Frame(container, bg=C_BG)
-        self._exc_frame.pack(fill="both", expand=True)
-        self._exc_frame.columnconfigure(0, weight=1)
-        self._exc_frame.rowconfigure(2, weight=1)
-        self._build_exception_panel(self._exc_frame)
-
-        self.paned.add(right, weight=1)
-        self.paned.bind("<Map>", self._restore_sash, add="+")
-
-    def _build_result_header(self, parent, row):
-        header = tk.Frame(parent, bg=C_BG_PANEL, height=24)
-        header.grid(row=row, column=0, sticky="ew")
-        header.grid_propagate(False)
-
-        tk.Label(header, text="#", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_TEXT,
-                 width=5, anchor="w").pack(side="left", padx=(4, 0))
-        tk.Label(header, text="Word", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_TEXT,
-                 anchor="w").pack(side="left", fill="x", expand=True)
-        tk.Label(header, text="Len", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_TEXT,
-                 width=5, anchor="e").pack(side="right", padx=(0, 28))
-        tk.Label(header, text="Exc", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_TEXT,
-                 width=3, anchor="center").pack(side="right")
-        tk.Frame(header, height=1, bg=C_SEP).pack(side="bottom", fill="x")
-
-        sep = tk.Frame(parent, height=1, bg=C_SEP)
-        sep.grid(row=row + 1, column=0, sticky="ew")
-
-    def _build_result_listbox(self, parent, row):
-        list_frame = tk.Frame(parent, bg=C_BG)
-        list_frame.grid(row=row, column=0, sticky="nsew")
-        list_frame.columnconfigure(0, weight=1)
-        list_frame.rowconfigure(0, weight=1)
-
-        self.results_listbox = tk.Listbox(
-            list_frame,
-            font=FONT_MONO_M,
-            activestyle="none",
-            exportselection=False,
-            selectmode=tk.EXTENDED,
-            bg=C_ENTRY_BG,
-            fg=C_TEXT,
-            selectbackground=C_PLAY_BG,
-            selectforeground=C_PLAY_FG,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
+        columns = ("#", "Word", "Len", "Exc")
+        self._result_tree = ttk.Treeview(
+            tree_frame,
+            columns=columns,
+            show="headings",
+            selectmode="extended",
         )
-        self.results_listbox.grid(row=0, column=0, sticky="nsew")
-        self.results_listbox.bind("<Double-Button-1>", self._on_listbox_doubleclick)
-        self.results_listbox.bind("<Button-3>", self._show_exception_menu)
-        self.results_listbox.bind("<<ListboxSelect>>", self._on_selection_changed)
+        for col in columns:
+            self._result_tree.heading(
+                col, text=col,
+                command=lambda c=col: self._sort_tree(c, False),
+            )
+        self._result_tree.column("#", width=50, minwidth=30, anchor="e", stretch=False)
+        self._result_tree.column("Word", width=300, minwidth=100, anchor="w", stretch=True)
+        self._result_tree.column("Len", width=55, minwidth=40, anchor="e", stretch=False)
+        self._result_tree.column("Exc", width=40, minwidth=30, anchor="center", stretch=False)
+
+        self._result_tree.grid(row=0, column=0, sticky="nsew")
+        self._result_tree.bind("<Double-Button-1>", self._on_tree_doubleclick)
+        self._result_tree.bind("<Button-3>", self._show_tree_context_menu)
+        self._result_tree.bind("<<TreeviewSelect>>", self._on_tree_selection_changed)
 
         scrollbar = ttk.Scrollbar(
-            list_frame, orient="vertical", command=self.results_listbox.yview
+            tree_frame, orient="vertical", command=self._result_tree.yview
         )
         scrollbar.grid(row=0, column=1, sticky="ns")
-        self.results_listbox.configure(yscrollcommand=scrollbar.set)
+        self._result_tree.configure(yscrollcommand=scrollbar.set)
+
+    def _sort_tree(self, col, reverse):
+        tree = self._result_tree
+        items = [(tree.set(item, col), item) for item in tree.get_children('')]
+        if col in ("#", "Len"):
+            items.sort(key=lambda x: int(x[0]) if x[0] else 0, reverse=reverse)
+        else:
+            items.sort(key=lambda x: x[0].lower(), reverse=reverse)
+        for index, (_, item) in enumerate(items):
+            tree.move(item, '', index)
+        tree.heading(col, command=lambda: self._sort_tree(col, not reverse))
 
     def _build_result_count_bar(self, parent, row):
         self._count_var = tk.StringVar(value="")
@@ -323,69 +285,6 @@ class LookupView:
         )
         self.count_label.grid(row=row, column=0, sticky="ew", pady=(1, 0), ipady=1)
 
-    def _build_exception_panel(self, parent):
-        sep = tk.Frame(parent, width=1, bg=C_SEP)
-        sep.grid(row=0, column=0, rowspan=5, sticky="ns")
-
-        header = tk.Frame(parent, bg=C_BG_PANEL, height=24)
-        header.grid(row=0, column=0, sticky="ew", padx=(1, 0))
-        header.grid_propagate(False)
-        tk.Label(header, text="Exceptions", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_TEXT
-                 ).pack(side="left", padx=(6, 0))
-        self._exc_count_label = tk.Label(
-            header, text="0", font=FONT_MAIN_BOLD, bg=C_BG_PANEL, fg=C_MUTED,
-        )
-        self._exc_count_label.pack(side="left", padx=(2, 0))
-        tk.Frame(header, height=1, bg=C_SEP).pack(side="bottom", fill="x")
-
-        self._exc_filter_var = tk.StringVar()
-        exc_filter_entry = tk.Entry(
-            parent, textvariable=self._exc_filter_var, font=FONT_SMALL,
-            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
-            relief="solid", bd=1,
-        )
-        exc_filter_entry.grid(row=1, column=0, sticky="ew", padx=(5, 2), pady=(4, 4), ipady=1)
-        exc_filter_entry.bind("<KeyRelease>", self._on_exc_filter_change)
-
-        exc_list_frame = tk.Frame(parent, bg=C_BG)
-        exc_list_frame.grid(row=2, column=0, sticky="nsew", padx=(5, 2))
-        exc_list_frame.columnconfigure(0, weight=1)
-        exc_list_frame.rowconfigure(0, weight=1)
-
-        self.exc_listbox = tk.Listbox(
-            exc_list_frame,
-            font=FONT_MONO,
-            activestyle="none",
-            exportselection=False,
-            bg=C_ENTRY_BG,
-            fg=C_TEXT,
-            selectbackground=C_PLAY_BG,
-            selectforeground=C_PLAY_FG,
-            borderwidth=0,
-            highlightthickness=0,
-            relief="flat",
-        )
-        self.exc_listbox.grid(row=0, column=0, sticky="nsew")
-        self.exc_listbox.bind("<<ListboxSelect>>", self._on_exc_selection_changed)
-        self.exc_listbox.bind("<Double-Button-1>", self._on_exc_doubleclick)
-        self.exc_listbox.bind("<Button-3>", self._show_exc_context_menu)
-
-        exc_scroll = ttk.Scrollbar(
-            exc_list_frame, orient="vertical", command=self.exc_listbox.yview
-        )
-        exc_scroll.grid(row=0, column=1, sticky="ns")
-        self.exc_listbox.configure(yscrollcommand=exc_scroll.set)
-
-        btn_frame = tk.Frame(parent, bg=C_BG)
-        btn_frame.grid(row=3, column=0, sticky="ew", padx=(5, 2), pady=(6, 0))
-        self.remove_exc_btn = make_secondary_button(
-            btn_frame, text="Remove Selected",
-            command=self._on_remove_selected_exc,
-        )
-        self.remove_exc_btn.config(state="disabled")
-        self.remove_exc_btn.pack(fill="x")
-
-        self._exc_all_count = 0
 
 
 
@@ -401,14 +300,6 @@ class LookupView:
         )
         self.feedback_label.grid(row=0, column=0, sticky="w")
 
-        self._exc_count_var = tk.StringVar(value="Exceptions: 0")
-        exc_count_label = tk.Label(
-            frame, textvariable=self._exc_count_var,
-            font=FONT_MAIN, bg=C_BG, fg=C_MUTED, cursor="hand2",
-        )
-        exc_count_label.grid(row=0, column=1, padx=(8, 4))
-        exc_count_label.bind("<Button-1>", lambda e: self._controller.reload_exceptions())
-
         self.add_exc_btn = make_secondary_button(
             frame, text="+ Add to Exceptions",
             command=self._controller.on_add_selected,
@@ -417,16 +308,44 @@ class LookupView:
         self.add_exc_btn.config(state="disabled")
 
         make_secondary_button(
+            frame, text="\u270e Exceptions...",
+            command=self._controller.edit_exceptions_file,
+            row=0, column=3, padx=(0, 4),
+        )
+
+        make_secondary_button(
             frame, text="\u270e Trap Endings...",
             command=self._controller.edit_trap_endings_file,
-            row=0, column=3, padx=(0, 4),
+            row=0, column=4, padx=(0, 4),
         )
 
         make_secondary_button(
             frame, text="\u2302 Clear",
             command=self._controller.on_clear,
-            row=0, column=4,
+            row=0, column=5,
         )
+
+        self._help_btn = make_secondary_button(
+            frame, text="\u24d8",
+            command=self._show_shortcuts_help,
+            row=0, column=6, padx=(12, 0),
+        )
+
+    def _show_shortcuts_help(self):
+        msg = (
+            "Keyboard Shortcuts\n\n"
+            "Ctrl+O    Load dictionary\n"
+            "Ctrl+F    Focus filter\n"
+            "Ctrl+L    Clear filters\n"
+            "Escape    Cycle focus\n"
+            "Delete    Remove selected from Exceptions\n"
+            "Space     Toggle exception on selected\n\n"
+            "Results\n"
+            "Double-click  Toggle exception\n"
+            "Right-click   Context menu (Copy, Exception)\n"
+            "Column header Sort by column"
+        )
+        tk.messagebox.showinfo("Help", msg, parent=self.root)
 
     # ------------------------------------------------------------------
     # Keyboard shortcuts
@@ -440,91 +359,50 @@ class LookupView:
         self.root.bind("<Control-f>", lambda e: self.start_entry.focus_set())
         self.root.bind("<Control-F>", lambda e: self.start_entry.focus_set())
         self.root.bind("<Escape>", self._on_escape)
-        self.results_listbox.bind("<Delete>", self._on_delete_results_selection)
-        self.results_listbox.bind("<space>", self._on_space_toggle_exception)
-        self.exc_listbox.bind("<Delete>", self._on_delete_exc_selection)
+        self._result_tree.bind("<Delete>", self._on_delete_results_selection)
+        self._result_tree.bind("<space>", self._on_space_toggle_exception)
 
     def _on_escape(self, event=None):
         focused = self.root.focus_get()
         if focused in (self.start_entry, self.end_entry):
-            self.results_listbox.focus_set()
+            self._result_tree.focus_set()
         else:
             self.start_entry.focus_set()
 
     def _on_delete_results_selection(self, event=None):
-        selection = self.results_listbox.curselection()
-        if selection:
-            words = [self._controller.get_result_word(i) for i in selection]
+        sel = self._result_tree.selection()
+        if sel:
+            words = [self._result_tree.item(item, "values")[1] for item in sel]
             self._controller.on_remove_from_exceptions(words)
 
     def _on_space_toggle_exception(self, event=None):
-        selection = self.results_listbox.curselection()
-        if selection:
-            for i in selection:
-                word = self._controller.get_result_word(i)
+        sel = self._result_tree.selection()
+        if sel:
+            for item in sel:
+                word = self._result_tree.item(item, "values")[1]
                 if self._controller.is_exception(word):
                     self._controller.on_remove_from_exceptions([word])
                 else:
                     self._controller.on_add_to_exceptions([word])
         return "break"
 
-    def _on_delete_exc_selection(self, event=None):
-        self._on_remove_selected_exc()
-
-    # ------------------------------------------------------------------
-    # Exception panel event handlers
-    # ------------------------------------------------------------------
-
-    def _on_exc_filter_change(self, event=None):
-        if self._exc_filter_after_id:
-            self.root.after_cancel(self._exc_filter_after_id)
-        self._exc_filter_after_id = self.root.after(EXC_DEBOUNCE_MS, self._controller.refresh_exception_list)
-
-    def _on_exc_selection_changed(self, event=None):
-        selection = self.exc_listbox.curselection()
-        self.remove_exc_btn.config(state="normal" if selection else "disabled")
-
-    def _on_exc_doubleclick(self, event=None):
-        selection = self.exc_listbox.curselection()
-        if not selection:
+    def _on_tree_doubleclick(self, event):
+        tree = self._result_tree
+        item = tree.identify_row(event.y)
+        if not item:
             return
-        word = self.exc_listbox.get(selection[0])
-        self._controller.on_exception_click(word)
-
-    def _show_exc_context_menu(self, event):
-        index = self.exc_listbox.nearest(event.y)
-        if index < 0 or index >= self.exc_listbox.size():
-            return
-        word = self.exc_listbox.get(index)
-        menu = tk.Menu(self.root, tearoff=0)
-        menu.add_command(label="Remove from Exceptions",
-                         command=lambda w=word: self._controller.on_remove_from_exceptions([w]))
-        menu.add_command(label="Scroll to in Results",
-                         command=lambda w=word: self._controller.on_exception_click(w))
-        menu.tk_popup(event.x_root, event.y_root)
-
-    def _on_remove_selected_exc(self):
-        selection = self.exc_listbox.curselection()
-        if not selection:
-            return
-        words = [self.exc_listbox.get(i) for i in selection]
-        self._controller.on_remove_from_exceptions(words)
-
-    def _on_listbox_doubleclick(self, event):
-        index = self.results_listbox.nearest(event.y)
-        if index < 0 or index >= self.results_listbox.size():
-            return
-        word = self._controller.get_result_word(index)
+        word = tree.item(item, "values")[1]
         if self._controller.is_exception(word):
             self._controller.on_remove_from_exceptions([word])
         else:
             self._controller.on_add_to_exceptions([word])
 
-    def _show_exception_menu(self, event):
-        index = self.results_listbox.nearest(event.y)
-        if index < 0 or index >= self.results_listbox.size():
+    def _show_tree_context_menu(self, event):
+        tree = self._result_tree
+        item = tree.identify_row(event.y)
+        if not item:
             return
-        word = self._controller.get_result_word(index)
+        word = tree.item(item, "values")[1]
         menu = tk.Menu(self.root, tearoff=0)
         if self._controller.is_exception(word):
             menu.add_command(
@@ -536,23 +414,15 @@ class LookupView:
                 label="Add to Exceptions",
                 command=lambda w=word: self._controller.on_add_to_exceptions([w])
             )
+        menu.add_command(
+            label="Copy Word",
+            command=lambda w=word: self.root.clipboard_clear() or self.root.clipboard_append(w)
+        )
         menu.tk_popup(event.x_root, event.y_root)
 
-    def _on_selection_changed(self, event=None):
-        selection = self.results_listbox.curselection()
-        self.add_exc_btn.config(state="normal" if selection else "disabled")
-
-    # ------------------------------------------------------------------
-    # Sash position
-    # ------------------------------------------------------------------
-
-    def _restore_sash(self, event=None):
-        pos = self._controller.get_setting("sash_pos")
-        if pos is not None:
-            try:
-                self.paned.sashpos(0, pos)
-            except Exception:
-                pass
+    def _on_tree_selection_changed(self, event=None):
+        sel = self._result_tree.selection()
+        self.add_exc_btn.config(state="normal" if sel else "disabled")
 
     # ------------------------------------------------------------------
     # Properties (read by controller)
@@ -612,7 +482,7 @@ class LookupView:
             pass
 
     def set_dict_loaded(self, filename, word_count):
-        self._dict_label_var.set(f"Dict: {filename}")
+        self._dict_label_var.set(f"Dict: {filename}  ({word_count:,} words)")
         self._dict_dot.config(fg=C_DOT_GREEN)
         self.dict_label.config(fg=C_TEXT)
 
@@ -628,17 +498,27 @@ class LookupView:
         self._prev_results_tuple = results_tuple
         self._prev_exceptions = frozenset(exceptions)
 
-        self.results_listbox.delete(0, tk.END)
-        col_width = max((len(w) for w in results), default=0)
-        col_width = max(COL_WORD_W, min(col_width + 2, 60))
+        tree = self._result_tree
+        tree.delete(*tree.get_children())
+
+        tag_configs = {
+            "r0": {"background": "#ffffff"},
+            "r1": {"background": "#f4f4f5"},
+            "rx0": {"background": "#ffffff", "foreground": C_MUTED},
+            "rx1": {"background": "#f4f4f5", "foreground": C_MUTED},
+        }
+        for tag, cfg in tag_configs.items():
+            tree.tag_configure(tag, **cfg)
+
         for i, word in enumerate(results):
+            parity = i % 2
             in_exc = word in exceptions
-            display = _format_row(i + 1, word, in_exc, col_width)
-            self.results_listbox.insert(tk.END, display)
-            bg = "#ffffff" if i % 2 == 0 else "#f4f4f5"
-            self.results_listbox.itemconfig(i, bg=bg)
-            if in_exc:
-                self.results_listbox.itemconfig(i, fg=C_MUTED)
+            tag = f"rx{parity}" if in_exc else f"r{parity}"
+            tree.insert(
+                "", tk.END,
+                values=(i + 1, word, len(word), "\u2713" if in_exc else ""),
+                tags=(tag,),
+            )
 
         n = len(results)
         if n == 0:
@@ -650,33 +530,15 @@ class LookupView:
         else:
             self._count_var.set(f"{n:,} words found")
 
-    def update_exception_panel(self, exceptions, filter_text=""):
-        self.exc_listbox.delete(0, tk.END)
-        filtered = sorted(
-            w for w in exceptions
-            if not filter_text or filter_text.lower() in w.lower()
-        )
-        for word in filtered:
-            self.exc_listbox.insert(tk.END, word)
-        n = len(exceptions)
-        self._exc_count_var.set(f"Exceptions: {n}")
-        self._exc_count_label.config(text=str(n))
-
-    def set_exception_count_label(self, count):
-        self._exc_count_var.set(f"Exceptions: {count}")
-
-    def get_exception_listbox_selection(self):
-        return [(self.exc_listbox.get(i), i) for i in self.exc_listbox.curselection()]
-
     def scroll_to_word(self, word):
-        i = self._controller.get_result_index(word)
-        if i < 0:
-            return False
-        self.results_listbox.selection_clear(0, tk.END)
-        self.results_listbox.selection_set(i)
-        self.results_listbox.see(i)
-        self.results_listbox.activate(i)
-        return True
+        tree = self._result_tree
+        for item in tree.get_children(''):
+            if tree.item(item, "values")[1] == word:
+                tree.selection_set(item)
+                tree.see(item)
+                tree.focus(item)
+                return True
+        return False
 
     def reset_filters(self):
         self._start_var.set("")
@@ -684,10 +546,6 @@ class LookupView:
         self._contains_var.set("")
         self._min_len_var.set(0)
         self._max_len_var.set(0)
-
-    @property
-    def exc_filter_text(self):
-        return self._exc_filter_var.get()
 
     def enable_dict_button(self, enabled):
         self.dict_button.config(state="normal" if enabled else "disabled")
@@ -729,6 +587,16 @@ class SearchWorker:
                 continue
             try:
                 has_secondary = bool(contains) or bool(min_len) or bool(max_len)
+                if not prefix and not suffix and not has_secondary:
+                    on_result([], 0)
+                    continue
+                if not prefix and not suffix and has_secondary:
+                    all_words = self._lookup.get_all_words()
+                    filtered = self._apply_filters(
+                        all_words, contains, min_len, max_len, match_case,
+                    )
+                    on_result(filtered[:self.RESULT_LIMIT], len(all_words))
+                    continue
                 limit = sys.maxsize if has_secondary else self.RESULT_LIMIT
                 results, total = self._lookup.find_starting_and_ending_with(
                     prefix, suffix, limit=limit,
@@ -869,6 +737,17 @@ class LookupApp:
         s = "s" if removed != 1 else ""
         self.view.set_status(f"Removed {removed} custom word{s}")
 
+    def edit_exceptions_file(self):
+        EditorDialog(
+            self,
+            title="Edit Exceptions",
+            file_path=EXCEPTIONS_FILE,
+            reload_callback=lambda: (self._load_exceptions(),
+                                      self.view.set_status("Exceptions reloaded")),
+            status_var=tk.StringVar(),
+            default_content="# Exceptions - one per line\n",
+        )
+
     def edit_trap_endings_file(self):
         EditorDialog(
             self,
@@ -900,11 +779,13 @@ class LookupApp:
             return
         prefix = self.view.prefix
         suffix = self.view.suffix
-        if not prefix and not suffix:
+        contains = self.view.contains
+        has_filter = bool(contains) or bool(self.view.min_len) or bool(self.view.max_len)
+        if not prefix and not suffix and not has_filter:
             self.view.update_results([], 0, self.exceptions)
             self.view.set_status(
                 f"{self.lookup.get_word_count():,} words available "
-                "\u2014 type a prefix or suffix"
+                "\u2014 type a prefix, suffix, or filter"
             )
             return
         self.view.set_status("Searching...")
@@ -945,17 +826,8 @@ class LookupApp:
     # Query helpers (public interface for view, no direct attr access)
     # ------------------------------------------------------------------
 
-    def get_result_word(self, index):
-        return self._result_word_list[index]
-
     def is_exception(self, word):
         return word in self.exceptions
-
-    def get_result_index(self, word):
-        try:
-            return self._result_word_list.index(word)
-        except ValueError:
-            return -1
 
     def get_setting(self, key, default=None):
         return self._settings.get(key, default)
@@ -973,12 +845,7 @@ class LookupApp:
         self.view.set_status("Exceptions reloaded")
 
     def refresh_exception_ui(self):
-        self.view.update_exception_panel(self.exceptions, self.view.exc_filter_text)
-        self.view.set_exception_count_label(len(self.exceptions))
         self._refresh_result_colors()
-
-    def refresh_exception_list(self):
-        self.view.update_exception_panel(self.exceptions, self.view.exc_filter_text)
 
     def on_add_to_exceptions(self, words):
         before = len(self.exceptions)
@@ -1006,10 +873,10 @@ class LookupApp:
             self.view.set_status("Words not in exceptions")
 
     def on_add_selected(self):
-        selection = self.view.results_listbox.curselection()
-        if not selection:
+        sel = self.view._result_tree.selection()
+        if not sel:
             return
-        words = [self.get_result_word(i) for i in selection]
+        words = [self.view._result_tree.item(item, "values")[1] for item in sel]
         self.on_add_to_exceptions(words)
 
     def on_exception_click(self, word):
@@ -1033,6 +900,23 @@ class LookupApp:
         except Exception:
             self._settings = {}
 
+    def on_paste_exceptions_from_clipboard(self):
+        try:
+            raw = self.root.clipboard_get()
+        except tk.TclError:
+            self.view.show_feedback("warn", "Clipboard is empty")
+            return
+        words = []
+        for line in raw.splitlines():
+            for token in line.split():
+                w = token.strip(",.!?;:()[]{}'\"-").lower()
+                if w and w.isalpha():
+                    words.append(w)
+        if words:
+            self.on_add_to_exceptions(words)
+        else:
+            self.view.show_feedback("warn", "No valid words in clipboard")
+
     def _save_settings(self):
         try:
             SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -1041,10 +925,6 @@ class LookupApp:
                 "win_w": self.root.winfo_width(),
                 "win_h": self.root.winfo_height(),
             }
-            try:
-                data["sash_pos"] = self.view.paned.sashpos(0)
-            except Exception:
-                pass
             SETTINGS_FILE.write_text(json.dumps(data, indent=2), "utf-8")
         except Exception as e:
             logger.warning("Failed to save lookup settings: %s", e)

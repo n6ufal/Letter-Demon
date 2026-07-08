@@ -21,7 +21,9 @@ from .theme import (
     C_TOOLTIP_FG,
     FONT_BTN,
     FONT_MAIN,
+    FONT_MAIN_BOLD,
     FONT_MONO,
+    FONT_MONO_M,
     FONT_SMALL,
 )
 
@@ -149,6 +151,33 @@ def setup_ttk_styles():
 
     style.configure("TFrame", background=C_BG)
     style.configure("TSeparator", background=C_SEP)
+
+    style.configure(
+        "Treeview",
+        background=C_ENTRY_BG,
+        foreground=C_TEXT,
+        fieldbackground=C_ENTRY_BG,
+        bordercolor=C_BG,
+        font=FONT_MONO_M,
+        rowheight=22,
+    )
+    style.map(
+        "Treeview",
+        background=[("selected", C_PLAY_BG)],
+        foreground=[("selected", C_PLAY_FG)],
+    )
+    style.configure(
+        "Treeview.Heading",
+        background=C_BG_PANEL,
+        foreground=C_TEXT,
+        font=FONT_MAIN_BOLD,
+        relief="flat",
+        bordercolor=C_SEP,
+    )
+    style.map(
+        "Treeview.Heading",
+        background=[("active", C_BTN_BG)],
+    )
 
     # Styles for the new ttk.Scale sliders
     style.configure("Panel.Horizontal.TScale", background=C_BG_PANEL)

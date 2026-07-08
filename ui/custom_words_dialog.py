@@ -215,7 +215,7 @@ class CustomWordsDialog:
         all_words = []
         for line in raw.splitlines():
             for token in line.split():
-                w = token.lower()
+                w = token.strip(",.!?;:()[]{}'\"-").lower()
                 if not w or not w.isalpha():
                     continue
                 if w not in seen:
