@@ -39,6 +39,7 @@ from core.dict_lookup import DictLookup
 from core.dictionary import load_custom_words, load_wordlist_from_dict, save_custom_words
 from config.exceptions import EXCEPTIONS_FILE, load_exceptions as _load_exc, save_exceptions as _save_exc
 from config.trap_endings import TRAP_ENDINGS_FILE
+from config.spam_suffixes import SPAM_SUFFIXES_FILE, load_spam_suffixes
 from ui.custom_words_dialog import CustomWordsDialog
 from ui.file_editors import EditorDialog
 from ui.theme import (
@@ -238,7 +239,7 @@ class LookupView:
         tree_frame.columnconfigure(0, weight=1)
         tree_frame.rowconfigure(0, weight=1)
 
-        columns = ("#", "Word", "Len", "Exc")
+        columns = ("#", "Word", "Len", "Exc", "Spm")
         self._result_tree = ttk.Treeview(
             tree_frame,
             columns=columns,
@@ -254,6 +255,7 @@ class LookupView:
         self._result_tree.column("Word", width=300, minwidth=100, anchor="w", stretch=True)
         self._result_tree.column("Len", width=55, minwidth=40, anchor="e", stretch=False)
         self._result_tree.column("Exc", width=40, minwidth=30, anchor="center", stretch=False)
+        self._result_tree.column("Spm", width=40, minwidth=30, anchor="center", stretch=False)
 
         self._result_tree.grid(row=0, column=0, sticky="nsew")
         self._result_tree.bind("<Double-Button-1>", self._on_tree_doubleclick)
@@ -320,15 +322,21 @@ class LookupView:
         )
 
         make_secondary_button(
+            frame, text="\u270e Spam Suffixes...",
+            command=self._controller.edit_spam_suffixes_file,
+            row=0, column=5, padx=(0, 4),
+        )
+
+        make_secondary_button(
             frame, text="\u2302 Clear",
             command=self._controller.on_clear,
-            row=0, column=5,
+            row=0, column=6,
         )
 
         self._help_btn = make_secondary_button(
             frame, text="\u24d8",
             command=self._show_shortcuts_help,
-            row=0, column=6, padx=(12, 0),
+            row=0, column=7, padx=(12, 0),
         )
 
     def _show_shortcuts_help(self):
@@ -491,7 +499,7 @@ class LookupView:
         self._dict_dot.config(fg=C_MUTED)
         self.dict_label.config(fg=C_MUTED)
 
-    def update_results(self, results, total, exceptions):
+    def update_results(self, results, total, exceptions, spam_suffixes=None):
         results_tuple = tuple(results)
         if results_tuple == self._prev_results_tuple and exceptions == self._prev_exceptions:
             return
@@ -513,10 +521,11 @@ class LookupView:
         for i, word in enumerate(results):
             parity = i % 2
             in_exc = word in exceptions
+            is_spam = spam_suffixes and any(word.endswith(s) for s in spam_suffixes)
             tag = f"rx{parity}" if in_exc else f"r{parity}"
             tree.insert(
                 "", tk.END,
-                values=(i + 1, word, len(word), "\u2713" if in_exc else ""),
+                values=(i + 1, word, len(word), "\u2713" if in_exc else "", "\u2713" if is_spam else ""),
                 tags=(tag,),
             )
 
@@ -654,6 +663,7 @@ class LookupApp:
         self._load_settings()
         self._center_window()
         self._load_exceptions()
+        self.spam_suffixes = load_spam_suffixes()
 
         if self.dict_path and Path(self.dict_path).is_file():
             self._load_dictionary(self.dict_path)
@@ -758,6 +768,18 @@ class LookupApp:
             default_content="# Trap endings - one per line, hardest first\n",
         )
 
+    def edit_spam_suffixes_file(self):
+        EditorDialog(
+            self,
+            title="Edit Spam Suffixes",
+            file_path=SPAM_SUFFIXES_FILE,
+            reload_callback=lambda: (setattr(self, 'spam_suffixes', load_spam_suffixes()),
+                                     self._refresh_result_colors(),
+                                     self.view.set_status("Spam suffixes reloaded")),
+            status_var=tk.StringVar(),
+            default_content="# Spam suffixes - one per line\n",
+        )
+
     # ------------------------------------------------------------------
     # Search
     # ------------------------------------------------------------------
@@ -782,7 +804,7 @@ class LookupApp:
         contains = self.view.contains
         has_filter = bool(contains) or bool(self.view.min_len) or bool(self.view.max_len)
         if not prefix and not suffix and not has_filter:
-            self.view.update_results([], 0, self.exceptions)
+            self.view.update_results([], 0, self.exceptions, self.spam_suffixes)
             self.view.set_status(
                 f"{self.lookup.get_word_count():,} words available "
                 "\u2014 type a prefix, suffix, or filter"
@@ -799,7 +821,7 @@ class LookupApp:
 
     def _update_results(self, results, total):
         self._result_word_list = list(results)
-        self.view.update_results(results, total, self.exceptions)
+        self.view.update_results(results, total, self.exceptions, self.spam_suffixes)
         n = len(results)
         if n == 0:
             self.view.set_status("No words found")
@@ -816,7 +838,7 @@ class LookupApp:
     def on_clear(self):
         self.view.reset_filters()
         self._result_word_list = []
-        self.view.update_results([], 0, self.exceptions)
+        self.view.update_results([], 0, self.exceptions, self.spam_suffixes)
         if self.lookup.has_wordlist():
             self.view.set_status(f"{self.lookup.get_word_count():,} words available")
         else:
@@ -885,7 +907,7 @@ class LookupApp:
             self.view.set_status(f"'{word}' not in current results \u2014 try searching")
 
     def _refresh_result_colors(self):
-        self.view.update_results(self._result_word_list, len(self._result_word_list), self.exceptions)
+        self.view.update_results(self._result_word_list, len(self._result_word_list), self.exceptions, self.spam_suffixes)
 
     # ------------------------------------------------------------------
     # Settings persistence
