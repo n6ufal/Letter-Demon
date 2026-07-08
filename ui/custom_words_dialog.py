@@ -214,12 +214,13 @@ class CustomWordsDialog:
         seen = set()
         all_words = []
         for line in raw.splitlines():
-            w = line.strip().lower()
-            if not w or not w.isalpha():
-                continue
-            if w not in seen:
-                seen.add(w)
-                all_words.append(w)
+            for token in line.split():
+                w = token.lower()
+                if not w or not w.isalpha():
+                    continue
+                if w not in seen:
+                    seen.add(w)
+                    all_words.append(w)
 
         all_words.sort()
 
