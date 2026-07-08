@@ -159,7 +159,7 @@ def setup_ttk_styles():
         fieldbackground=C_ENTRY_BG,
         bordercolor=C_BG,
         font=FONT_MONO_M,
-        rowheight=22,
+        rowheight=32,
     )
     style.map(
         "Treeview",
