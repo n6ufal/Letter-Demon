@@ -369,6 +369,8 @@ class LookupView:
         self.root.bind("<Escape>", self._on_escape)
         self._result_tree.bind("<Delete>", self._on_delete_results_selection)
         self._result_tree.bind("<space>", self._on_space_toggle_exception)
+        self.root.bind("<Control-c>", self._on_copy_selected)
+        self.root.bind("<Control-C>", self._on_copy_selected)
 
     def _on_escape(self, event=None):
         focused = self.root.focus_get()
@@ -394,6 +396,15 @@ class LookupView:
                     self._controller.on_add_to_exceptions([word])
         return "break"
 
+    def _on_copy_selected(self, event=None):
+        sel = self._result_tree.selection()
+        if not sel:
+            return
+        words = [self._result_tree.item(item, "values")[1] for item in sel]
+        text = "\n".join(words)
+        self.root.clipboard_clear()
+        self.root.clipboard_append(text)
+
     def _on_tree_doubleclick(self, event):
         tree = self._result_tree
         item = tree.identify_row(event.y)
@@ -411,6 +422,13 @@ class LookupView:
         if not item:
             return
         word = tree.item(item, "values")[1]
+        sel = tree.selection()
+        if item in sel and len(sel) > 1:
+            words = [tree.item(i, "values")[1] for i in sel]
+            label = f"Copy {len(words)} Words"
+        else:
+            words = [word]
+            label = "Copy Word"
         menu = tk.Menu(self.root, tearoff=0)
         if self._controller.is_exception(word):
             menu.add_command(
@@ -423,8 +441,8 @@ class LookupView:
                 command=lambda w=word: self._controller.on_add_to_exceptions([w])
             )
         menu.add_command(
-            label="Copy Word",
-            command=lambda w=word: self.root.clipboard_clear() or self.root.clipboard_append(w)
+            label=label,
+            command=lambda ws=words: (self.root.clipboard_clear(), self.root.clipboard_append("\n".join(ws)))
         )
         menu.tk_popup(event.x_root, event.y_root)
 
