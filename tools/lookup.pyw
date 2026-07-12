@@ -41,7 +41,7 @@ from config.exceptions import EXCEPTIONS_FILE, load_exceptions as _load_exc, sav
 from config.trap_endings import TRAP_ENDINGS_FILE
 from config.spam_suffixes import SPAM_SUFFIXES_FILE, load_spam_suffixes
 from ui.custom_words_dialog import CustomWordsDialog
-from ui.file_editors import EditorDialog
+from ui.file_editors import InlineFileEditor
 from ui.theme import (
     C_BG,
     C_BG_PANEL,
@@ -226,12 +226,20 @@ class LookupView:
         main.columnconfigure(0, weight=1)
         main.rowconfigure(0, weight=1)
 
-        results_frame = tk.Frame(main, bg=C_BG)
-        results_frame.grid(row=0, column=0, sticky="nsew")
-        results_frame.columnconfigure(0, weight=1)
-        results_frame.rowconfigure(1, weight=1)
-        self._build_result_count_bar(results_frame, 0)
-        self._build_result_tree(results_frame, 1)
+        self.results_frame = tk.Frame(main, bg=C_BG)
+        self.results_frame.grid(row=0, column=0, sticky="nsew")
+        self.results_frame.columnconfigure(0, weight=1)
+        self.results_frame.rowconfigure(1, weight=1)
+        self._build_result_count_bar(self.results_frame, 0)
+        self._build_result_tree(self.results_frame, 1)
+
+        self._editor_frame = tk.Frame(main, bg=C_BG)
+        self._editor_frame.grid(row=0, column=0, sticky="nsew")
+        self._editor_frame.grid_remove()
+        self._inline_editor = InlineFileEditor(
+            self._editor_frame, on_close=self._hide_editor,
+        )
+        self._inline_editor.place(relx=0, rely=0, relwidth=1, relheight=1)
 
     def _build_result_tree(self, parent, row):
         tree_frame = tk.Frame(parent, bg=C_BG)
@@ -588,6 +596,16 @@ class LookupView:
     def focus_start_entry(self):
         self.start_entry.focus_set()
 
+    def show_inline_editor(self, title, file_path, reload_callback, default_content):
+        self.results_frame.grid_remove()
+        self._editor_frame.grid()
+        self._inline_editor.open(title, file_path, reload_callback, default_content)
+
+    def _hide_editor(self):
+        self._editor_frame.grid_remove()
+        self.results_frame.grid()
+        self._controller._refresh_result_colors()
+
 
 
 
@@ -771,36 +789,30 @@ class LookupApp:
         self.view.set_status(f"Removed {removed} custom word{s}")
 
     def edit_exceptions_file(self):
-        EditorDialog(
-            self,
-            title="Edit Exceptions",
-            file_path=EXCEPTIONS_FILE,
-            reload_callback=lambda: (self._load_exceptions(),
-                                      self.view.set_status("Exceptions reloaded")),
-            status_var=tk.StringVar(),
-            default_content="# Exceptions - one per line\n",
+        self.view.show_inline_editor(
+            "Edit Exceptions",
+            EXCEPTIONS_FILE,
+            lambda: (self._load_exceptions(),
+                      self.view.set_status("Exceptions reloaded")),
+            "# Exceptions - one per line\n",
         )
 
     def edit_trap_endings_file(self):
-        EditorDialog(
-            self,
-            title="Edit Trap Endings",
-            file_path=TRAP_ENDINGS_FILE,
-            reload_callback=lambda: self.view.set_status("Trap endings saved"),
-            status_var=tk.StringVar(),
-            default_content="# Trap endings - one per line, hardest first\n",
+        self.view.show_inline_editor(
+            "Edit Trap Endings",
+            TRAP_ENDINGS_FILE,
+            lambda: self.view.set_status("Trap endings saved"),
+            "# Trap endings - one per line, hardest first\n",
         )
 
     def edit_spam_suffixes_file(self):
-        EditorDialog(
-            self,
-            title="Edit Spam Suffixes",
-            file_path=SPAM_SUFFIXES_FILE,
-            reload_callback=lambda: (setattr(self, 'spam_suffixes', load_spam_suffixes()),
-                                     self._refresh_result_colors(),
-                                     self.view.set_status("Spam suffixes reloaded")),
-            status_var=tk.StringVar(),
-            default_content="# Spam suffixes - one per line\n",
+        self.view.show_inline_editor(
+            "Edit Spam Suffixes",
+            SPAM_SUFFIXES_FILE,
+            lambda: (setattr(self, 'spam_suffixes', load_spam_suffixes()),
+                     self._refresh_result_colors(),
+                     self.view.set_status("Spam suffixes reloaded")),
+            "# Spam suffixes - one per line\n",
         )
 
     # ------------------------------------------------------------------
