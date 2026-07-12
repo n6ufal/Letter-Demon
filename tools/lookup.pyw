@@ -86,6 +86,7 @@ class LookupView:
         self._feedback_after_id = None
         self._prev_results_tuple = None
         self._prev_exceptions = None
+        self._current_editor_path = None
 
         setup_ttk_styles()
         self._build_ui()
@@ -612,16 +613,28 @@ class LookupView:
     def show_results(self):
         self._hide_all_panels()
         self.results_frame.grid()
+        self._current_editor_path = None
         self._controller._refresh_result_colors()
 
     def show_inline_editor(self, title, file_path, reload_callback, default_content):
+        if self._editor_frame.winfo_ismapped() and self._current_editor_path == file_path:
+            self.show_results()
+            return
+        self._current_editor_path = file_path
         self._hide_all_panels()
         self._editor_frame.grid()
         self._inline_editor.open(title, file_path, reload_callback, default_content)
 
     def show_custom_words(self):
+        if self._custom_frame.winfo_ismapped():
+            self.show_results()
+            return
         self._hide_all_panels()
         self._custom_frame.grid()
+
+    def ensure_results_visible(self):
+        if self._editor_frame.winfo_ismapped() or self._custom_frame.winfo_ismapped():
+            self.show_results()
 
     def _hide_editor(self):
         self.show_results()
@@ -854,6 +867,7 @@ class LookupApp:
         self._run_search()
 
     def _run_search(self):
+        self.view.ensure_results_visible()
         self._search_after_id = None
         if not self.lookup.has_wordlist():
             return
@@ -894,6 +908,7 @@ class LookupApp:
     # ------------------------------------------------------------------
 
     def on_clear(self):
+        self.view.ensure_results_visible()
         self.view.reset_filters()
         self._result_word_list = []
         self.view.update_results([], 0, self.exceptions, self.spam_suffixes)
