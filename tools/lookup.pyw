@@ -241,6 +241,14 @@ class LookupView:
         )
         self._inline_editor.place(relx=0, rely=0, relwidth=1, relheight=1)
 
+        self._custom_frame = tk.Frame(main, bg=C_BG)
+        self._custom_frame.grid(row=0, column=0, sticky="nsew")
+        self._custom_frame.grid_remove()
+        self._custom_words = CustomWordsDialog(
+            self._custom_frame, self._controller, on_close=self._hide_custom_words,
+        )
+        self._custom_words.place(relx=0, rely=0, relwidth=1, relheight=1)
+
     def _build_result_tree(self, parent, row):
         tree_frame = tk.Frame(parent, bg=C_BG)
         tree_frame.grid(row=row, column=0, sticky="nsew")
@@ -596,15 +604,30 @@ class LookupView:
     def focus_start_entry(self):
         self.start_entry.focus_set()
 
-    def show_inline_editor(self, title, file_path, reload_callback, default_content):
+    def _hide_all_panels(self):
         self.results_frame.grid_remove()
+        self._editor_frame.grid_remove()
+        self._custom_frame.grid_remove()
+
+    def show_results(self):
+        self._hide_all_panels()
+        self.results_frame.grid()
+        self._controller._refresh_result_colors()
+
+    def show_inline_editor(self, title, file_path, reload_callback, default_content):
+        self._hide_all_panels()
         self._editor_frame.grid()
         self._inline_editor.open(title, file_path, reload_callback, default_content)
 
+    def show_custom_words(self):
+        self._hide_all_panels()
+        self._custom_frame.grid()
+
     def _hide_editor(self):
-        self._editor_frame.grid_remove()
-        self.results_frame.grid()
-        self._controller._refresh_result_colors()
+        self.show_results()
+
+    def _hide_custom_words(self):
+        self.show_results()
 
 
 
@@ -771,7 +794,7 @@ class LookupApp:
         if not self.lookup.has_wordlist():
             self.view.show_feedback("warn", "Load a dictionary first")
             return
-        CustomWordsDialog(self.root, self)
+        self.view.show_custom_words()
 
     def on_remove_custom_words(self, words):
         before = len(self.custom_words)

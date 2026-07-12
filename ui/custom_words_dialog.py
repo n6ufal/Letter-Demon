@@ -1,4 +1,7 @@
-"""Custom Words dialog — view, filter, remove, and add custom words."""
+"""Custom Words dialog — view, filter, remove, and add custom words.
+
+Inline version (tk.Frame) embedded in the lookup tool's results area.
+"""
 
 import logging
 import tkinter as tk
@@ -22,34 +25,28 @@ from ui.widgets import make_primary_button, make_secondary_button
 logger = logging.getLogger(__name__)
 
 
-class CustomWordsDialog:
-    """Unified dialog to view, filter, remove, and add custom words."""
+class CustomWordsDialog(tk.Frame):
+    """Inline panel to view, filter, remove, and add custom words."""
 
     FILTER_DEBOUNCE_MS = 200
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, on_close=None):
+        super().__init__(parent, bg=C_BG)
         self._controller = controller
+        self._on_close = on_close
         self._new_words = []
         self._filter_after_id = None
 
-        self.dialog = tk.Toplevel(parent)
-        self.dialog.title("Custom Words")
-        self.dialog.transient(parent)
-        self.dialog.grab_set()
-        self.dialog.minsize(480, 580)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(8, weight=1)
 
         self._build_ui()
         self._refresh_custom_words_list()
         self._input_text.focus_set()
 
     def _build_ui(self):
-        main = tk.Frame(self.dialog, bg=C_BG, padx=14, pady=12)
-        main.pack(fill="both", expand=True)
-        main.columnconfigure(0, weight=1)
-        main.rowconfigure(8, weight=1)
-
         # Header
-        header_frame = tk.Frame(main, bg=C_BG)
+        header_frame = tk.Frame(self, bg=C_BG)
         header_frame.grid(row=0, column=0, sticky="ew", pady=(0, 4))
         tk.Label(header_frame, text="Custom Words", font=FONT_MAIN_BOLD,
                  bg=C_BG, fg=C_TEXT).pack(side="left")
@@ -61,7 +58,7 @@ class CustomWordsDialog:
         # Filter
         self._filter_var = tk.StringVar()
         filter_entry = tk.Entry(
-            main, textvariable=self._filter_var, font=FONT_SMALL,
+            self, textvariable=self._filter_var, font=FONT_SMALL,
             bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
             relief="solid", bd=1,
         )
@@ -69,7 +66,7 @@ class CustomWordsDialog:
         filter_entry.bind("<KeyRelease>", self._on_filter_change)
 
         # Custom words listbox
-        list_frame = tk.Frame(main, bg=C_BG)
+        list_frame = tk.Frame(self, bg=C_BG)
         list_frame.grid(row=2, column=0, sticky="nsew", pady=(0, 6))
         list_frame.columnconfigure(0, weight=1)
         list_frame.rowconfigure(0, weight=1)
@@ -92,22 +89,22 @@ class CustomWordsDialog:
 
         # Remove button
         self._remove_btn = make_secondary_button(
-            main, text="Remove Selected",
+            self, text="Remove Selected",
             command=self._on_remove,
             row=3, column=0, sticky="w", pady=(0, 8),
         )
         self._remove_btn.config(state="disabled")
 
         # Separator
-        ttk.Separator(main, orient="horizontal").grid(
+        ttk.Separator(self, orient="horizontal").grid(
             row=4, column=0, sticky="ew", pady=(0, 8))
 
         # Input area
-        tk.Label(main, text="Add words (one per line):", font=FONT_MAIN,
+        tk.Label(self, text="Add words (one per line):", font=FONT_MAIN,
                  bg=C_BG, fg=C_TEXT, anchor="w"
                  ).grid(row=5, column=0, sticky="ew", pady=(0, 2))
 
-        in_frame = tk.Frame(main, bg=C_BG)
+        in_frame = tk.Frame(self, bg=C_BG)
         in_frame.grid(row=6, column=0, sticky="nsew", pady=(0, 8))
         in_frame.columnconfigure(0, weight=1)
         in_frame.rowconfigure(0, weight=1)
@@ -126,7 +123,7 @@ class CustomWordsDialog:
         self._input_text.bind("<Control-Return>", lambda e: self._on_add())
 
         # Preview
-        preview_header = tk.Frame(main, bg=C_BG)
+        preview_header = tk.Frame(self, bg=C_BG)
         preview_header.grid(row=7, column=0, sticky="ew", pady=(0, 2))
         tk.Label(preview_header, text="Preview:",
                  font=FONT_MAIN_BOLD, bg=C_BG, fg=C_TEXT
@@ -136,7 +133,7 @@ class CustomWordsDialog:
                  font=FONT_SMALL, bg=C_BG, fg=C_MUTED
                  ).pack(side="left", padx=(8, 0))
 
-        prev_frame = tk.Frame(main, bg=C_BG)
+        prev_frame = tk.Frame(self, bg=C_BG)
         prev_frame.grid(row=8, column=0, sticky="nsew", pady=(0, 10))
         prev_frame.columnconfigure(0, weight=1)
         prev_frame.rowconfigure(0, weight=1)
@@ -153,7 +150,7 @@ class CustomWordsDialog:
         self._preview_text.configure(yscrollcommand=prev_scroll.set)
 
         # Bottom buttons
-        btn_frame = tk.Frame(main, bg=C_BG)
+        btn_frame = tk.Frame(self, bg=C_BG)
         btn_frame.grid(row=9, column=0, sticky="ew")
 
         self._add_btn = make_primary_button(
@@ -165,14 +162,18 @@ class CustomWordsDialog:
 
         close_btn = make_secondary_button(
             btn_frame, text="Close",
-            command=self.dialog.destroy,
+            command=self._close,
         )
         close_btn.pack(side="right")
 
+    def _close(self):
+        if self._on_close:
+            self._on_close()
+
     def _on_filter_change(self, event=None):
         if self._filter_after_id:
-            self.dialog.after_cancel(self._filter_after_id)
-        self._filter_after_id = self.dialog.after(
+            self.after_cancel(self._filter_after_id)
+        self._filter_after_id = self.after(
             self.FILTER_DEBOUNCE_MS, self._refresh_custom_words_list)
 
     def _refresh_custom_words_list(self):
