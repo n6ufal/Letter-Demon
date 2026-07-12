@@ -371,6 +371,8 @@ class LookupView:
         self._result_tree.bind("<space>", self._on_space_toggle_exception)
         self.root.bind("<Control-c>", self._on_copy_selected)
         self.root.bind("<Control-C>", self._on_copy_selected)
+        self.root.bind("<Control-a>", self._on_select_all)
+        self.root.bind("<Control-A>", self._on_select_all)
 
     def _on_escape(self, event=None):
         focused = self.root.focus_get()
@@ -404,6 +406,9 @@ class LookupView:
         text = "\n".join(words)
         self.root.clipboard_clear()
         self.root.clipboard_append(text)
+
+    def _on_select_all(self, event=None):
+        self._result_tree.selection_set(*self._result_tree.get_children())
 
     def _on_tree_doubleclick(self, event):
         tree = self._result_tree
