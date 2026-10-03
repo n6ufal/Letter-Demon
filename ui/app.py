@@ -80,7 +80,7 @@ class LetterDemonApp:
                 top = w.winfo_toplevel()
             except (tk.TclError, KeyError):
                 return
-            if top is not self.root:
+            if top is not self.root or w is not self.root:
                 return
         try:
             self.view.entry.focus_set()

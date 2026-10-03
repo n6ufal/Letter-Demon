@@ -98,90 +98,190 @@ _GRID_KEYS = {"row", "column", "rowspan", "columnspan", "sticky", "ipadx", "ipad
 # ---------------------------------------------------------------------------
 
 
+def _safe_configure(style, name, **opts):
+    for key, val in opts.items():
+        try:
+            style.configure(name, **{key: val})
+        except tk.TclError:
+            pass
+
+
+def _safe_map(style, name, **opts):
+    for key, val in opts.items():
+        try:
+            style.map(name, **{key: val})
+        except tk.TclError:
+            pass
+
+
+# The clam theme expresses slider and scrollbar sizes in points, so they grow
+# with display DPI. Plain pixel values keep these controls compact.
+_SLIM_SCALE = {"gripsize": 8, "sliderlength": 14, "troughheight": 4, "borderwidth": 0}
+_SLIM_SCROLLBAR = {"gripsize": 9, "arrowsize": 13, "width": 11, "gripcount": 0, "borderwidth": 0}
+
+
 def setup_ttk_styles():
     """Configure the ttk theme once at startup."""
     style = ttk.Style()
     style.theme_use("clam")
 
-    style.configure(
+    _safe_configure(
+        style,
         "TCombobox",
         fieldbackground=C_ENTRY_BG,
-        background=C_BTN_BG,
+        background=C_ENTRY_BG,
         foreground=C_TEXT,
         bordercolor=C_ENTRY_BD,
+        lightcolor=C_ENTRY_BD,
+        darkcolor=C_ENTRY_BD,
+        troughcolor=C_ENTRY_BG,
         arrowcolor=C_TEXT,
+        arrowsize=13,
+        borderwidth=1,
+        padding=2,
         relief="flat",
     )
-    style.map(
+    _safe_map(
+        style,
         "TCombobox",
         fieldbackground=[("readonly", C_ENTRY_BG)],
         foreground=[("readonly", C_TEXT)],
         bordercolor=[("focus", C_PLAY_BG), ("!focus", C_ENTRY_BD)],
-        selectbackground=[("readonly", C_ENTRY_BG)],
-        selectforeground=[("readonly", C_TEXT)],
+        selectbackground=[("readonly", C_PLAY_BG)],
+        selectforeground=[("readonly", C_PLAY_FG)],
     )
 
-    style.configure(
+    _safe_configure(
+        style,
         "TCheckbutton",
         background=C_BG,
         foreground=C_TEXT,
         focuscolor=C_BG,
+        indicatorbackground=C_ENTRY_BG,
+        indicatorforeground=C_TEXT,
+        indicatorrelief="flat",
+        bordercolor=C_ENTRY_BD,
+        lightcolor=C_ENTRY_BD,
+        darkcolor=C_ENTRY_BD,
+        troughcolor=C_ENTRY_BG,
     )
-    style.map("TCheckbutton", background=[("active", C_BG)])
+    _safe_map(
+        style,
+        "TCheckbutton",
+        background=[("active", C_BG)],
+        foreground=[("disabled", C_MUTED)],
+    )
 
-    style.configure(
+    _safe_configure(
+        style,
         "TScrollbar",
         background=C_BTN_BG,
         troughcolor=C_BG_PANEL,
         bordercolor=C_BG_PANEL,
+        lightcolor=C_BTN_BG,
+        darkcolor=C_ENTRY_BD,
         arrowcolor=C_MUTED,
+        troughrelief="flat",
         relief="flat",
+        **_SLIM_SCROLLBAR,
     )
 
-    style.configure(
+    _safe_configure(
+        style,
         "TButton",
         background=C_BTN_BG,
         foreground=C_BTN_FG,
         bordercolor=C_ENTRY_BD,
+        lightcolor=C_ENTRY_BD,
+        darkcolor=C_ENTRY_BD,
+        troughcolor=C_BTN_BG,
         focuscolor=C_BG,
         relief="flat",
+        borderwidth=0,
         padding=(8, 4),
     )
-    style.map("TButton", background=[("active", C_ENTRY_BD)])
+    _safe_map(
+        style,
+        "TButton",
+        background=[("active", C_ENTRY_BD)],
+        foreground=[("disabled", C_MUTED)],
+    )
 
-    style.configure("TFrame", background=C_BG)
-    style.configure("TSeparator", background=C_SEP)
+    _safe_configure(style, "TFrame", background=C_BG)
+    _safe_configure(
+        style,
+        "TSeparator",
+        background=C_SEP,
+        troughcolor=C_SEP,
+        bordercolor=C_SEP,
+        lightcolor=C_SEP,
+        darkcolor=C_SEP,
+    )
 
-    style.configure(
+    _safe_configure(
+        style,
         "Treeview",
         background=C_ENTRY_BG,
         foreground=C_TEXT,
         fieldbackground=C_ENTRY_BG,
         bordercolor=C_BG,
+        lightcolor=C_ENTRY_BG,
+        darkcolor=C_ENTRY_BG,
+        troughcolor=C_BG,
         font=FONT_MONO_M,
         rowheight=32,
+        borderwidth=0,
     )
-    style.map(
+    _safe_map(
+        style,
         "Treeview",
         background=[("selected", C_PLAY_BG)],
         foreground=[("selected", C_PLAY_FG)],
     )
-    style.configure(
+    _safe_configure(
+        style,
         "Treeview.Heading",
         background=C_BG_PANEL,
         foreground=C_TEXT,
         font=FONT_MAIN_BOLD,
         relief="flat",
         bordercolor=C_SEP,
+        lightcolor=C_SEP,
+        darkcolor=C_SEP,
+        troughcolor=C_BG_PANEL,
+        borderwidth=0,
+        padding=(6, 4),
     )
-    style.map(
+    _safe_map(
+        style,
         "Treeview.Heading",
         background=[("active", C_BTN_BG)],
     )
 
-    # Styles for the new ttk.Scale sliders
-    style.configure("Panel.Horizontal.TScale", background=C_BG_PANEL)
-    style.configure("Bg.Horizontal.TScale", background=C_BG)
+    _safe_configure(
+        style,
+        "Panel.Horizontal.TScale",
+        background=C_ENTRY_BD,
+        troughcolor=C_SEP,
+        bordercolor=C_SEP,
+        lightcolor=C_ENTRY_BG,
+        darkcolor=C_ENTRY_BD,
+        relief="flat",
+        troughrelief="flat",
+        **_SLIM_SCALE,
+    )
+    _safe_configure(
+        style,
+        "Bg.Horizontal.TScale",
+        background=C_ENTRY_BD,
+        troughcolor=C_BTN_BG,
+        bordercolor=C_BTN_BG,
+        lightcolor=C_ENTRY_BG,
+        darkcolor=C_ENTRY_BD,
+        relief="flat",
+        troughrelief="flat",
+        **_SLIM_SCALE,
+    )
 
 
 def _split_grid_kwargs(kwargs: dict) -> tuple[dict, dict]:
