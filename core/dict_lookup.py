@@ -16,11 +16,25 @@ class DictLookup:
         self._lock = threading.RLock()
         self._wordlist = wordlist or []
         self._reversed_pairs = None
+        self._version = 0
 
     def set_wordlist(self, wordlist):
         with self._lock:
             self._wordlist = wordlist
             self._reversed_pairs = None
+            self._version += 1
+
+    def warm_suffix_index(self):
+        """Build the reversed-word index ahead of time, off the UI thread."""
+        with self._lock:
+            if self._reversed_pairs is not None or not self._wordlist:
+                return
+            words = self._wordlist
+            version = self._version
+        pairs = sorted((w[::-1], w) for w in words)
+        with self._lock:
+            if self._version == version and self._reversed_pairs is None:
+                self._reversed_pairs = pairs
 
     def get_word_count(self):
         with self._lock:
@@ -106,6 +120,7 @@ class DictLookup:
                 return False
             self._wordlist.insert(i, word)
             self._reversed_pairs = None
+            self._version += 1
             return True
 
     def add_words(self, words: list[str]) -> int:

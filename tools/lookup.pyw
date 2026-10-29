@@ -4,6 +4,7 @@ Uses binary search (bisect) for O(log n) prefix/suffix lookup on
 a sorted word list. Runs independently of the main Letter Demon app.
 """
 
+import bisect
 import json
 import logging
 import queue
@@ -34,12 +35,16 @@ logging.basicConfig(
 import tkinter as tk
 from tkinter import filedialog, ttk
 
+from config.exceptions import (
+    EXCEPTIONS_FILE,
+    load_exceptions as _load_exc,
+    save_exceptions as _save_exc,
+)
+from config.spam_suffixes import SPAM_SUFFIXES_FILE, load_spam_suffixes
+from config.trap_endings import TRAP_ENDINGS_FILE
 from core import __version__
 from core.dict_lookup import DictLookup
 from core.dictionary import load_custom_words, load_wordlist_from_dict, save_custom_words
-from config.exceptions import EXCEPTIONS_FILE, load_exceptions as _load_exc, save_exceptions as _save_exc
-from config.trap_endings import TRAP_ENDINGS_FILE
-from config.spam_suffixes import SPAM_SUFFIXES_FILE, load_spam_suffixes
 from ui.custom_words_dialog import CustomWordsDialog
 from ui.file_editors import InlineFileEditor
 from ui.theme import (
@@ -55,14 +60,8 @@ from ui.theme import (
     C_FEEDBACK_WARN_BG,
     C_FEEDBACK_WARN_FG,
     C_MUTED,
-    C_PLAY_BG,
-    C_PLAY_FG,
-    C_SEP,
     C_TEXT,
     FONT_MAIN,
-    FONT_MAIN_BOLD,
-    FONT_MONO,
-    FONT_MONO_M,
     FONT_SMALL,
 )
 from ui.widgets import make_secondary_button, setup_ttk_styles
@@ -77,6 +76,17 @@ FEEDBACK_MS_ERROR = 6000
 FEEDBACK_MS_DICT_ERROR = 8000
 
 
+def _merge_custom_words(base, extra):
+    """Merge extra words into an already-sorted list without re-sorting it."""
+    missing = sorted(extra - set(base))
+    if not missing:
+        return base
+    merged = list(base)
+    for word in missing:
+        bisect.insort(merged, word)
+    return merged
+
+
 class LookupView:
     """Owns all widgets, tkinter vars, and layout. Delegates actions to controller."""
 
@@ -86,6 +96,7 @@ class LookupView:
         self._feedback_after_id = None
         self._prev_results_tuple = None
         self._prev_exceptions = None
+        self._prev_spam = None
         self._current_editor_path = None
 
         setup_ttk_styles()
@@ -118,7 +129,7 @@ class LookupView:
         frame.columnconfigure(3, weight=1)
 
         self.dict_button = make_secondary_button(
-            frame, text="\U0001f4c2 Load Dictionary...",
+            frame, text="Load Dictionary...",
             command=self._controller.on_load_dict,
             row=0, column=0, padx=(0, 6),
         )
@@ -140,6 +151,21 @@ class LookupView:
         )
         self.dict_label.grid(row=0, column=3, sticky="w")
 
+    def _make_filter_entry(self, parent, variable, **grid_kwargs):
+        entry = tk.Entry(
+            parent, textvariable=variable, font=FONT_MAIN,
+            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
+            relief="solid", bd=1, highlightthickness=1,
+            highlightbackground=C_ENTRY_BD, highlightcolor=C_ENTRY_FOCUS,
+        )
+        entry.grid(**grid_kwargs)
+        entry.bind("<KeyRelease>", self._controller.on_search_debounced)
+        entry.bind("<FocusIn>", lambda e: entry.config(
+            highlightbackground=C_ENTRY_FOCUS, highlightthickness=2))
+        entry.bind("<FocusOut>", lambda e: entry.config(
+            highlightbackground=C_ENTRY_BD, highlightthickness=1))
+        return entry
+
     def _build_filter_row1(self, parent, row):
         frame = tk.Frame(parent, bg=C_BG)
         frame.grid(row=row, column=0, sticky="ew", pady=(0, 6))
@@ -148,30 +174,18 @@ class LookupView:
         tk.Label(frame, text="Starts With:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
                  ).grid(row=0, column=0, padx=(0, 4))
         self._start_var = tk.StringVar()
-        self.start_entry = tk.Entry(
-            frame, textvariable=self._start_var, font=FONT_MAIN,
-            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
-            relief="solid", bd=1, highlightthickness=1,
-            highlightbackground=C_ENTRY_BD, highlightcolor=C_ENTRY_FOCUS,
+        self.start_entry = self._make_filter_entry(
+            frame, self._start_var,
+            row=0, column=1, sticky="ew", padx=(0, 16), ipady=2,
         )
-        self.start_entry.grid(row=0, column=1, sticky="ew", padx=(0, 16), ipady=2)
-        self.start_entry.bind("<KeyRelease>", self._controller.on_search_debounced)
-        self.start_entry.bind("<FocusIn>", lambda e: self.start_entry.config(highlightbackground=C_ENTRY_FOCUS, highlightthickness=2))
-        self.start_entry.bind("<FocusOut>", lambda e: self.start_entry.config(highlightbackground=C_ENTRY_BD, highlightthickness=1))
 
         tk.Label(frame, text="Ends With:", font=FONT_MAIN, bg=C_BG, fg=C_TEXT
                  ).grid(row=0, column=2, padx=(0, 4))
         self._end_var = tk.StringVar()
-        self.end_entry = tk.Entry(
-            frame, textvariable=self._end_var, font=FONT_MAIN,
-            bg=C_ENTRY_BG, fg=C_TEXT, insertbackground=C_TEXT,
-            relief="solid", bd=1, highlightthickness=1,
-            highlightbackground=C_ENTRY_BD, highlightcolor=C_ENTRY_FOCUS,
+        self.end_entry = self._make_filter_entry(
+            frame, self._end_var,
+            row=0, column=3, sticky="ew", ipady=2,
         )
-        self.end_entry.grid(row=0, column=3, sticky="ew", ipady=2)
-        self.end_entry.bind("<KeyRelease>", self._controller.on_search_debounced)
-        self.end_entry.bind("<FocusIn>", lambda e: self.end_entry.config(highlightbackground=C_ENTRY_FOCUS, highlightthickness=2))
-        self.end_entry.bind("<FocusOut>", lambda e: self.end_entry.config(highlightbackground=C_ENTRY_BD, highlightthickness=1))
 
     def _build_filter_row2(self, parent, row):
         frame = tk.Frame(parent, bg=C_BG)
@@ -273,6 +287,11 @@ class LookupView:
         self._result_tree.column("Len", width=55, minwidth=40, anchor="e", stretch=False)
         self._result_tree.column("Exc", width=40, minwidth=30, anchor="center", stretch=False)
         self._result_tree.column("Spm", width=40, minwidth=30, anchor="center", stretch=False)
+
+        self._result_tree.tag_configure("r0", background="#ffffff")
+        self._result_tree.tag_configure("r1", background="#f4f4f5")
+        self._result_tree.tag_configure("rx0", background="#ffffff", foreground=C_MUTED)
+        self._result_tree.tag_configure("rx1", background="#f4f4f5", foreground=C_MUTED)
 
         self._result_tree.grid(row=0, column=0, sticky="nsew")
         self._result_tree.bind("<Double-Button-1>", self._on_tree_doubleclick)
@@ -376,20 +395,19 @@ class LookupView:
     # Keyboard shortcuts
     # ------------------------------------------------------------------
 
+    def _bind_ctrl(self, key, handler):
+        for k in (key, key.upper()):
+            self.root.bind(f"<Control-{k}>", handler)
+
     def _wire_keyboard_shortcuts(self):
-        self.root.bind("<Control-o>", lambda e: self._controller.on_load_dict())
-        self.root.bind("<Control-O>", lambda e: self._controller.on_load_dict())
-        self.root.bind("<Control-l>", lambda e: self._controller.on_clear())
-        self.root.bind("<Control-L>", lambda e: self._controller.on_clear())
-        self.root.bind("<Control-f>", lambda e: self.start_entry.focus_set())
-        self.root.bind("<Control-F>", lambda e: self.start_entry.focus_set())
+        self._bind_ctrl("o", lambda e: self._controller.on_load_dict())
+        self._bind_ctrl("l", lambda e: self._controller.on_clear())
+        self._bind_ctrl("f", lambda e: self.start_entry.focus_set())
+        self._bind_ctrl("c", self._on_copy_selected)
+        self._bind_ctrl("a", self._on_select_all)
         self.root.bind("<Escape>", self._on_escape)
         self._result_tree.bind("<Delete>", self._on_delete_results_selection)
         self._result_tree.bind("<space>", self._on_space_toggle_exception)
-        self.root.bind("<Control-c>", self._on_copy_selected)
-        self.root.bind("<Control-C>", self._on_copy_selected)
-        self.root.bind("<Control-a>", self._on_select_all)
-        self.root.bind("<Control-A>", self._on_select_all)
 
     def _on_escape(self, event=None):
         focused = self.root.focus_get()
@@ -540,28 +558,23 @@ class LookupView:
         self.dict_label.config(fg=C_MUTED)
 
     def update_results(self, results, total, exceptions, spam_suffixes=None):
+        spam_tails = tuple(spam_suffixes) if spam_suffixes else ()
         results_tuple = tuple(results)
-        if results_tuple == self._prev_results_tuple and exceptions == self._prev_exceptions:
+        if (results_tuple == self._prev_results_tuple
+                and exceptions == self._prev_exceptions
+                and spam_tails == self._prev_spam):
             return
         self._prev_results_tuple = results_tuple
         self._prev_exceptions = frozenset(exceptions)
+        self._prev_spam = spam_tails
 
         tree = self._result_tree
         tree.delete(*tree.get_children())
 
-        tag_configs = {
-            "r0": {"background": "#ffffff"},
-            "r1": {"background": "#f4f4f5"},
-            "rx0": {"background": "#ffffff", "foreground": C_MUTED},
-            "rx1": {"background": "#f4f4f5", "foreground": C_MUTED},
-        }
-        for tag, cfg in tag_configs.items():
-            tree.tag_configure(tag, **cfg)
-
         for i, word in enumerate(results):
             parity = i % 2
             in_exc = word in exceptions
-            is_spam = spam_suffixes and any(word.endswith(s) for s in spam_suffixes)
+            is_spam = spam_tails and word.endswith(spam_tails)
             tag = f"rx{parity}" if in_exc else f"r{parity}"
             tree.insert(
                 "", tk.END,
@@ -579,16 +592,6 @@ class LookupView:
         else:
             self._count_var.set(f"{n:,} words found")
 
-    def scroll_to_word(self, word):
-        tree = self._result_tree
-        for item in tree.get_children(''):
-            if tree.item(item, "values")[1] == word:
-                tree.selection_set(item)
-                tree.see(item)
-                tree.focus(item)
-                return True
-        return False
-
     def reset_filters(self):
         self._start_var.set("")
         self._end_var.set("")
@@ -601,9 +604,6 @@ class LookupView:
 
     def enable_add_words_btn(self, enabled):
         self.add_words_btn.config(state="normal" if enabled else "disabled")
-
-    def focus_start_entry(self):
-        self.start_entry.focus_set()
 
     def _hide_all_panels(self):
         self.results_frame.grid_remove()
@@ -700,13 +700,11 @@ class SearchWorker:
     def _apply_filters(results, contains, min_len, max_len, match_case):
         if not contains and not min_len and not max_len:
             return results
+        needle = contains if match_case else contains.lower()
         filtered = []
         for word in results:
-            w = word if match_case else word.lower()
-            if contains:
-                needle = contains if match_case else contains.lower()
-                if needle not in w:
-                    continue
+            if needle and needle not in (word if match_case else word.lower()):
+                continue
             if min_len and len(word) < min_len:
                 continue
             if max_len and len(word) > max_len:
@@ -728,6 +726,7 @@ class LookupApp:
         self.exceptions = set()
         self._search_after_id = None
         self._result_word_list = []
+        self._last_total = 0
         self._settings = {}
         self.custom_words = load_custom_words()
         self._base_wordlist = None
@@ -779,18 +778,22 @@ class LookupApp:
 
     def _load_thread(self, path):
         try:
-            wordlist, from_cache = load_wordlist_from_dict(path)
-            self.root.after(0, self._on_dict_loaded, path, wordlist, from_cache)
+            base_wordlist, from_cache = load_wordlist_from_dict(path)
+            wordlist = base_wordlist
+            if self.custom_words:
+                wordlist = _merge_custom_words(base_wordlist, self.custom_words)
+            self.root.after(
+                0, self._on_dict_loaded, path, base_wordlist, wordlist, from_cache,
+            )
         except Exception as e:
             logger.exception("Failed to load dictionary")
             self.root.after(0, self._on_dict_error, str(e))
 
-    def _on_dict_loaded(self, path, wordlist, from_cache):
+    def _on_dict_loaded(self, path, base_wordlist, wordlist, from_cache):
         self.dict_path = path
-        self._base_wordlist = wordlist
-        if self.custom_words:
-            wordlist = sorted(set(wordlist) | self.custom_words)  # type: ignore[arg-type]
+        self._base_wordlist = base_wordlist
         self.lookup.set_wordlist(wordlist)
+        threading.Thread(target=self.lookup.warm_suffix_index, daemon=True).start()
         self.view.set_dict_loaded(Path(path).name, len(wordlist))
         cache_hint = " (from cache)" if from_cache else ""
         extra = f" + {len(self.custom_words)} custom" if self.custom_words else ""
@@ -818,8 +821,9 @@ class LookupApp:
             return
         save_custom_words(self.custom_words)
         if self._base_wordlist is not None:
-            merged = sorted(set(self._base_wordlist) | self.custom_words)
+            merged = _merge_custom_words(self._base_wordlist, self.custom_words)
             self.lookup.set_wordlist(merged)
+            threading.Thread(target=self.lookup.warm_suffix_index, daemon=True).start()
         self._run_search()
         s = "s" if removed != 1 else ""
         self.view.set_status(f"Removed {removed} custom word{s}")
@@ -893,6 +897,7 @@ class LookupApp:
 
     def _update_results(self, results, total):
         self._result_word_list = list(results)
+        self._last_total = total
         self.view.update_results(results, total, self.exceptions, self.spam_suffixes)
         n = len(results)
         if n == 0:
@@ -911,6 +916,7 @@ class LookupApp:
         self.view.ensure_results_visible()
         self.view.reset_filters()
         self._result_word_list = []
+        self._last_total = 0
         self.view.update_results([], 0, self.exceptions, self.spam_suffixes)
         if self.lookup.has_wordlist():
             self.view.set_status(f"{self.lookup.get_word_count():,} words available")
@@ -924,9 +930,6 @@ class LookupApp:
     def is_exception(self, word):
         return word in self.exceptions
 
-    def get_setting(self, key, default=None):
-        return self._settings.get(key, default)
-
     # ------------------------------------------------------------------
     # Exception management
     # ------------------------------------------------------------------
@@ -934,10 +937,6 @@ class LookupApp:
     def _load_exceptions(self):
         self.exceptions = _load_exc()
         self.refresh_exception_ui()
-
-    def reload_exceptions(self):
-        self._load_exceptions()
-        self.view.set_status("Exceptions reloaded")
 
     def refresh_exception_ui(self):
         self._refresh_result_colors()
@@ -974,13 +973,11 @@ class LookupApp:
         words = [self.view._result_tree.item(item, "values")[1] for item in sel]
         self.on_add_to_exceptions(words)
 
-    def on_exception_click(self, word):
-        found = self.view.scroll_to_word(word)
-        if not found:
-            self.view.set_status(f"'{word}' not in current results \u2014 try searching")
-
     def _refresh_result_colors(self):
-        self.view.update_results(self._result_word_list, len(self._result_word_list), self.exceptions, self.spam_suffixes)
+        self.view.update_results(
+            self._result_word_list, self._last_total,
+            self.exceptions, self.spam_suffixes,
+        )
 
     # ------------------------------------------------------------------
     # Settings persistence
@@ -994,23 +991,6 @@ class LookupApp:
                 self.dict_path = data.get("dict_path") or None
         except Exception:
             self._settings = {}
-
-    def on_paste_exceptions_from_clipboard(self):
-        try:
-            raw = self.root.clipboard_get()
-        except tk.TclError:
-            self.view.show_feedback("warn", "Clipboard is empty")
-            return
-        words = []
-        for line in raw.splitlines():
-            for token in line.split():
-                w = token.strip(",.!?;:()[]{}'\"-").lower()
-                if w and w.isalpha():
-                    words.append(w)
-        if words:
-            self.on_add_to_exceptions(words)
-        else:
-            self.view.show_feedback("warn", "No valid words in clipboard")
 
     def _save_settings(self):
         try:

@@ -203,6 +203,30 @@ class DictLookupThreadSafetyTest(unittest.TestCase):
         self.assertEqual(errors, [])
 
 
+class DictLookupWarmSuffixIndexTest(unittest.TestCase):
+    def test_warm_then_search_returns_matches(self):
+        lookup = DictLookup(["apple", "axle", "banana"])
+        lookup.warm_suffix_index()
+        self.assertEqual(lookup.find_ending_with("le"), ["apple", "axle"])
+
+    def test_warm_index_invalidated_by_new_wordlist(self):
+        lookup = DictLookup(["apple"])
+        lookup.warm_suffix_index()
+        lookup.set_wordlist(["banana"])
+        self.assertEqual(lookup.find_ending_with("na"), ["banana"])
+
+    def test_warm_index_invalidated_by_added_word(self):
+        lookup = DictLookup(["apple"])
+        lookup.warm_suffix_index()
+        lookup.add_word("axle")
+        self.assertEqual(lookup.find_ending_with("le"), ["apple", "axle"])
+
+    def test_warm_on_empty_wordlist_is_noop(self):
+        lookup = DictLookup([])
+        lookup.warm_suffix_index()
+        self.assertEqual(lookup.find_ending_with("a"), [])
+
+
 class DictLookupHasWordlistTest(unittest.TestCase):
     def test_has_wordlist_true(self):
         lookup = DictLookup(["apple"])
