@@ -15,6 +15,8 @@ acestoma
 acinacifoliate
 acipenseridv
 adha
+adinvention
+adod
 aeron
 aeroperitoneum
 afterplanting
@@ -25,7 +27,9 @@ ahrendahronon
 ain't
 akaba
 akania
+akkadist
 aladinist
+alagao
 alain
 alchem
 alda
@@ -65,6 +69,9 @@ amstar
 amsted
 anama
 anamite
+anaphe
+anathemitisation
+andaman
 anecdotalism
 anecdotalisms
 anerythroplasia
@@ -82,11 +89,22 @@ anton
 anutraminosa
 anyu
 anyus
+anzanian
+anzio
 aortoptosia
 apeldoorn
 aphroditeum
 apicial
+apothec
 apyrotype
+araldite
+arales
+araliaceae
+araliaceous
+araliad
+araliaephyllum
+araliophyllum
+aralkyl
 aralkylated
 arank
 archabomination
@@ -95,6 +113,7 @@ archespsporia
 areda
 aredf
 aredv
+armageddonist
 armoric
 arrtez
 artou
@@ -105,6 +124,7 @@ asf
 ashton
 asiaticization
 atherinidae
+atorai
 aulacodus
 aulacomniaceae
 ausgleich
@@ -155,6 +175,7 @@ cotoin
 cp
 dagassa
 dallapiccola
+dalmation
 deoch
 dg
 dh
@@ -187,12 +208,14 @@ elys
 elytrons
 entebbe
 epstein
+erda
 errol
 esd
 esopgi
 esquimaux
 etons
 euxenite
+extant
 ezuz
 faggot
 fatx
@@ -206,6 +229,7 @@ fsafeds
 fsiest
 fstore
 gaidhealtachd
+ganta
 gaudi
 gcmg
 gdansk
@@ -214,6 +238,7 @@ gedda
 gedder
 gershwin
 ggr
+ginglymuses
 giselle
 gleichschaltung
 gne
@@ -223,6 +248,7 @@ gothamist
 gyp
 hagen
 haig
+harz
 hd
 hdmi
 hebamic
@@ -258,6 +284,7 @@ iona
 ionesco
 ionicise
 ionicised
+ionicising
 ipswich
 irae
 iraimbilanj\a
@@ -292,7 +319,12 @@ kwh
 kwon
 leamington
 lennox
+lermontov
+lerna
+lerne
 lernean
+lerner
+leroy
 lerwick
 leses
 lessa
@@ -304,6 +336,8 @@ lls
 lonsdale
 lonsdaler
 lonsdales
+lorentz
+lorenz
 losss
 luzon
 lw
@@ -313,6 +347,7 @@ lwo
 lwp
 lwsorrybroyouonyourown
 lwsorrybroyouronyourown
+lyons
 mackenzie
 maesteg
 mahshi
@@ -338,7 +373,10 @@ mtx
 mv
 myg
 myrrhines
+nakayama
+nanterre
 nantucket
+nantwich
 negged
 negqtiator
 neopythagoreanism
@@ -391,6 +429,8 @@ nnethermore
 noghl
 nyx
 obbiphylyougotthem
+ockenden
+ockham
 ockhamism
 ockhamist
 oed
@@ -412,6 +452,8 @@ osterreich
 otago
 ouse
 overlubricatio
+paolozzi
+paomo
 paperw
 paysd
 paz
@@ -440,6 +482,7 @@ pkg
 pkhali
 pks
 pkt
+plegium
 pmk
 pmsg
 ponys
@@ -465,7 +508,9 @@ rica
 rigsseur
 rigsseurabdrglementischangedto
 rigsseurandrglementischangedto
+riksdag
 rosenkavalier
+rossa
 russianisation
 rw
 rwandan
@@ -530,6 +575,7 @@ thermofax
 theroux
 tinewald
 tissington
+tji
 tkt
 tla
 tmh
@@ -540,6 +586,8 @@ transcendentalizm
 tteok
 tteokbokki
 tty
+tupamaro
+tupamaros
 tvalchrelidzeite
 tx
 txt
@@ -547,9 +595,12 @@ tyg
 typ
 typw (type?)
 tyson
+tzetal
+uefa
 uffizi
 ui
 uig
+uist
 unstraightforwardness
 urgullibleifyoutypethis
 uzi
@@ -583,6 +634,7 @@ xians
 xianshanosaurus
 xiao
 xiaolongbao
+xiaoyaosan
 xidontknowthese
 ximenes
 ximenez
