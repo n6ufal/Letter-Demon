@@ -30,6 +30,9 @@ akania
 akkadist
 aladinist
 alagao
+alagarto
+alagau
+alagebrium
 alain
 alchem
 alda
@@ -45,6 +48,7 @@ alicula
 aliculae
 allyic
 allys
+alogotrophy
 alsace
 alsbachite
 alsbachites
@@ -122,6 +126,7 @@ arzan
 asak
 asf
 ashton
+asiatically
 asiaticization
 atherinidae
 atorai
@@ -168,7 +173,9 @@ chenille
 cheniller
 chenilles
 chungkingosaurus
+clemenza
 cmd
+cmg
 cooghneiorvlt
 corvktte
 cotoin
@@ -199,6 +206,7 @@ eddys
 edite
 editio
 edom
+ehrlich
 eleemosinar
 elise
 ellesmere
@@ -298,6 +306,7 @@ joanie
 kaffir
 kaman
 kariba
+kcmg
 keskul
 keyus
 kiribati
@@ -362,6 +371,7 @@ meistersingers
 mers
 merthyr
 mfd
+mg
 mgd
 mgr
 mgt
@@ -370,6 +380,7 @@ mhg
 mhor
 moomeveningpalace
 mtx
+muzhuzhi
 mv
 myg
 myrrhines
@@ -522,6 +533,7 @@ rwy
 ryan
 sachs
 saeculorum
+saeters
 samsa
 saorstat
 sarab
@@ -545,6 +557,7 @@ ssam
 ssi
 ssw
 steaakhouse
+stercorariidae
 stk
 sulawesi
 sv
@@ -583,6 +596,7 @@ topsyturvification
 tpk
 tralee
 transcendentalizm
+tsi
 tteok
 tteokbokki
 tty
@@ -615,6 +629,7 @@ vy
 vyshyvanka
 wahr
 wehrmacht
+weinberg
 weissmuller
 wiesbaden
 woku
@@ -673,6 +688,7 @@ zeeland
 zeelanders
 zeeman
 zh
+zhivago
 ziegler
 zies
 zieswallahiimcooked

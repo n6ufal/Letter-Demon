@@ -25,6 +25,7 @@ ehr
 #asm
 ocy
 erig
+zhi
 riks
 euco
 haim
@@ -62,6 +63,7 @@ eise
 #apyr
 tsum
 rhip
+surs
 euch
 volo
 acin
