@@ -8,7 +8,7 @@ oed
 ines
 ting
 pera
-ted
+#ted
 ged
 ion
 ist
@@ -16,6 +16,7 @@ less
 ned
 eric
 ters
+ler
 sing
 king
 #ses
@@ -27,14 +28,12 @@ nah
 neh
 bia
 bug
-ion
 #ons
 ely
 vie
 zie
 kia
 #sia
-ist
 nia
 aka
 kus

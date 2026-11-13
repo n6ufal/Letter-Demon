@@ -32,7 +32,6 @@ aladinist
 alagao
 alagarto
 alagau
-alagebrium
 alain
 alchem
 alda
@@ -71,6 +70,7 @@ amsath
 amsel
 amstar
 amsted
+anaerobion
 anama
 anamite
 anaphe
@@ -80,6 +80,7 @@ anecdotalism
 anecdotalisms
 anerythroplasia
 aneuch
+angakut
 anhydrated
 annie
 annis
@@ -126,8 +127,16 @@ arzan
 asak
 asf
 ashton
+asialia
+asianism
+asiarchate
+asiatical
 asiatically
+asiatican
+asiaticism
 asiaticization
+asiaticize
+asiatize
 atherinidae
 atorai
 aulacodus
@@ -153,6 +162,7 @@ bkbndr
 bkg
 bks
 bkt
+bleriot
 bnf
 brabantio
 brainwashjng
@@ -178,6 +188,7 @@ cmd
 cmg
 cooghneiorvlt
 corvktte
+cosenza
 cotoin
 cp
 dagassa
@@ -189,6 +200,7 @@ dh
 dha
 dhss
 dhus
+dictagraph
 dihdroxycholecalciferol
 diisobutylcarbamoylmethylphosphine
 disestablismentarianism
@@ -207,6 +219,7 @@ edite
 editio
 edom
 ehrlich
+ektachrome
 eleemosinar
 elise
 ellesmere
@@ -217,6 +230,7 @@ elytrons
 entebbe
 epstein
 erda
+erecting
 errol
 esd
 esopgi
@@ -239,7 +253,12 @@ fstore
 gaidhealtachd
 ganta
 gaudi
+gcb
+gcd
+gce
+gciriku
 gcmg
+gcse
 gdansk
 gdayg
 gedda
@@ -327,6 +346,7 @@ kwai
 kwh
 kwon
 leamington
+leitrim
 lennox
 lermontov
 lerna
@@ -342,6 +362,8 @@ lessly
 lhasa
 lhb
 lls
+lmft
+lmm
 lonsdale
 lonsdaler
 lonsdales
@@ -370,6 +392,7 @@ meistersinger
 meistersingers
 mers
 merthyr
+methamphetamines
 mfd
 mg
 mgd
@@ -445,6 +468,7 @@ ockham
 ockhamism
 ockhamist
 oed
+oked
 okonomiyaki
 onere
 ongar
@@ -462,7 +486,10 @@ osteo
 osterreich
 otago
 ouse
+ouzu
 overlubricatio
+ozawa
+panza
 paolozzi
 paomo
 paperw
@@ -472,6 +499,7 @@ pd
 pdl
 pdn
 pdsa
+pedestrianization
 peez
 penetrolqgy
 perez
@@ -488,9 +516,9 @@ pg
 pgntt
 pgnttrp
 phd
+piacenza
 pk
 pkg
-pkhali
 pks
 pkt
 plegium
@@ -499,6 +527,7 @@ pmsg
 ponys
 preinferredpreinferring
 preobtrudingpreobtrusion
+prospekt
 psf
 pussyfooted
 pussyfooting
@@ -535,6 +564,9 @@ sachs
 saeculorum
 saeters
 samsa
+sandinismo
+sandinista
+sandinistas
 saorstat
 sarab
 sarthe
@@ -544,12 +576,14 @@ sd
 sds
 seato
 sensibilitiy
+sesotho
 seychelles
 seyfert
 sf
 shilluh
 shlemiehl
 shr
+singara
 spey
 spielberg
 spohr
@@ -589,6 +623,7 @@ theroux
 tinewald
 tissington
 tji
+tjvjik
 tkt
 tla
 tmh
@@ -596,6 +631,7 @@ topsyturvification
 tpk
 tralee
 transcendentalizm
+trouv
 tsi
 tteok
 tteokbokki
@@ -624,6 +660,7 @@ vectorcardiographic
 velasquez
 velazquez
 veracruz
+vicenza
 voronezh
 vy
 vyshyvanka

@@ -18,7 +18,8 @@ hd
 #yp
 #uz
 jja
-zuz
+alag
+#zuz
 efa
 bwa
 ehr
@@ -37,8 +38,8 @@ suan
 loh
 pex
 cef
-aji
-cae
+#aji
+#cae
 sae
 arta
 zha
@@ -47,14 +48,14 @@ mita
 taph
 aral
 epal
-nier
 #tane
 eich
 #diol
 #afi
 #olea
-ptin
-loka
+#ptin
+#loka
+nier
 zie
 zan
 oshi
@@ -108,7 +109,7 @@ von
 #eos
 eis
 perb
-eda
+#eda
 tla
 #soko
 zar
